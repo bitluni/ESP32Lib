@@ -1,5 +1,5 @@
 #pragma once
-#include "Tools/Log.h"
+#include "../Tools/Log.h"
 
 class DMABuffer
 {

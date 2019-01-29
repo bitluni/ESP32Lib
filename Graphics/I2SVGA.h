@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Graphics.h"
-#include "I2S/I2S.h"
+#include "../I2S/I2S.h"
 
 class I2SVGA: public I2S, public Graphics<unsigned short>
 {
