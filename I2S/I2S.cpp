@@ -1,5 +1,5 @@
 #include "I2S.h"
-#include "Tools/Log.h"
+#include "../Tools/Log.h"
 #include <soc/rtc.h>
 
 i2s_dev_t* i2sDevices[] = {&I2S0, &I2S1};
