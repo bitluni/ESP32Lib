@@ -72,7 +72,7 @@ class Graphics
     cursorY = y;  
   }
   
-  void print(char *str)
+  void print(const char *str)
   {
     if(!font) return;
     while(*str)
