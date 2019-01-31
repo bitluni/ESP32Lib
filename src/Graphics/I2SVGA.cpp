@@ -16,7 +16,7 @@ const int I2SVGA::MODE360x350[] = {16, 108, 56, 720, 11, 2, 32, 350, 2, 1, 28322
 const int I2SVGA::MODE360x175[] = {16, 108, 56, 720, 11, 2, 32, 350, 2, 2, 28322000};
 const int I2SVGA::MODE360x88[] = {16, 108, 56, 720, 11, 2, 31, 350, 2, 4, 28322000};
 
-//not supported on all of my screens
+//not supported on any of my screens
 const int I2SVGA::MODE384x576[] = {24, 80, 104, 768, 1, 3, 17, 576, 2, 1, 34960000};
 const int I2SVGA::MODE384x288[] = {24, 80, 104, 768, 1, 3, 17, 576, 2, 2, 34960000};
 const int I2SVGA::MODE384x144[] = {24, 80, 104, 768, 1, 3, 17, 576, 2, 4, 34960000};
