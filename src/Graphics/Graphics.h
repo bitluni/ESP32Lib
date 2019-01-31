@@ -136,8 +136,9 @@ class Graphics
 
 	inline void dotAdd(int x, int y, Color color)
 	{
+		//todo repair this
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backbuffer[y][x] = min(54, color + backbuffer[y][x]);
+			backbuffer[y][x] = color + backbuffer[y][x];
 	}
 
 	inline char get(int x, int y)
