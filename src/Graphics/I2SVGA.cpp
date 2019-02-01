@@ -57,9 +57,9 @@ bool I2SVGA::init(const int *mode, const int *redPins, const int *greenPins, con
 
 	rgbMask = 0x3fff;
 	hsyncBit = 0x0000;
-	vsyncBitI = 0x0000;
+	vsyncBit = 0x0000;
 	hsyncBitI = 0x4000;
-	vsyncBit = 0x8000;
+	vsyncBitI = 0x8000;
 
 	int pinMap[24];
 	for (int i = 0; i < 8; i++)
@@ -114,15 +114,15 @@ void I2SVGA::interrupt()
 	unsigned long *signal = (unsigned long *)dmaBuffers[dmaBufferActive]->buffer;
 	unsigned long *pixels = &((unsigned long *)dmaBuffers[dmaBufferActive]->buffer)[(hfront + hsync + hback) / 2];
 	unsigned long base, baseh;
-	if (currentLine < vfront || currentLine >= vfront + vsync)
+	if (currentLine >= vfront && currentLine < vfront + vsync)
 	{
-		baseh = (vsyncBitI | hsyncBit) | ((vsyncBitI | hsyncBit) << 16);
-		base = (vsyncBitI | hsyncBitI) | ((vsyncBitI | hsyncBitI) << 16);
+		baseh = (vsyncBit | hsyncBit) | ((vsyncBit | hsyncBit) << 16);
+		base = (vsyncBit | hsyncBitI) | ((vsyncBit | hsyncBitI) << 16);
 	}
 	else
 	{
-		baseh = (vsyncBit | hsyncBitI) | ((vsyncBit | hsyncBitI) << 16);
-		base = (vsyncBit | hsyncBit) | ((vsyncBit | hsyncBit) << 16);
+		baseh = (vsyncBitI | hsyncBit) | ((vsyncBitI | hsyncBit) << 16);
+		base = (vsyncBitI | hsyncBitI) | ((vsyncBitI | hsyncBitI) << 16);
 	}
 	for (int i = 0; i < hfront / 2; i++)
 		signal[i] = base;
