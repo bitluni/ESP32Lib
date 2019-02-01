@@ -8,8 +8,7 @@ class I2SVGA : public I2S, public Graphics<unsigned short>
   public:
 	I2SVGA(const int i2sIndex);
 
-	bool init(const int xres, const int yres, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin);
-	bool init(const int *mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin);
+	bool init(const int *mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin, int lineBufferCount = 8);
 	virtual float pixelAspect() const;
 
 	static const int MODE320x480[];
@@ -56,10 +55,10 @@ class I2SVGA : public I2S, public Graphics<unsigned short>
 	int vback;
 	int hdivider;
 	int vdivider;
-	void allocateDMABuffersVGA(const int lines);
 
   protected:
-	void interruptWorker();
+	virtual void interrupt();
+	virtual void allocateDMABuffersVGA(const int lines);
 
   public:
 	static const int HIDDEN_MODE0[];

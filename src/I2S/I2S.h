@@ -20,7 +20,6 @@ class I2S
 	int dmaBufferActive;
 	DMABuffer **dmaBuffers;
 	volatile bool stopSignal;
-	volatile i2s_dev_t &i2s;
 
 	/// hardware index [0, 1]
 	I2S(const int i2sIndex = 0);
@@ -32,8 +31,6 @@ class I2S
 	void startTX();
 	void startRX();
 
-	static void IRAM_ATTR interrupt(void *arg);
-
 	void resetDMA();
 	void resetFIFO();
 	bool initParallelOutputMode(const int *pinMap, long APLLFreq = 1000000, int baseClock = -1, int wordSelect = -1);
@@ -43,6 +40,8 @@ class I2S
 	void deleteDMABuffers();
 
   protected:
-	void interrupt();
-	virtual void interruptWorker();
+	virtual void interrupt();
+	
+  private:
+	static void IRAM_ATTR interrupt(void *arg);
 };

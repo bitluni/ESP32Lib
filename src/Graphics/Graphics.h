@@ -43,19 +43,23 @@ class Graphics
 		backColor = back;
 	}
 
-	void initBuffers(const int w, const int h, const int initialTrinagleBufferSize = 0)
+	virtual void initBuffers(const int w, const int h, const int initialTrinagleBufferSize = 0, const bool doubleBuffer = true)
 	{
 		xres = w;
 		yres = h;
 		trinagleBufferSize = initialTrinagleBufferSize;
 		frame = (Color **)malloc(yres * sizeof(Color *));
-		backbuffer = (Color **)malloc(yres * sizeof(Color *));
+		if(doubleBuffer)
+			backbuffer = (Color **)malloc(yres * sizeof(Color *));
+		else
+			backbuffer = frame;
 		//not enough memory for z-buffer implementation
 		//zbuffer = (char**)malloc(yres * sizeof(char*));
 		for (int y = 0; y < yres; y++)
 		{
 			frame[y] = (Color *)malloc(xres * sizeof(Color));
-			backbuffer[y] = (Color *)malloc(xres * sizeof(Color));
+			if(doubleBuffer)
+				backbuffer[y] = (Color *)malloc(xres * sizeof(Color));
 			//zbuffer[y] = (char*)malloc(xres);
 		}
 		triangleBuffer = (TriangleTree<Graphics<Color>, Color> *)malloc(sizeof(TriangleTree<Graphics<Color>, Color>) * trinagleBufferSize);
@@ -136,9 +140,27 @@ class Graphics
 
 	inline void dotAdd(int x, int y, Color color)
 	{
+		//todo repair this
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backbuffer[y][x] = min(54, color + backbuffer[y][x]);
+			backbuffer[y][x] = color + backbuffer[y][x];
 	}
+	
+	inline void dotMix(int x, int y, unsigned int color)
+	{
+		if ((unsigned int)x < xres && (unsigned int)y < yres)
+		{
+			unsigned int ai = (3 - (color >> 14)) * (65536 / 3);
+			unsigned int a = 65536 - ai;
+			unsigned int co = backbuffer[y][x];
+			unsigned int ro = (co & 0b11111) * ai;
+			unsigned int go = (co & 0b1111100000) * ai;
+			unsigned int bo = (co & 0b11110000000000) * ai;
+			unsigned int r = (color & 0b11111) * a + ro;
+			unsigned int g = ((color & 0b1111100000) * a + go) & 0b11111000000000000000000000;
+			unsigned int b = ((color & 0b11110000000000) * a + bo) & 0b111100000000000000000000000000;
+			backbuffer[y][x] = (r | g | b) >> 16;
+		}	
+	}	
 
 	inline char get(int x, int y)
 	{

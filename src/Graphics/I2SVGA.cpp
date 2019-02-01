@@ -16,18 +16,18 @@ const int I2SVGA::MODE360x350[] = {16, 108, 56, 720, 11, 2, 32, 350, 2, 1, 28322
 const int I2SVGA::MODE360x175[] = {16, 108, 56, 720, 11, 2, 32, 350, 2, 2, 28322000};
 const int I2SVGA::MODE360x88[] = {16, 108, 56, 720, 11, 2, 31, 350, 2, 4, 28322000};
 
-//not supported on all of my screens
+//not supported on any of my screens
 const int I2SVGA::MODE384x576[] = {24, 80, 104, 768, 1, 3, 17, 576, 2, 1, 34960000};
 const int I2SVGA::MODE384x288[] = {24, 80, 104, 768, 1, 3, 17, 576, 2, 2, 34960000};
 const int I2SVGA::MODE384x144[] = {24, 80, 104, 768, 1, 3, 17, 576, 2, 4, 34960000};
 const int I2SVGA::MODE384x96[] = {24, 80, 104, 768, 1, 3, 17, 576, 2, 6, 34960000};
 
-//not stable (can't reach 40MHz pixel clock, it's clipped by the driver to 36249999)
+//not stable (can't reach 40MHz pixel clock, it's clipped by the driver to 36249999 at undivided resolution)
 //you can mod the timings a bit the get it running on your system
-const int I2SVGA::MODE400x300[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 2, 40000000};
-const int I2SVGA::MODE400x150[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 4, 40000000};
-const int I2SVGA::MODE400x100[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 6, 36249999};
-const int I2SVGA::MODE200x150[] = {40, 128, 88, 800, 1, 4, 23, 600, 4, 4, 40000000};
+const int I2SVGA::MODE400x300[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 2, 39700000};
+const int I2SVGA::MODE400x150[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 4, 39700000};
+const int I2SVGA::MODE400x100[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 6, 39700000};
+const int I2SVGA::MODE200x150[] = {40, 128, 88, 800, 1, 4, 23, 600, 4, 4, 39700000};
 
 //you took your time to look at the code. try this mode.. 460 pixels horizontal it's based on 640x480
 const int I2SVGA::HIDDEN_MODE0[] = {24, 136, 76, 920, 11, 2, 31, 480, 2, 1, 36249999};
@@ -40,7 +40,7 @@ I2SVGA::I2SVGA(const int i2sIndex)
 {
 }
 
-bool I2SVGA::init(const int *mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin)
+bool I2SVGA::init(const int *mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin, int lineBufferCount)
 {
 	initBuffers(mode[3] / mode[8], mode[7] / mode[9], 1337);
 	this->vsyncPin = vsyncPin;
@@ -57,9 +57,9 @@ bool I2SVGA::init(const int *mode, const int *redPins, const int *greenPins, con
 
 	rgbMask = 0x3fff;
 	hsyncBit = 0x0000;
-	vsyncBitI = 0x0000;
+	vsyncBit = 0x0000;
 	hsyncBitI = 0x4000;
-	vsyncBit = 0x8000;
+	vsyncBitI = 0x8000;
 
 	int pinMap[24];
 	for (int i = 0; i < 8; i++)
@@ -74,7 +74,7 @@ bool I2SVGA::init(const int *mode, const int *redPins, const int *greenPins, con
 	pinMap[22] = hsyncPin;
 	pinMap[23] = vsyncPin;
 	initParallelOutputMode(pinMap, mode[10] / hdivider);
-	allocateDMABuffersVGA(8);
+	allocateDMABuffersVGA(lineBufferCount);
 	currentLine = 0;
 	startTX();
 	return true;
@@ -97,9 +97,8 @@ void I2SVGA::allocateDMABuffersVGA(const int lines)
 	dmaBuffers[dmaBufferCount - 1]->next(dmaBuffers[0]);
 }
 
-void I2SVGA::interruptWorker()
+void I2SVGA::interrupt()
 {
-	i2s.int_clr.val = i2s.int_raw.val;
 	/*uint32_t start, finish, current;
   start = REG_READ(FRC_TIMER_COUNT_REG(1));
   gpio_set_level((gpio_num_t)hsyncPin, 0);
@@ -111,18 +110,19 @@ void I2SVGA::interruptWorker()
   while(current > start && current < finish);
   //hsync done
   //gpio_set_level((gpio_num_t)hsyncPin, 1);*/
+
 	unsigned long *signal = (unsigned long *)dmaBuffers[dmaBufferActive]->buffer;
 	unsigned long *pixels = &((unsigned long *)dmaBuffers[dmaBufferActive]->buffer)[(hfront + hsync + hback) / 2];
 	unsigned long base, baseh;
-	if (currentLine < vfront || currentLine >= vfront + vsync)
+	if (currentLine >= vfront && currentLine < vfront + vsync)
 	{
-		baseh = (vsyncBitI | hsyncBit) | ((vsyncBitI | hsyncBit) << 16);
-		base = (vsyncBitI | hsyncBitI) | ((vsyncBitI | hsyncBitI) << 16);
+		baseh = (vsyncBit | hsyncBit) | ((vsyncBit | hsyncBit) << 16);
+		base = (vsyncBit | hsyncBitI) | ((vsyncBit | hsyncBitI) << 16);
 	}
 	else
 	{
-		baseh = (vsyncBit | hsyncBitI) | ((vsyncBit | hsyncBitI) << 16);
-		base = (vsyncBit | hsyncBit) | ((vsyncBit | hsyncBit) << 16);
+		baseh = (vsyncBitI | hsyncBit) | ((vsyncBitI | hsyncBit) << 16);
+		base = (vsyncBitI | hsyncBitI) | ((vsyncBitI | hsyncBitI) << 16);
 	}
 	for (int i = 0; i < hfront / 2; i++)
 		signal[i] = base;
