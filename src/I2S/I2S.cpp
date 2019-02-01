@@ -5,7 +5,6 @@
 i2s_dev_t *i2sDevices[] = {&I2S0, &I2S1};
 
 I2S::I2S(const int i2sIndex)
-	: i2s(*i2sDevices[i2sIndex])
 {
 	this->i2sIndex = i2sIndex;
 	interruptHandle = 0;
@@ -17,13 +16,18 @@ I2S::I2S(const int i2sIndex)
 
 void IRAM_ATTR I2S::interrupt(void *arg)
 {
+	volatile i2s_dev_t &i2s = *i2sDevices[((I2S *)arg)->i2sIndex];
+	i2s.int_clr.val = i2s.int_raw.val;
 	((I2S *)arg)->interrupt();
 }
 
 void I2S::interrupt()
 {
-	i2s.int_clr.val = i2s.int_raw.val;
-	interruptWorker();
+	static int c = 0;
+	unsigned short *buf = (unsigned short *)dmaBuffers[dmaBufferActive]->buffer;
+	for (int i = 0; i < 16; i++)
+		buf[i] = c++;
+	dmaBufferActive = (dmaBufferActive + 1) % dmaBufferCount;
 	if (stopSignal)
 	{
 		i2sStop();
@@ -31,17 +35,9 @@ void I2S::interrupt()
 	}
 }
 
-void I2S::interruptWorker()
-{
-	static int c = 0;
-	unsigned short *buf = (unsigned short *)dmaBuffers[dmaBufferActive]->buffer;
-	for (int i = 0; i < 16; i++)
-		buf[i] = c++;
-	dmaBufferActive = (dmaBufferActive + 1) % dmaBufferCount;
-}
-
 void I2S::reset()
 {
+	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
 	const unsigned long lc_conf_reset_flags = I2S_IN_RST_M | I2S_OUT_RST_M | I2S_AHBM_RST_M | I2S_AHBM_FIFO_RST_M;
 	i2s.lc_conf.val |= lc_conf_reset_flags;
 	i2s.lc_conf.val &= ~lc_conf_reset_flags;
@@ -55,6 +51,7 @@ void I2S::reset()
 
 void I2S::i2sStop()
 {
+	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
 	esp_intr_disable(interruptHandle);
 	reset();
 	i2s.conf.rx_start = 0;
@@ -63,6 +60,7 @@ void I2S::i2sStop()
 
 void I2S::startTX()
 {
+	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
 	DEBUG_PRINTLN("I2S TX");
 	esp_intr_disable(interruptHandle);
 	reset();
@@ -83,6 +81,7 @@ void I2S::startTX()
 
 void I2S::startRX()
 {
+	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
 	DEBUG_PRINTLN("I2S RX");
 	esp_intr_disable(interruptHandle);
 	reset();
@@ -101,6 +100,7 @@ void I2S::startRX()
 
 void I2S::resetDMA()
 {
+	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
 	i2s.lc_conf.in_rst = 1;
 	i2s.lc_conf.in_rst = 0;
 	i2s.lc_conf.out_rst = 1;
@@ -109,6 +109,7 @@ void I2S::resetDMA()
 
 void I2S::resetFIFO()
 {
+	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
 	i2s.conf.rx_fifo_reset = 1;
 	i2s.conf.rx_fifo_reset = 0;
 	i2s.conf.tx_fifo_reset = 1;
@@ -117,6 +118,7 @@ void I2S::resetFIFO()
 
 bool I2S::initParallelInputMode(const int *pinMap, long sampleRate, int baseClock, int wordSelect)
 {
+	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
 	//route peripherals
 	const int deviceBaseIndex[] = {I2S0I_DATA_IN0_IDX, I2S1I_DATA_IN0_IDX};
 	const int deviceClockIndex[] = {I2S0I_BCK_IN_IDX, I2S1I_BCK_IN_IDX};
@@ -197,6 +199,7 @@ bool I2S::initParallelInputMode(const int *pinMap, long sampleRate, int baseCloc
 
 bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClock, int wordSelect)
 {
+	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
 	//route peripherals
 	//in parallel mode only upper 16 bits are interesting in this case
 	const int deviceBaseIndex[] = {I2S0O_DATA_OUT0_IDX, I2S1O_DATA_OUT0_IDX};

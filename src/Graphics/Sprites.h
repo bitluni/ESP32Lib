@@ -11,7 +11,7 @@ class Sprite : public Image<Color>
 	void init(int xres, int yres, const Color *pixels, unsigned char pointCount, const signed short points[][2])
 	{
 		static const signed short zeroPoint[][2] = {0, 0};
-		Image::init(xres, yres, pixels);
+		Image<Color>::init(xres, yres, pixels);
 		if (pointCount)
 		{
 			this->pointCount = pointCount;
@@ -26,17 +26,17 @@ class Sprite : public Image<Color>
 
 	void draw(Graphics<Color> &g, int x, int y)
 	{
-		Image::draw(g, x - points[0][0], y - points[0][1]);
+		Image<Color>::draw(g, x - points[0][0], y - points[0][1]);
 	}
 
 	void drawMix(Graphics<Color> &g, int x, int y)
 	{
-		Image::drawMix(g, x - points[0][0], y - points[0][1]);
+		Image<Color>::drawMix(g, x - points[0][0], y - points[0][1]);
 	}
 
 	void drawAdd(Graphics<Color> &g, int x, int y)
 	{
-		Image::drawAdd(g, x - points[0][0], y - points[0][1]);
+		Image<Color>::drawAdd(g, x - points[0][0], y - points[0][1]);
 	}
 };
 

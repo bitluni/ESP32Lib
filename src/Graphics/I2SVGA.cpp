@@ -22,12 +22,12 @@ const int I2SVGA::MODE384x288[] = {24, 80, 104, 768, 1, 3, 17, 576, 2, 2, 349600
 const int I2SVGA::MODE384x144[] = {24, 80, 104, 768, 1, 3, 17, 576, 2, 4, 34960000};
 const int I2SVGA::MODE384x96[] = {24, 80, 104, 768, 1, 3, 17, 576, 2, 6, 34960000};
 
-//not stable (can't reach 40MHz pixel clock, it's clipped by the driver to 36249999)
+//not stable (can't reach 40MHz pixel clock, it's clipped by the driver to 36249999 at undivided resolution)
 //you can mod the timings a bit the get it running on your system
-const int I2SVGA::MODE400x300[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 2, 40000000};
-const int I2SVGA::MODE400x150[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 4, 40000000};
-const int I2SVGA::MODE400x100[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 6, 36249999};
-const int I2SVGA::MODE200x150[] = {40, 128, 88, 800, 1, 4, 23, 600, 4, 4, 40000000};
+const int I2SVGA::MODE400x300[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 2, 39700000};
+const int I2SVGA::MODE400x150[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 4, 39700000};
+const int I2SVGA::MODE400x100[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 6, 39700000};
+const int I2SVGA::MODE200x150[] = {40, 128, 88, 800, 1, 4, 23, 600, 4, 4, 39700000};
 
 //you took your time to look at the code. try this mode.. 460 pixels horizontal it's based on 640x480
 const int I2SVGA::HIDDEN_MODE0[] = {24, 136, 76, 920, 11, 2, 31, 480, 2, 1, 36249999};
@@ -40,7 +40,7 @@ I2SVGA::I2SVGA(const int i2sIndex)
 {
 }
 
-bool I2SVGA::init(const int *mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin)
+bool I2SVGA::init(const int *mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin, int lineBufferCount)
 {
 	initBuffers(mode[3] / mode[8], mode[7] / mode[9], 1337);
 	this->vsyncPin = vsyncPin;
@@ -74,7 +74,7 @@ bool I2SVGA::init(const int *mode, const int *redPins, const int *greenPins, con
 	pinMap[22] = hsyncPin;
 	pinMap[23] = vsyncPin;
 	initParallelOutputMode(pinMap, mode[10] / hdivider);
-	allocateDMABuffersVGA(8);
+	allocateDMABuffersVGA(lineBufferCount);
 	currentLine = 0;
 	startTX();
 	return true;
@@ -97,9 +97,8 @@ void I2SVGA::allocateDMABuffersVGA(const int lines)
 	dmaBuffers[dmaBufferCount - 1]->next(dmaBuffers[0]);
 }
 
-void I2SVGA::interruptWorker()
+void I2SVGA::interrupt()
 {
-	i2s.int_clr.val = i2s.int_raw.val;
 	/*uint32_t start, finish, current;
   start = REG_READ(FRC_TIMER_COUNT_REG(1));
   gpio_set_level((gpio_num_t)hsyncPin, 0);
@@ -111,6 +110,7 @@ void I2SVGA::interruptWorker()
   while(current > start && current < finish);
   //hsync done
   //gpio_set_level((gpio_num_t)hsyncPin, 1);*/
+
 	unsigned long *signal = (unsigned long *)dmaBuffers[dmaBufferActive]->buffer;
 	unsigned long *pixels = &((unsigned long *)dmaBuffers[dmaBufferActive]->buffer)[(hfront + hsync + hback) / 2];
 	unsigned long base, baseh;
