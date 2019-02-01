@@ -99,18 +99,6 @@ void I2SVGA::allocateDMABuffersVGA(const int lines)
 
 void I2SVGA::interrupt()
 {
-	/*uint32_t start, finish, current;
-  start = REG_READ(FRC_TIMER_COUNT_REG(1));
-  gpio_set_level((gpio_num_t)hsyncPin, 0);
-  finish = start + 8 * 38;
-  do
-  {
-    current = REG_READ(FRC_TIMER_COUNT_REG(1));
-  }
-  while(current > start && current < finish);
-  //hsync done
-  //gpio_set_level((gpio_num_t)hsyncPin, 1);*/
-
 	unsigned long *signal = (unsigned long *)dmaBuffers[dmaBufferActive]->buffer;
 	unsigned long *pixels = &((unsigned long *)dmaBuffers[dmaBufferActive]->buffer)[(hfront + hsync + hback) / 2];
 	unsigned long base, baseh;
@@ -154,3 +142,20 @@ float I2SVGA::pixelAspect() const
 {
 	return float(vdivider) / hdivider;
 }
+
+
+
+
+/* code dumpster
+	/*uint32_t start, finish, current;
+  start = REG_READ(FRC_TIMER_COUNT_REG(1));
+  gpio_set_level((gpio_num_t)hsyncPin, 0);
+  finish = start + 8 * 38;
+  do
+  {
+    current = REG_READ(FRC_TIMER_COUNT_REG(1));
+  }
+  while(current > start && current < finish);
+  //hsync done
+  //gpio_set_level((gpio_num_t)hsyncPin, 1);*/
+*/
