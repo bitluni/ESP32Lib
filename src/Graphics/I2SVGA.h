@@ -36,8 +36,9 @@ class I2SVGA : public I2S, public Graphics<unsigned short>
 	static const int MODE400x100[];
 	static const int MODE200x150[];
 
-  private:
-	int vsyncPin;
+  protected:
+
+  	int vsyncPin;
 	int hsyncPin;
 	int currentLine;
 	int rgbMask;
@@ -56,8 +57,7 @@ class I2SVGA : public I2S, public Graphics<unsigned short>
 	int hdivider;
 	int vdivider;
 
-  protected:
-	virtual void interrupt();
+  virtual void interrupt();
 	virtual void allocateDMABuffersVGA(const int lines);
 
   public:

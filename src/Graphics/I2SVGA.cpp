@@ -157,5 +157,5 @@ float I2SVGA::pixelAspect() const
   }
   while(current > start && current < finish);
   //hsync done
-  //gpio_set_level((gpio_num_t)hsyncPin, 1);*/
+  //gpio_set_level((gpio_num_t)hsyncPin, 1);
 */

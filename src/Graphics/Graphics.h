@@ -147,7 +147,7 @@ class Graphics
 	
 	inline void dotMix(int x, int y, unsigned int color)
 	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres)
+		if ((unsigned int)x < xres && (unsigned int)y < yres && (color >> 14) != 0)
 		{
 			unsigned int ai = (3 - (color >> 14)) * (65536 / 3);
 			unsigned int a = 65536 - ai;
