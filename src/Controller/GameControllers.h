@@ -1,4 +1,14 @@
-//code by bitluni. It's public domain but I'm happy about shout outs nevertheless :-)
+/*
+	Author: bitluni 2019
+	License: 
+	Creative Commons Attribution ShareAlike 2.0
+	https://creativecommons.org/licenses/by-sa/2.0/
+	
+	For further details check out: 
+		https://youtube.com/bitlunislab
+		https://github.com/bitluni
+		http://bitluni.net
+*/
 
 #pragma once
 const int MAX_CONTROLLERS = 4;
