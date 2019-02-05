@@ -1,6 +1,6 @@
 {
   "name": "bitluni ESP32Lib",
-  "keywords": "VGA, audio, I2S, 3d, game, engine, mesh, bitluni, gamepad, controller, NES, SNES",
+  "keywords": "VGA, audio, I2S, 3d, game, engine, mesh, gamepad, controller, NES, SNES, input, output, graphics, font, arduino, esp32, driver, display",
   "description": "Provides VGA, Game Controller (NES, SNES), Audio support for the ESP32. The graphics engine supports sprites, animations and 3d meshes.",
   "repository":
   {
