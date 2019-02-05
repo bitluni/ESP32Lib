@@ -12,7 +12,7 @@
 #pragma once
 #include "Matrix.h"
 
-template <class Graphics>
+template <class Color = unsigned short>
 class Mesh
 {
   public:
@@ -45,7 +45,7 @@ class Mesh
 		delete (tvertices);
 	}
 
-	void drawTriangles(Graphics &g, long color)
+	void drawTriangles(Graphics<Color> &g, long color)
 	{
 		const float scaleN = 1.0f / 127.0f;
 
@@ -96,7 +96,7 @@ class Mesh
 		}
 	}
 
-	void drawEdges(Graphics &g, char color)
+	void drawEdges(Graphics<Color> &g, char color)
 	{
 		for (int i = 0; i < edgeCount; i++)
 		{
@@ -104,7 +104,7 @@ class Mesh
 		}
 	}
 
-	void drawVertices(Graphics &g, char color)
+	void drawVertices(Graphics<Color> &g, char color)
 	{
 		for (int i = 0; i < vertexCount; i++)
 			g.dot(tvertices[i][0], tvertices[i][1], color);

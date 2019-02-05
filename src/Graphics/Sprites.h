@@ -12,7 +12,7 @@
 #pragma once
 #include "Image.h"
 
-template <typename Color>
+template <typename Color = unsigned short>
 class Sprite : public Image<Color>
 {
   public:
@@ -51,7 +51,7 @@ class Sprite : public Image<Color>
 	}
 };
 
-template<typename Color>
+template<typename Color = unsigned short>
 class Sprites
 {
   public:

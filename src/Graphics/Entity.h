@@ -12,6 +12,7 @@
 #pragma once
 #include "Graphics.h"
 
+template<typename Color = unsigned short>
 class Entity
 {
   public:
@@ -19,7 +20,7 @@ class Entity
 	int vx, vy;
 	int life;
 	int faction;
-	Sprites *sprites;
+	Sprites<Color> *sprites;
 	virtual bool act(int dt);
-	virtual void draw(Graphics &g);
+	virtual void draw(Graphics<Color> &g);
 };

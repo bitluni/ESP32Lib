@@ -11,7 +11,7 @@
 */
 #pragma once
 
-template <class Color>
+template <class Color = unsigned short>
 class Image
 {
   public:

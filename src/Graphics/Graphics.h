@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-template <typename Color>
+template <typename Color = unsigned short>
 class Graphics
 {
   public:

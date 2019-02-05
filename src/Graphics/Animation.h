@@ -13,13 +13,14 @@
 #include "Graphics.h"
 #include "Entity.h"
 
-template<typename Color>
-class Animation : public Entity
+template<typename Color = unsigned short>
+class Animation : public Entity<Color>
 {
   public:
 	int start, end, frameDuration;
 	int time;
 	int drawMode;
+
 	Animation(Sprites<Color> &sprites, int x, int y, int start, int end, int frameDuration, int drawMode = 0)
 	{
 		this->x = x;
@@ -31,7 +32,7 @@ class Animation : public Entity
 		time = 0;
 		this->drawMode = drawMode;
 	}
-
+	
 	bool act(int dt)
 	{
 		time += dt;
@@ -42,13 +43,13 @@ class Animation : public Entity
 	{
 		int current = time / frameDuration + start;
 		if (drawMode == 0)
-			sprites->drawMix(g, current, x, y);
+			this->sprites->drawMix(g, current, this->x, this->y);
 		else if (drawMode == 1)
-			sprites->drawAdd(g, current, x, y);
-	}
+			this->sprites->drawAdd(g, current, this->x, this->y);
+	}	
 };
 
-template<typename Color>
+template<typename Color = unsigned short>
 void animationsAct(Animation<Color> *animations, int dt, int maxCount = 100)
 {
 	for (int i = 0; i < maxCount; i++)
@@ -62,16 +63,16 @@ void animationsAct(Animation<Color> *animations, int dt, int maxCount = 100)
 	}
 }
 
-template<typename Color>
-void animationsDraw(Animation<Color> *animations, int maxCount = 100)
+template<typename Color = unsigned short>
+void animationsDraw(Graphics<Color> &g, Animation<Color> *animations, int maxCount = 100)
 {
 	for (int i = 0; i < maxCount; i++)
 		if (animations[i])
 			if (animations[i])
-				animations[i]->draw(graphics);
+				animations[i]->draw(g);
 }
 
-template<typename Color>
+template<typename Color = unsigned short>
 void animationsEmit(Animation<Color> *animations, Animation<Color> *e, int maxCount = 100)
 {
 	for (int i = 0; i < maxCount; i++)

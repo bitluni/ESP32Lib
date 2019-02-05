@@ -9,7 +9,7 @@
 		https://github.com/bitluni
 		http://bitluni.net
 */
-template <class Graphics, class Color>
+template <class Graphics, class Color = unsigned short>
 class TriangleTree
 {
   public:
@@ -56,7 +56,7 @@ class TriangleTree
 		depth = l > r ? l : r;
 	}
 
-	int add(TriangleTree **origin, TriangleTree &t)
+	int add(TriangleTree<Graphics, Color> **origin, TriangleTree<Graphics, Color> &t)
 	{
 		int d = 1;
 		if (t.z < z)
