@@ -11,7 +11,7 @@ Paypal https://paypal.me/bitluni
 # Acknowledgements
 Thanks to Ivan Grokhotkov & Jeroen Domburg (aka Sprite_tm) for their great work on I2S revealing some nitty-gritty details and quirks of the ESP32.
 
-#License
+# License
 bitluni 2019
 Creative Commons Attribution ShareAlike 2.0
 https://creativecommons.org/licenses/by-sa/2.0/
