@@ -1,0 +1,22 @@
+{
+  "name": "bitluni ESP32Lib",
+  "keywords": "VGA, audio, I2S, 3d, game, engine, mesh, bitluni, gamepad, controller, NES, SNES",
+  "description": "Provides VGA, Game Controller (NES, SNES), Audio support for the ESP32. The graphics engine supports sprites, animations and 3d meshes.",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/bitluni/ESP32Lib.git"
+  },
+  "authors":
+  [
+    {
+      "name": "bitluni",
+      "email": "platformio@bitluni.net",
+      "url": "https://youtube.com/bitlunislab",
+      "maintainer": true
+    }
+  ],
+  "version": "0.0.1",
+  "frameworks": "arduino",
+  "platforms": "espressif32"
+}
