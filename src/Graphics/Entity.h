@@ -11,16 +11,17 @@
 */
 #pragma once
 #include "Graphics.h"
+#include "Sprites.h"
 
-template<typename Color = unsigned short>
-class Entity
+template<typename Color = unsigned int>
+class EntityT
 {
   public:
 	int x, y;
 	int vx, vy;
 	int life;
 	int faction;
-	Sprites<Color> *sprites;
+	SpritesT<Color> *sprites;
 	virtual bool act(int dt);
-	virtual void draw(Graphics<Color> &g);
+	//virtual void draw(Graphics &g);
 };

@@ -1,8 +1,7 @@
 #pragma once
 
-typedef unsigned short Color;
-
-#include <Graphics/I2SVGA.h>
+#include <VGA/VGA14Bit.h>
+#include <VGA/VGA3Bit.h>
 #include <Graphics/Mesh.h>
 #include <Graphics/Sprites.h>
 #include <Graphics/Animation.h>

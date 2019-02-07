@@ -10,10 +10,11 @@
 		http://bitluni.net
 */
 #pragma once
+#include "Graphics.h"
 #include "Image.h"
 
 template <typename Color = unsigned short>
-class Sprite : public Image<Color>
+class SpriteT : public ImageT<Color>
 {
   public:
 	unsigned char pointCount;
@@ -22,7 +23,7 @@ class Sprite : public Image<Color>
 	void init(int xres, int yres, const Color *pixels, unsigned char pointCount, const signed short points[][2])
 	{
 		static const signed short zeroPoint[][2] = {0, 0};
-		Image<Color>::init(xres, yres, pixels);
+		ImageT<Color>::init(xres, yres, pixels);
 		if (pointCount)
 		{
 			this->pointCount = pointCount;
@@ -34,53 +35,54 @@ class Sprite : public Image<Color>
 			this->points = zeroPoint;
 		}
 	}
-
-	void draw(Graphics<Color> &g, int x, int y)
+/* TODO
+	void draw(Graphics &g, int x, int y)
 	{
-		Image<Color>::draw(g, x - points[0][0], y - points[0][1]);
+		Image::draw(g, x - points[0][0], y - points[0][1]);
 	}
 
-	void drawMix(Graphics<Color> &g, int x, int y)
+	void drawMix(Graphics &g, int x, int y)
 	{
-		Image<Color>::drawMix(g, x - points[0][0], y - points[0][1]);
+		Image::drawMix(g, x - points[0][0], y - points[0][1]);
 	}
 
-	void drawAdd(Graphics<Color> &g, int x, int y)
+	void drawAdd(Graphics &g, int x, int y)
 	{
-		Image<Color>::drawAdd(g, x - points[0][0], y - points[0][1]);
+		Image::drawAdd(g, x - points[0][0], y - points[0][1]);
 	}
+	*/
 };
 
-template<typename Color = unsigned short>
-class Sprites
+template <typename Color = unsigned short>
+class SpritesT
 {
   public:
 	int count;
-	Sprite<Color> *sprites;
+	SpriteT<Color> *sprites;
 
-	Sprites(int count, const Color pixels[], const int offsets[], const unsigned short resolutions[][2], const signed short points[][2], const short pointOffsets[])
+	SpritesT(int count, const Color pixels[], const int offsets[], const unsigned short resolutions[][2], const signed short points[][2], const short pointOffsets[])
 	{
 		this->count = count;
-		this->sprites = new Sprite<Color>[count];
+		this->sprites = new SpriteT<Color>[count];
 		for (int i = 0; i < count; i++)
 			this->sprites[i].init(resolutions[i][0], resolutions[i][1], &pixels[offsets[i]], pointOffsets[i + 1] - pointOffsets[i], &points[pointOffsets[i]]);
 	}
-
-	void draw(Graphics<Color> &g, int sprite, int x, int y)
+/*TODO
+	void draw(Graphics &g, int sprite, int x, int y)
 	{
 		sprites[sprite].draw(g, x, y);
 	}
 
-	void drawMix(Graphics<Color> &g, int sprite, int x, int y)
+	void drawMix(Graphics &g, int sprite, int x, int y)
 	{
 		sprites[sprite].drawMix(g, x, y);
 	}
 
-	void drawAdd(Graphics<Color> &g, int sprite, int x, int y)
+	void drawAdd(Graphics &g, int sprite, int x, int y)
 	{
 		sprites[sprite].drawMix(g, x, y);
 	}
-
+*/
 	int xres(int sprite) const
 	{
 		return sprites[sprite].xres;

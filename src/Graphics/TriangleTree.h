@@ -9,17 +9,18 @@
 		https://github.com/bitluni
 		http://bitluni.net
 */
-template <class Graphics, class Color = unsigned short>
+#pragma once
+
 class TriangleTree
 {
   public:
 	short *v[3];
 	int z;
-	TriangleTree<Graphics, Color> *left, *right;
+	TriangleTree *left, *right;
 	int depth;
-	Color color;
+	long color;
 
-	void set(short *v0, short *v1, short *v2, Color color)
+	void set(short *v0, short *v1, short *v2, long color)
 	{
 		v[0] = v0;
 		v[1] = v1;
@@ -30,21 +31,12 @@ class TriangleTree
 		depth = 1;
 	}
 
-	void draw(Graphics &g)
-	{
-		if (left)
-			left->draw(g);
-		g.triangle(v[0], v[1], v[2], color);
-		if (right)
-			right->draw(g);
-	}
-
-	int leftDepth()
+	int leftDepth() const
 	{
 		return left ? left->depth : 0;
 	}
 
-	int rightDepth()
+	int rightDepth() const
 	{
 		return right ? right->depth : 0;
 	}
@@ -56,7 +48,7 @@ class TriangleTree
 		depth = l > r ? l : r;
 	}
 
-	int add(TriangleTree<Graphics, Color> **origin, TriangleTree<Graphics, Color> &t)
+	int add(TriangleTree **origin, TriangleTree &t)
 	{
 		int d = 1;
 		if (t.z < z)

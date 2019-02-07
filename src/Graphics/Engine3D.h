@@ -1,0 +1,65 @@
+/*
+	Author: bitluni 2019
+	License: 
+	Creative Commons Attribution ShareAlike 2.0
+	https://creativecommons.org/licenses/by-sa/2.0/
+	
+	For further details check out: 
+		https://youtube.com/bitlunislab
+		https://github.com/bitluni
+		http://bitluni.net
+*/
+#pragma once
+#include <stdlib.h>
+#include "TriangleTree.h"
+template<class Graphics>
+class Engine3D
+{
+	public:
+	TriangleTree *triangleBuffer;
+	TriangleTree *triangleRoot;
+	int trinagleBufferSize;
+	int triangleCount;
+
+	Engine3D(const int initialTrinagleBufferSize = 0)
+	{
+		trinagleBufferSize = initialTrinagleBufferSize;
+		triangleBuffer = (TriangleTree*)malloc(sizeof(TriangleTree) * trinagleBufferSize);
+		triangleRoot = 0;
+		triangleCount = 0;
+	}
+
+
+	void enqueueTriangle(short *v0, short *v1, short *v2, Color color)
+	{
+		if (triangleCount >= trinagleBufferSize)
+			return;
+		TriangleTree &t = triangleBuffer[triangleCount++];
+		t.set(v0, v1, v2, color);
+		if (triangleRoot)
+			triangleRoot->add(&triangleRoot, t);
+		else
+			triangleRoot = &t;
+	}
+	
+	void drawTriangleTree(Graphics &g TriangleTree *t)
+	{
+		if (t->left)
+			triangleTree(t->left);
+		g.triangle(t->v[0], t->v[1], t->v[2], t->color);
+		if (t->right)
+			triangleTree(t->right);
+	}
+
+	virtual void begin()
+	{
+		triangleCount = 0;
+		triangleRoot = 0;
+	}
+
+	virtual void end(Graphics &g)
+	{
+		if (triangleRoot)
+			drawTriangleTree(triangleRoot);
+	}
+};

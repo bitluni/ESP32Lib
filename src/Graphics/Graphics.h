@@ -10,34 +10,40 @@
 		http://bitluni.net
 */
 #pragma once
-#include "Font.h"
-#include "TriangleTree.h"
 #include <stdlib.h>
 #include <math.h>
+#include "Font.h"
+#include "Image.h"
+#include "Entity.h"
+#include "Sprites.h"
 
-template <typename Color = unsigned short>
+template<typename Color>
 class Graphics
 {
   public:
-	int xres;
-	int yres;
-	Color **frame;
-	Color **backbuffer;
-	char **zbuffer;
+	typedef ImageT<Color> Image;
+	typedef SpriteT<Color> Sprite;
+	typedef SpritesT<Color> Sprites;
+
 	int cursorX, cursorY, cursorBaseX;
 	long frontColor, backColor;
-	Font<Graphics> *font;
+	Font *font;
 
-	TriangleTree<Graphics<Color>, Color> *triangleBuffer;
-	TriangleTree<Graphics<Color>, Color> *triangleRoot;
-	int trinagleBufferSize;
-	int triangleCount;
+	int xres;
+	int yres;
 
-	Graphics()
+	virtual void dotFast(int x, int y, Color color) = 0;
+	virtual void dot(int x, int y, Color color) = 0;
+	virtual void dotAdd(int x, int y, Color color) = 0;
+	virtual void dotMix(int x, int y, Color color) = 0;
+	virtual char get(int x, int y) = 0;
+
+	Graphics(int xres = 0, int yres = 0)
 	{
+		this->xres = xres;
+		this->yres = yres;
 		font = 0;
 		cursorX = cursorY = cursorBaseX = 0;
-		triangleCount = 0;
 		frontColor = 0;
 		backColor = 0;
 	}
@@ -54,29 +60,7 @@ class Graphics
 		backColor = back;
 	}
 
-	virtual void initBuffers(const int w, const int h, const int initialTrinagleBufferSize = 0, const bool doubleBuffer = true)
-	{
-		xres = w;
-		yres = h;
-		trinagleBufferSize = initialTrinagleBufferSize;
-		frame = (Color **)malloc(yres * sizeof(Color *));
-		if(doubleBuffer)
-			backbuffer = (Color **)malloc(yres * sizeof(Color *));
-		else
-			backbuffer = frame;
-		//not enough memory for z-buffer implementation
-		//zbuffer = (char**)malloc(yres * sizeof(char*));
-		for (int y = 0; y < yres; y++)
-		{
-			frame[y] = (Color *)malloc(xres * sizeof(Color));
-			if(doubleBuffer)
-				backbuffer[y] = (Color *)malloc(xres * sizeof(Color));
-			//zbuffer[y] = (char*)malloc(xres);
-		}
-		triangleBuffer = (TriangleTree<Graphics<Color>, Color> *)malloc(sizeof(TriangleTree<Graphics<Color>, Color>) * trinagleBufferSize);
-	}
-
-	void setFont(Font<Graphics> &font)
+	void setFont(Font &font)
 	{
 		this->font = &font;
 	}
@@ -87,26 +71,47 @@ class Graphics
 		cursorY = y;
 	}
 
+	virtual void drawChar(int x, int y, int ch)
+	{
+		if (!font)
+			return;
+		const unsigned char *pix = &font->pixels[font->charWidth * font->charHeight * (ch - font->firstChar)];
+		for (int py = 0; py < font->charHeight; py++)
+			for (int px = 0; px < font->charWidth; px++)
+				if (*(pix++))
+					dot(px + x, py + y, frontColor);
+				else if (backColor >= 0)
+					dot(px + x, py + y, backColor);
+	}
+
 	void print(const char *str)
 	{
 		if (!font)
 			return;
 		while (*str)
 		{
-			if (*str >= 32 && *str < 128)
-				font->drawChar(*this, cursorX, cursorY, *str, frontColor, backColor);
-			cursorX += font->xres;
-			if (cursorX + font->xres > xres || *str == '\n')
+			if (font->valid(*str))
+				drawChar(cursorX, cursorY, *str);
+			cursorX += font->charWidth;
+			if (cursorX + font->charWidth > xres || *str == '\n')
 			{
 				cursorX = cursorBaseX;
-				cursorY += font->yres;
+				cursorY += font->charHeight;
 			}
 			str++;
 		}
 	}
 
-	void print(int number, int base = 10, int minCharacters = 1)
+	void println(const char *str)
 	{
+		print(str); 
+		print("\n");
+	}
+
+	void print(long number, int base = 10, int minCharacters = 1)
+	{
+		if(minCharacters < 1)
+			minCharacters = 1;
 		bool sign = number < 0;
 		if (sign)
 			number = -number;
@@ -126,61 +131,47 @@ class Graphics
 		print(&temp[i + 1]);
 	}
 
-	inline void clear(Color clear = 0)
+	void println(long number, int base = 10, int minCharacters = 1)
+	{
+		print(number, base, minCharacters); print("\n");
+	}
+
+	void print(int number, int base = 10, int minCharacters = 1)
+	{
+		print(long(number), base, minCharacters);
+	}
+
+	void println(int number, int base = 10, int minCharacters = 1)
+	{
+		println(long(number), base, minCharacters);
+	}
+
+	void print(double number, int fractionalDigits = 2, int minCharacters = 1)
+	{
+		long p = long(pow(10, fractionalDigits));
+		long long n = (double(number) * p + 0.5f);
+		print(int(number / p), 10, minCharacters - 1 - fractionalDigits);
+		if(fractionalDigits)
+		{
+			print(".");
+			print(long(n % p));
+		}
+	}
+
+	void println(double number, int fractionalDigits = 2, int minCharacters = 1)
+	{
+		print(number, fractionalDigits, minCharacters); 
+		print("\n");
+	}
+
+	virtual void clear(Color clear = 0)
 	{
 		for (int y = 0; y < yres; y++)
 			for (int x = 0; x < xres; x++)
-				backbuffer[y][x] = clear;
-	}
-	inline void begin()
-	{
-		triangleCount = 0;
-		triangleRoot = 0;
+				dotFast(x, y, clear);
 	}
 
-	inline void dotFast(int x, int y, Color color)
-	{
-		backbuffer[y][x] = color;
-	}
-
-	inline void dot(int x, int y, Color color)
-	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backbuffer[y][x] = color;
-	}
-
-	inline void dotAdd(int x, int y, Color color)
-	{
-		//todo repair this
-		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backbuffer[y][x] = color + backbuffer[y][x];
-	}
-	
-	inline void dotMix(int x, int y, unsigned int color)
-	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres && (color >> 14) != 0)
-		{
-			unsigned int ai = (3 - (color >> 14)) * (65536 / 3);
-			unsigned int a = 65536 - ai;
-			unsigned int co = backbuffer[y][x];
-			unsigned int ro = (co & 0b11111) * ai;
-			unsigned int go = (co & 0b1111100000) * ai;
-			unsigned int bo = (co & 0b11110000000000) * ai;
-			unsigned int r = (color & 0b11111) * a + ro;
-			unsigned int g = ((color & 0b1111100000) * a + go) & 0b11111000000000000000000000;
-			unsigned int b = ((color & 0b11110000000000) * a + bo) & 0b111100000000000000000000000000;
-			backbuffer[y][x] = (r | g | b) >> 16;
-		}	
-	}	
-
-	inline char get(int x, int y)
-	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			return backbuffer[y][x];
-		return 0;
-	}
-
-	inline void xLine(int x0, int x1, int y, Color color)
+	virtual void xLine(int x0, int x1, int y, Color color)
 	{
 		if (x0 > x1)
 		{
@@ -194,18 +185,6 @@ class Graphics
 			x1 = xres;
 		for (int x = x0; x < x1; x++)
 			dotFast(x, y, color);
-	}
-
-	void enqueueTriangle(short *v0, short *v1, short *v2, Color color)
-	{
-		if (triangleCount >= trinagleBufferSize)
-			return;
-		TriangleTree<Graphics, Color> &t = triangleBuffer[triangleCount++];
-		t.set(v0, v1, v2, color);
-		if (triangleRoot)
-			triangleRoot->add(&triangleRoot, t);
-		else
-			triangleRoot = &t;
 	}
 
 	void triangle(short *v0, short *v1, short *v2, Color color)
@@ -344,20 +323,19 @@ class Graphics
 		}
 	}
 
-	inline void flush()
+	virtual void begin()
 	{
-		if (triangleRoot)
-			triangleRoot->draw(*this);
 	}
 
-	inline void end()
+	virtual void flush()
 	{
-		Color **b = backbuffer;
-		backbuffer = frame;
-		frame = b;
 	}
 
-	void fillRect(int x, int y, int w, int h, int color)
+	virtual void end()
+	{
+	}
+
+	void fillRect(int x, int y, int w, int h, Color color)
 	{
 		if (x < 0)
 		{
@@ -378,11 +356,71 @@ class Graphics
 				dotFast(i, j, color);
 	}
 
-	void rect(int x, int y, int w, int h, int color)
+	void rect(int x, int y, int w, int h, Color color)
 	{
 		fillRect(x, y, w, 1, color);
 		fillRect(x, y, 1, h, color);
 		fillRect(x, y + h - 1, w, 1, color);
 		fillRect(x + w - 1, y, 1, h, color);
+	}
+
+	void circle(int x, int y, int r, Color color)
+	{
+		int oxr = r;
+		for(int i = 0; i < r + 1; i++)
+		{
+			int xr = (int)sqrt(r *r - i * i);
+			xLine(x - oxr, x - xr + 1, y + i, color);
+			xLine(x + xr, x + oxr + 1, y + i, color);
+			if(i) 
+			{
+				xLine(x - oxr, x - xr + 1, y - i, color);
+				xLine(x + xr, x + oxr + 1, y - i, color);
+			}
+			oxr = xr;
+		}
+	}
+
+	void fillCircle(int x, int y, int r, Color color)
+	{
+		for(int i = 0; i < r + 1; i++)
+		{
+			int xr = (int)sqrt(r * r - i * i);
+			xLine(x - xr, x + xr + 1, y + i, color);
+			if(i) 
+				xLine(x - xr, x + xr + 1, y - i, color);
+		}
+	}
+
+	void ellipse(int x, int y, int rx, int ry, Color color)
+	{
+		int oxr = rx;
+		float f = float(rx) / ry;
+		f *= f;
+		for(int i = 0; i < ry + 1; i++)
+		{
+			int xr = (int)sqrt(rx * rx - i * i * f);
+			xLine(x - oxr, x - xr + 1, y + i, color);
+			xLine(x + xr, x + oxr + 1, y + i, color);
+			if(i) 
+			{
+				xLine(x - oxr, x - xr + 1, y - i, color);
+				xLine(x + xr, x + oxr + 1, y - i, color);
+			}
+			oxr = xr;
+		}
+	}
+
+	void fillEllipse(int x, int y, int rx, int ry, Color color)
+	{
+		float f = float(rx) / ry;
+		f *= f;		
+		for(int i = 0; i < ry + 1; i++)
+		{
+			int xr = (int)sqrt(rx * rx - i * i * f);
+			xLine(x - xr, x + xr + 1, y + i, color);
+			if(i) 
+				xLine(x - xr, x + xr + 1, y - i, color);
+		}
 	}
 };

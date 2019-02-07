@@ -17,3 +17,26 @@ Creative Commons Attribution ShareAlike 2.0
 https://creativecommons.org/licenses/by-sa/2.0/
 
 If you need another license, please feel free to contact me
+
+# Documentation
+
+## Pin configuration
+
+There are limitation on which the VGA output an DACs can work:
+
+I/O GPIO pads are 0-19, 21-23, 25-27, 32-39
+Input/Output GPIOs are 0-19, 21-23, 25-27, 32-33. 
+GPIO pads 34-39 are input-only.
+
+Beware of pin 0. It selects the boot mode.
+It can only be used as any of the syncs. (no resistors attached)
+
+Pin 5 is often tied to the LED but can be used as hSync if you don't need the LED.
+I²C is on 21 (SDA), 22(SCL)
+DACs are 25, 26
+ins 1(TX), 3(RX) sould only be used if really don't need to communicate anymore.
+
+Here is an overview for your convenience:
+(0), 2, 4, (5), 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 27, 32, 33
+
+
