@@ -22,6 +22,28 @@ class GraphicsR1G1B1A1: public Graphics<unsigned char>
 		frontColor = 0xf;
 	}
 
+	virtual int R(Color c) const
+	{
+		return (c & 1) * 255;
+	}
+	virtual int G(Color c) const
+	{
+		return (c & 2) ? 255 : 0;
+	}
+	virtual int B(Color c) const
+	{
+		return (c & 4) ? 255 : 0;
+	}
+	virtual int A(Color c) const
+	{
+		return (c & 8) ? 255 : 0;
+	}
+
+	virtual Color RGBA(int r, int g, int b, int a = 255) const
+	{
+		return ((r >> 7) & 1) | ((g >> 6) & 2) | ((b >> 5) & 4) | ((a >> 4) & 8);
+	}
+
 	virtual void dotFast(int x, int y, Color color)
 	{
 		if(x & 1)
@@ -80,7 +102,11 @@ class GraphicsR1G1B1A1: public Graphics<unsigned char>
 	{
 		Color** frame = (Color **)malloc(yres * sizeof(Color *));
 		for (int y = 0; y < yres; y++)
+		{
 			frame[y] = (Color *)malloc(xres / 2 * sizeof(Color));
+			for (int x = 0; x < xres / 2; x++)
+				frame[y][x] = 0;
+		}
 		return frame;
 	}
 };

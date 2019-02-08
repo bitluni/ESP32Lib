@@ -23,6 +23,28 @@ class GraphicsR5G5B4A2: public Graphics<unsigned short>
 		frontColor = 0xffff;
 	}
 
+	virtual int R(Color c) const
+	{
+		return (((c << 1) & 0x3e) * 255 + 1) / 0x3e;
+	}
+	virtual int G(Color c) const
+	{
+		return (((c >> 4) & 0x3e) * 255 + 1) / 0x3e;
+	}
+	virtual int B(Color c) const
+	{
+		return (((c >> 9) & 0x1e) * 255 + 1) / 0x1e;
+	}
+	virtual int A(Color c) const
+	{
+		return (((c >> 13) & 6) * 255 + 1) / 6;
+	}
+
+	virtual Color RGBA(int r, int g, int b, int a = 255) const
+	{
+		return ((r >> 3) & 0b11111) | ((g << 2) & 0b1111100000) | ((b << 6) & 0b11110000000000) | ((a << 8) & 0b110000000000000000);
+	}
+
 	virtual void dotFast(int x, int y, Color color)
 	{
 		backBuffer[y][x] = color;
@@ -76,7 +98,11 @@ class GraphicsR5G5B4A2: public Graphics<unsigned short>
 	{
 		Color** frame = (Color **)malloc(yres * sizeof(Color *));
 		for (int y = 0; y < yres; y++)
+		{
 			frame[y] = (Color *)malloc(xres * sizeof(Color));
+			for (int x = 0; x < xres; x++)
+				frame[y][x] = 0;
+		}
 		return frame;
 	}
 };

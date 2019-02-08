@@ -44,6 +44,23 @@ class Graphics
 	virtual void dotMix(int x, int y, Color color) = 0;
 	virtual char get(int x, int y) = 0;
 	virtual Color** allocateFrameBuffer() = 0;
+	virtual Color RGBA(int r, int g, int b, int a = 255) const = 0;
+	virtual int R(Color c) const = 0;
+	virtual int G(Color c) const = 0;
+	virtual int B(Color c) const = 0;
+	virtual int A(Color c) const = 0;
+	Color RGB(unsigned long rgb) const 
+	{
+		return RGBA(rgb & 255, (rgb >> 8) & 255, (rgb >> 16) & 255);
+	}
+	Color RGBA(unsigned long rgba) const 
+	{
+		return RGBA(rgba & 255, (rgba >> 8) & 255, (rgba >> 16) & 255, rgba >> 24);
+	}
+	Color RGB(int r, int g, int b) const 
+	{
+		return RGBA(r, g, b);
+	}
 
 	void setFrameBufferCount(unsigned char i)
 	{
