@@ -1,6 +1,6 @@
 #pragma once
 
-#include <VGA/VGA14BitFast.h>
+#include <VGA/VGA14BitSlow.h>
 #include <VGA/VGA14Bit.h>
 #include <VGA/VGA3Bit.h>
 #include <Graphics/Mesh.h>

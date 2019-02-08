@@ -51,10 +51,15 @@ class VGA3Bit : public VGA, public GraphicsR1G1B1A1
 	}
 
   protected:
+	virtual bool useInterrupt()
+	{ 
+		return true; 
+	};
+
 	virtual void interrupt()
 	{
-		unsigned long *signal = dmaBufferDescriptors[dmaBufferDescriptorActive]->buffer();
-		unsigned long *pixels = &(dmaBufferDescriptors[dmaBufferDescriptorActive]->buffer())[(hfront + hsync + hback) / 2];
+		unsigned long *signal = (unsigned long*)dmaBufferDescriptors[dmaBufferDescriptorActive].buffer();
+		unsigned long *pixels = &((unsigned long*)dmaBufferDescriptors[dmaBufferDescriptorActive].buffer())[(hfront + hsync + hback) / 2];
 		unsigned long base, baseh;
 		if (currentLine >= vfront && currentLine < vfront + vsync)
 		{

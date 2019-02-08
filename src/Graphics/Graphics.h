@@ -42,7 +42,7 @@ class Graphics
 	virtual void dot(int x, int y, Color color) = 0;
 	virtual void dotAdd(int x, int y, Color color) = 0;
 	virtual void dotMix(int x, int y, Color color) = 0;
-	virtual char get(int x, int y) = 0;
+	virtual Color get(int x, int y) = 0;
 	virtual Color** allocateFrameBuffer() = 0;
 	virtual Color RGBA(int r, int g, int b, int a = 255) const = 0;
 	virtual int R(Color c) const = 0;
@@ -485,7 +485,6 @@ class Graphics
 
 	virtual void scroll(int dy, Color color)
 	{
-		//todo improve that
 		if(dy > 0)
 		{
 			for(int d = 0; d < dy; d++)

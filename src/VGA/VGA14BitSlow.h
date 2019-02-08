@@ -13,11 +13,11 @@
 #include "VGA.h"
 #include "../Graphics/GraphicsR5G5B4A2.h"
 
-class VGA14BitFast : public VGA, public GraphicsR5G5B4A2
+class VGA14Bit : public VGA, public GraphicsR5G5B4A2
 {
 	public:
 
-	VGA14BitFast(const int i2sIndex = 1)
+	VGA14Bit(const int i2sIndex = 1)
 		: VGA(i2sIndex)
 	{
 		hsyncBit = 0x0000;
@@ -68,12 +68,17 @@ class VGA14BitFast : public VGA, public GraphicsR5G5B4A2
 	{
 		setResolution(xres, yres);
 	}
-	
+
 protected:
+	virtual bool useInterrupt()
+	{ 
+		return true; 
+	};
+
 	virtual void interrupt()
 	{
-		unsigned long *signal = dmaBufferDescriptors[dmaBufferDescriptorActive]->buffer();
-		unsigned long *pixels = &(dmaBufferDescriptors[dmaBufferDescriptorActive]->buffer())[(hfront + hsync + hback) / 2];
+		unsigned long *signal = (unsigned long*)dmaBufferDescriptors[dmaBufferDescriptorActive].buffer();
+		unsigned long *pixels = &((unsigned long*)dmaBufferDescriptors[dmaBufferDescriptorActive].buffer())[(hfront + hsync + hback) / 2];
 		unsigned long base, baseh;
 		if (currentLine >= vfront && currentLine < vfront + vsync)
 		{

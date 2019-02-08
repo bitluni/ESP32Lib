@@ -81,7 +81,7 @@ class GraphicsR1G1B1A1: public Graphics<unsigned char>
 		}	
 	}
 	
-	virtual char get(int x, int y)
+	virtual Color get(int x, int y)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
 			if(x & 1)

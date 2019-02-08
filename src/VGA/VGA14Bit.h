@@ -13,11 +13,11 @@
 #include "VGA.h"
 #include "../Graphics/GraphicsR5G5B4A2.h"
 
-class VGA14Bit : public VGA, public GraphicsR5G5B4A2
+class VGA14BitFast : public VGA, public GraphicsR5G5B4A2
 {
 	public:
 
-	VGA14Bit(const int i2sIndex = 1)
+	VGA14BitFast(const int i2sIndex = 1)
 		: VGA(i2sIndex)
 	{
 		hsyncBit = 0x0000;
@@ -69,46 +69,135 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4A2
 		setResolution(xres, yres);
 	}
 
+	void *vSyncInactiveBuffer;
+	void *vSyncActiveBuffer;
+	void *inactiveBuffer;
+	void *blankActiveBuffer;
+
+	virtual Color** allocateFrameBuffer()
+	{
+		Color** frame = (Color **)malloc(yres * sizeof(Color *));
+		for (int y = 0; y < yres; y++)
+			frame[y] = (Color *)DMABufferDescriptor::allocateBuffer(hres * bytesPerSample, true, 0xc000c000);
+		return frame;
+	}
+
+	virtual void allocateLineBuffers(const int lines)
+	{
+		dmaBufferDescriptorCount = totalLines * 2;
+		int inactiveSamples = (hfront + hsync + hback + 1) & 0xfffffffe;
+		vSyncInactiveBuffer = DMABufferDescriptor::allocateBuffer(inactiveSamples * bytesPerSample, true);
+		vSyncActiveBuffer = DMABufferDescriptor::allocateBuffer(hres * bytesPerSample, true);
+		inactiveBuffer = DMABufferDescriptor::allocateBuffer(inactiveSamples * bytesPerSample, true);
+		blankActiveBuffer = DMABufferDescriptor::allocateBuffer(hres * bytesPerSample, true);
+		for(int i = 0; i < inactiveSamples; i++)
+		{
+			if(i >= hfront && i < hfront + hsync)
+			{
+				((unsigned short*)vSyncInactiveBuffer)[i^1] = hsyncBit | vsyncBit;
+				((unsigned short*)inactiveBuffer)[i^1] = hsyncBit | vsyncBitI;
+			}
+			else
+			{
+				((unsigned short*)vSyncInactiveBuffer)[i^1] = hsyncBitI | vsyncBit;
+				((unsigned short*)inactiveBuffer)[i^1] = hsyncBitI | vsyncBitI;
+			}
+		}
+		for(int i = 0; i < hres; i++)
+		{
+			((unsigned short*)vSyncActiveBuffer)[i^1] = hsyncBitI | vsyncBit;
+			((unsigned short*)blankActiveBuffer)[i^1] = hsyncBitI | vsyncBitI;
+		}
+
+		dmaBufferDescriptors = DMABufferDescriptor::allocateDescriptors(dmaBufferDescriptorCount);
+		for(int i = 0; i < dmaBufferDescriptorCount; i++)
+			dmaBufferDescriptors[i].next(dmaBufferDescriptors[(i + 1) % dmaBufferDescriptorCount]);
+		int d = 0;
+		for (int i = 0; i < vfront; i++)
+		{
+			dmaBufferDescriptors[d++].setBuffer(inactiveBuffer, inactiveSamples * bytesPerSample);
+			dmaBufferDescriptors[d++].setBuffer(blankActiveBuffer, hres * bytesPerSample);
+		}
+		for (int i = 0; i < vsync; i++)
+		{
+			dmaBufferDescriptors[d++].setBuffer(vSyncInactiveBuffer, inactiveSamples * bytesPerSample);
+			dmaBufferDescriptors[d++].setBuffer(vSyncActiveBuffer, hres * bytesPerSample);
+		}
+		for (int i = 0; i < vback; i++)
+		{
+			dmaBufferDescriptors[d++].setBuffer(inactiveBuffer, inactiveSamples * bytesPerSample);
+			dmaBufferDescriptors[d++].setBuffer(blankActiveBuffer, hres * bytesPerSample);
+		}
+		for (int i = 0; i < yres * vdivider; i++)
+		{
+			dmaBufferDescriptors[d++].setBuffer(inactiveBuffer, inactiveSamples * bytesPerSample);
+			dmaBufferDescriptors[d++].setBuffer(frameBuffers[0][i / vdivider], hres * bytesPerSample);
+		}
+	}
+
+	virtual void show()
+	{
+		if(!frameBufferCount)
+			return;
+		currentFrameBuffer = (currentFrameBuffer + 1) % frameBufferCount;
+		frontBuffer = frameBuffers[currentFrameBuffer];
+		backBuffer = frameBuffers[(currentFrameBuffer + frameBufferCount - 1) % frameBufferCount];
+		for (int i = 0; i < yres * vdivider; i++)
+			dmaBufferDescriptors[(vfront + vsync + vback + i) * 2 + 1].setBuffer(frontBuffer[i / vdivider], hres * bytesPerSample);
+	}
+
+	virtual void dotFast(int x, int y, Color color)
+	{
+		backBuffer[y][x^1] = color | 0xc000;
+	}
+
+	virtual void dot(int x, int y, Color color)
+	{
+		if ((unsigned int)x < xres && (unsigned int)y < yres)
+			backBuffer[y][x^1] = color | 0xc000;
+	}
+
+	virtual void dotAdd(int x, int y, Color color)
+	{
+		//todo repair this
+		if ((unsigned int)x < xres && (unsigned int)y < yres)
+			backBuffer[y][x^1] = (color + backBuffer[y][x^1]) | 0xc000;
+	}
+	
+	virtual void dotMix(int x, int y, Color color)
+	{
+		if ((unsigned int)x < xres && (unsigned int)y < yres && (color >> 14) != 0)
+		{
+			unsigned int ai = (3 - (color >> 14)) * (65536 / 3);
+			unsigned int a = 65536 - ai;
+			unsigned int co = backBuffer[y][x^1];
+			unsigned int ro = (co & 0b11111) * ai;
+			unsigned int go = (co & 0b1111100000) * ai;
+			unsigned int bo = (co & 0b11110000000000) * ai;
+			unsigned int r = (color & 0b11111) * a + ro;
+			unsigned int g = ((color & 0b1111100000) * a + go) & 0b11111000000000000000000000;
+			unsigned int b = ((color & 0b11110000000000) * a + bo) & 0b111100000000000000000000000000;
+			backBuffer[y][x^1] = ((r | g | b) >> 16) | 0xc000;
+		}	
+	}
+	
+	virtual Color get(int x, int y)
+	{
+		if ((unsigned int)x < xres && (unsigned int)y < yres)
+			return backBuffer[y][x^1];
+		return 0;
+	}
+
+	virtual void clear(Color clear = 0)
+	{
+		for (int y = 0; y < this->yres; y++)
+			for (int x = 0; x < this->xres; x++)
+				backBuffer[y][x^1] = clear | 0xc000;
+	}
+
 protected:
 	virtual void interrupt()
 	{
-		unsigned long *signal = dmaBufferDescriptors[dmaBufferDescriptorActive]->buffer();
-		unsigned long *pixels = &(dmaBufferDescriptors[dmaBufferDescriptorActive]->buffer())[(hfront + hsync + hback) / 2];
-		unsigned long base, baseh;
-		if (currentLine >= vfront && currentLine < vfront + vsync)
-		{
-			baseh = (vsyncBit | hsyncBit) | ((vsyncBit | hsyncBit) << 16);
-			base = (vsyncBit | hsyncBitI) | ((vsyncBit | hsyncBitI) << 16);
-		}
-		else
-		{
-			baseh = (vsyncBitI | hsyncBit) | ((vsyncBitI | hsyncBit) << 16);
-			base = (vsyncBitI | hsyncBitI) | ((vsyncBitI | hsyncBitI) << 16);
-		}
-		for (int i = 0; i < hfront / 2; i++)
-			signal[i] = base;
-		for (int i = hfront / 2; i < (hfront + hsync) / 2; i++)
-			signal[i] = baseh;
-		for (int i = (hfront + hsync) / 2; i < (hfront + hsync + hback) / 2; i++)
-			signal[i] = base;
-
-		int y = (currentLine - vfront - vsync - vback) / vdivider;
-		if (y >= 0 && y < yres)
-		{
-			unsigned short *line = frontBuffer[y];
-			for (int i = 0; i < xres / 2; i++)
-			{
-				//writing two pixels improves speed drastically (avoids reading in higher word)
-				pixels[i] = base | (line[i * 2 + 1] & 0x3fff) | ((line[i * 2] & 0x3fff) << 16);
-			}
-		}
-		else
-			for (int i = 0; i < xres / 2; i++)
-			{
-				pixels[i] = base | (base << 16);
-			}
-		currentLine = (currentLine + 1) % totalLines;
-		dmaBufferDescriptorActive = (dmaBufferDescriptorActive + 1) % dmaBufferDescriptorCount;
 	}
 
 };

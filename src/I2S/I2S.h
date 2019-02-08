@@ -29,7 +29,7 @@ class I2S
 	intr_handle_t interruptHandle;
 	int dmaBufferDescriptorCount;
 	int dmaBufferDescriptorActive;
-	DMABufferDescriptor **dmaBufferDescriptors;
+	DMABufferDescriptor *dmaBufferDescriptors;
 	volatile bool stopSignal;
 
 	/// hardware index [0, 1]
@@ -46,13 +46,15 @@ class I2S
 	void resetFIFO();
 	bool initParallelOutputMode(const int *pinMap, long APLLFreq = 1000000, int baseClock = -1, int wordSelect = -1);
 	bool initParallelInputMode(const int *pinMap, long sampleRate = 1000000, int baseClock = -1, int wordSelect = -1);
+	virtual DMABufferDescriptor *firstDescriptorAddress() const;
 
 	void allocateDMABuffers(int count, int bytes);
 	void deleteDMABuffers();
 
   protected:
 	virtual void interrupt() = 0;
+	virtual bool useInterrupt();
 	
   private:
-	static void IRAM_ATTR interrupt(void *arg);
+	static void IRAM_ATTR interruptStatic(void *arg);
 };

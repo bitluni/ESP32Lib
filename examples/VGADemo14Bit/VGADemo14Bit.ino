@@ -17,34 +17,28 @@ void setup()
 	vga.init(vga.MODE200x150, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
 }
 
-int heat(VGA14Bit::Color c)
-{
-	if (vga.B(c))
-		return vga.B(c) + 512;
-	if (vga.G(c))
-		return vga.G(c) + 256;
-	return vga.R(c);
-}
-
-VGA14Bit::Color color(int heat)
-{
-	if (heat >= 512)
-		return vga.RGB(255, 255, heat - 512);
-	if (heat >= 256)
-		return vga.RGB(255, heat - 256, 0);
-	return vga.RGB(heat, 0, 0);
-}
-
 void loop()
 {
-	float p = millis() * 0.001f;
-	vga.fillCircle(vga.xres / 2 + sin(p) * vga.xres / 3, vga.yres / 2 + cos(p * 1.34f) * vga.yres / 3, (rand() & 1) + 3, vga.RGB(255, 255, 255));
+	float factors[][2] = {{1, 1.1f}, {0.9f, 1.02f}, {1.1, 0.8}};
+	int colors[] = {vga.RGB(0xff0000), vga.RGB(0x00ff00), vga.RGB(0x0000ff)};
+	float p = millis() * 0.002f;
+	for (int i = 0; i < 3; i++)
+	{
+		int x = vga.xres / 2 + sin(p * factors[i][0]) * vga.xres / 3;
+		int y = vga.yres / 2 + cos(p * factors[i][1]) * vga.yres / 3;
+		vga.fillCircle(x, y, 8, 0);
+		vga.circle(x, y, 10, colors[i]);
+	}
 	for (int y = 0; y < vga.yres - 1; y++)
 		for (int x = 1; x < vga.xres - 1; x++)
 		{
-			int h = (heat(vga.get(x, y)) + (heat(vga.get(x - 1, y + 1)) + heat(vga.get(x + 1, y + 1))) / 2 + heat(vga.get(x, y + 1))) / 3;
-			vga.dotFast(x, y, color(h));
+			int c0 = vga.get(x, y) & 0x3fff;
+			int c1 = vga.get(x, y + 1) & 0x3fff;
+			int c2 = vga.get(x - 1, y + 1) & 0x3fff;
+			int c3 = vga.get(x + 1, y + 1) & 0x3fff;
+			int r = ((c0 & 0x1f) + (c1 & 0x1f) + ((c2 & 0x1f) + (c3 & 0x1f)) / 2) / 3;
+			int g = (((c0 & 0x3e0) + (c1 & 0x3e0) + ((c2 & 0x3e0) + (c3 & 0x3e0)) / 2) / 3) & 0x3e0;
+			int b = (((c0 & 0x3c00) + (c1 & 0x3c00) + ((c2 & 0x3c00) + (c3 & 0x3c00)) / 2) / 3) & 0x3c00;
+			vga.dotFast(x, y, r | g | b);
 		}
-	for (int x = 0; x < vga.xres; x++)
-		vga.dotFast(x, vga.yres - 1, (rand() & 3 == 3) ? color(767) : 0);
 }

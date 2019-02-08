@@ -80,7 +80,7 @@ class GraphicsR5G5B4A2: public Graphics<unsigned short>
 		}	
 	}
 	
-	virtual char get(int x, int y)
+	virtual Color get(int x, int y)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
 			return backBuffer[y][x];
