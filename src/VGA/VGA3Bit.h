@@ -15,8 +15,7 @@
 
 class VGA3Bit : public VGA, public GraphicsR1G1B1A1
 {
-	public:
-
+  public:
 	VGA3Bit(const int i2sIndex = 1)
 		: VGA(i2sIndex)
 	{
@@ -34,11 +33,24 @@ class VGA3Bit : public VGA, public GraphicsR1G1B1A1
 			GPin,
 			BPin,
 			hsyncPin, vsyncPin,
-			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
-			};
+			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+		int xres = mode[3] / mode[8];
+		int yres = mode[7] / mode[9];
+		setResolution(xres, yres);
 		return VGA::init(mode, pinMap);
 	}
 
+	virtual float pixelAspect() const
+	{
+		return float(vdivider) / hdivider;
+	}
+
+	virtual void propagateResolution(const int xres, const int yres)
+	{
+		setResolution(xres, yres);
+	}
+
+  protected:
 	virtual void interrupt()
 	{
 		unsigned long *signal = (unsigned long *)dmaBuffers[dmaBufferActive]->buffer;
@@ -64,7 +76,7 @@ class VGA3Bit : public VGA, public GraphicsR1G1B1A1
 		int y = (currentLine - vfront - vsync - vback) / vdivider;
 		if (y >= 0 && y < yres)
 		{
-			unsigned char *line = frame[y];
+			unsigned char *line = frontBuffer[y];
 			for (int i = 0; i < xres / 2; i++)
 			{
 				//writing two pixels improves speed drastically (avoids reading in higher word)
@@ -78,12 +90,5 @@ class VGA3Bit : public VGA, public GraphicsR1G1B1A1
 			}
 		currentLine = (currentLine + 1) % totalLines;
 		dmaBufferActive = (dmaBufferActive + 1) % dmaBufferCount;
-	}
-
-	virtual void setResolution(int xres, int yres)
-	{
-		this->xres = xres;
-		this->yres = yres;
-		initBuffers();
 	}
 };

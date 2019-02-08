@@ -58,8 +58,7 @@ bool VGA::init(const int *mode, const int *pinMap)
 	int xres = mode[3] / mode[8];
 	int yres = mode[7] / mode[9];
 	hres = xres;
-	setResolution(xres, yres);
-
+	propagateResolution(xres, yres);
 	this->vsyncPin = vsyncPin;
 	this->hsyncPin = hsyncPin;
 	hdivider = mode[8];
@@ -98,9 +97,4 @@ void VGA::allocateLineBuffers(const int lines)
 			dmaBuffers[i - 1]->next(dmaBuffers[i]);
 	}
 	dmaBuffers[dmaBufferCount - 1]->next(dmaBuffers[0]);
-}
-
-float VGA::pixelAspect() const
-{
-	return float(vdivider) / hdivider;
 }

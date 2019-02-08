@@ -17,33 +17,35 @@ class GraphicsR1G1B1A1: public Graphics<unsigned char>
 {
 	public:
 	typedef unsigned char Color;
-	Color **frame;
-	Color **backbuffer;
+	GraphicsR1G1B1A1()
+	{
+		frontColor = 0xf;
+	}
 
 	virtual void dotFast(int x, int y, Color color)
 	{
 		if(x & 1)
-			backbuffer[y][x >> 1] = backbuffer[y][x >> 1] | (color << 4);
+			backBuffer[y][x >> 1] =  (backBuffer[y][x >> 1] & 0xf) | (color << 4);
 		else
-			backbuffer[y][x >> 1] = backbuffer[y][x >> 1] | color;
+			backBuffer[y][x >> 1] = (backBuffer[y][x >> 1] & 0xf0) | (color & 0xf);
 	}
 
 	virtual void dot(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
 			if(x & 1)
-				backbuffer[y][x >> 1] = (backbuffer[y][x >> 1] & 0xf) | (color << 4);
+				backBuffer[y][x >> 1] = (backBuffer[y][x >> 1] & 0xf) | (color << 4);
 			else
-				backbuffer[y][x >> 1] = (backbuffer[y][x >> 1] & 0xf0) | (color & 0xf);
+				backBuffer[y][x >> 1] = (backBuffer[y][x >> 1] & 0xf0) | (color & 0xf);
 	}
 
 	virtual void dotAdd(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
 			if(x & 1)
-				backbuffer[y][x >> 1] = backbuffer[y][x >> 1] | (color << 4);
+				backBuffer[y][x >> 1] = backBuffer[y][x >> 1] | (color << 4);
 			else
-				backbuffer[y][x >> 1] = backbuffer[y][x >> 1] | (color & 0xf);
+				backBuffer[y][x >> 1] = backBuffer[y][x >> 1] | (color & 0xf);
 	}
 	
 	virtual void dotMix(int x, int y, Color color)
@@ -51,9 +53,9 @@ class GraphicsR1G1B1A1: public Graphics<unsigned char>
 		if ((unsigned int)x < xres && (unsigned int)y < yres && (color & 8) != 0)
 		{
 			if(x & 1)
-				backbuffer[y][x >> 1] = backbuffer[y][x >> 1] | (color << 4);
+				backBuffer[y][x >> 1] = backBuffer[y][x >> 1] | (color << 4);
 			else
-				backbuffer[y][x >> 1] = backbuffer[y][x >> 1] | (color & 0xf);
+				backBuffer[y][x >> 1] = backBuffer[y][x >> 1] | (color & 0xf);
 		}	
 	}
 	
@@ -61,9 +63,9 @@ class GraphicsR1G1B1A1: public Graphics<unsigned char>
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
 			if(x & 1)
-				return backbuffer[y][x >> 1] = backbuffer[y][x >> 1] >> 4;
+				return backBuffer[y][x >> 1] = backBuffer[y][x >> 1] >> 4;
 			else
-				return backbuffer[y][x >> 1] = backbuffer[y][x >> 1] & 0xf;
+				return backBuffer[y][x >> 1] = backBuffer[y][x >> 1] & 0xf;
 		return 0;
 	}
 
@@ -71,31 +73,14 @@ class GraphicsR1G1B1A1: public Graphics<unsigned char>
 	{
 		for (int y = 0; y < this->yres; y++)
 			for (int x = 0; x < this->xres / 2; x++)
-				this->backbuffer[y][x] = clear | (clear << 4);
+				this->backBuffer[y][x] = clear | (clear << 4);
 	}
 
-	virtual void show()
+	virtual Color** allocateFrameBuffer()
 	{
-		Color **b = backbuffer;
-		backbuffer = frame;
-		frame = b;
-	}
-
-	virtual void initBuffers(const bool doubleBuffer = true, const bool zbuffer = false)
-	{
-		frame = (Color **)malloc(yres * sizeof(Color *));
-		if(doubleBuffer)
-			backbuffer = (Color **)malloc(yres * sizeof(Color *));
-		else
-			backbuffer = frame;
-		//not enough memory for z-buffer implementation
-		//zbuffer = (char**)malloc(yres * sizeof(char*));
+		Color** frame = (Color **)malloc(yres * sizeof(Color *));
 		for (int y = 0; y < yres; y++)
-		{
 			frame[y] = (Color *)malloc(xres / 2 * sizeof(Color));
-			if(doubleBuffer)
-				backbuffer[y] = (Color *)malloc(xres / 2 * sizeof(Color));
-			//zbuffer[y] = (char*)malloc(xres);
-		}
+		return frame;
 	}
 };

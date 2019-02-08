@@ -28,6 +28,12 @@ class Graphics
 	int cursorX, cursorY, cursorBaseX;
 	long frontColor, backColor;
 	Font *font;
+	int frameBufferCount;
+	int currentFrameBuffer;
+	Color **frameBuffers[3];
+	Color **frontBuffer;
+	Color **backBuffer;
+	bool autoScroll;
 
 	int xres;
 	int yres;
@@ -37,6 +43,21 @@ class Graphics
 	virtual void dotAdd(int x, int y, Color color) = 0;
 	virtual void dotMix(int x, int y, Color color) = 0;
 	virtual char get(int x, int y) = 0;
+	virtual Color** allocateFrameBuffer() = 0;
+
+	void setFrameBufferCount(unsigned char i)
+	{
+		frameBufferCount = i > 3 ? 3 : i;
+	}
+
+	virtual void show()
+	{
+		if(!frameBufferCount)
+			return;
+		currentFrameBuffer = (currentFrameBuffer + 1) % frameBufferCount;
+		frontBuffer = frameBuffers[currentFrameBuffer];
+		backBuffer = frameBuffers[(currentFrameBuffer + frameBufferCount - 1) % frameBufferCount];
+	}
 
 	Graphics(int xres = 0, int yres = 0)
 	{
@@ -46,6 +67,31 @@ class Graphics
 		cursorX = cursorY = cursorBaseX = 0;
 		frontColor = 0;
 		backColor = 0;
+		frameBufferCount = 1;
+		for(int i = 0; i < 3; i++)
+			frameBuffers[i] = 0;
+		frontBuffer = 0;
+		backBuffer = 0;
+		autoScroll = true;
+	}
+
+	virtual bool allocateFrameBuffers()
+	{
+		if(yres <= 0 || xres <= 0)
+			return false;
+
+		for(int i = 0; i < frameBufferCount; i++)
+			frameBuffers[i] = allocateFrameBuffer();
+		currentFrameBuffer = 0;
+		show();
+		return true;
+	}
+
+	virtual void setResolution(int xres, int yres)
+	{
+		this->xres = xres;
+		this->yres = yres;
+		allocateFrameBuffers();
 	}
 
 	virtual float pixelAspect() const
@@ -97,6 +143,8 @@ class Graphics
 			{
 				cursorX = cursorBaseX;
 				cursorY += font->charHeight;
+				if(autoScroll && cursorY + font->charHeight > yres)
+					scroll(cursorY + font->charHeight - yres, backColor);
 			}
 			str++;
 		}
@@ -327,18 +375,6 @@ class Graphics
 		}
 	}
 
-	virtual void begin()
-	{
-	}
-
-	virtual void flush()
-	{
-	}
-
-	virtual void end()
-	{
-	}
-
 	void fillRect(int x, int y, int w, int h, Color color)
 	{
 		if (x < 0)
@@ -429,4 +465,36 @@ class Graphics
 				xLine(x - xr, x + xr + 1, y - i, color);
 		}
 	}
+
+	virtual void scroll(int dy, Color color)
+	{
+		//todo improve that
+		if(dy > 0)
+		{
+			for(int d = 0; d < dy; d++)
+			{
+				Color *l = backBuffer[0];
+				for(int i = 0; i < yres - 1; i++)
+				{
+					backBuffer[i] = backBuffer[i + 1];
+				}
+				backBuffer[yres - 1] = l;
+				xLine(0, xres, yres - 1, color);
+			}
+		}
+		else
+		{
+			for(int d = 0; d < -dy; d++)
+			{
+				Color *l = backBuffer[yres - 1];
+				for(int i = 1; i < yres; i++)
+				{
+					backBuffer[i] = backBuffer[i - 1];
+				}
+				backBuffer[0] = l;
+				xLine(0, xres, 0, color);
+			}
+		}
+		cursorY -= dy;
+	}	
 };

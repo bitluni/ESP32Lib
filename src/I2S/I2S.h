@@ -51,7 +51,7 @@ class I2S
 	void deleteDMABuffers();
 
   protected:
-	virtual void interrupt();
+	virtual void interrupt() = 0;
 	
   private:
 	static void IRAM_ATTR interrupt(void *arg);

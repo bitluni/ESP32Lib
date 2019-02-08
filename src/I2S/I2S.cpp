@@ -32,6 +32,7 @@ void IRAM_ATTR I2S::interrupt(void *arg)
 	((I2S *)arg)->interrupt();
 }
 
+/*
 void I2S::interrupt()
 {
 	static int c = 0;
@@ -45,6 +46,7 @@ void I2S::interrupt()
 		stopSignal = false;
 	}
 }
+*/
 
 void I2S::reset()
 {

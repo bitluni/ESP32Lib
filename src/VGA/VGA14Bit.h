@@ -59,6 +59,17 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4A2
 		return VGA::init(mode, pinMap);
 	}
 
+	virtual float pixelAspect() const
+	{
+		return float(vdivider) / hdivider;
+	}
+
+	virtual void propagateResolution(const int xres, const int yres)
+	{
+		setResolution(xres, yres);
+	}
+	
+protected:
 	virtual void interrupt()
 	{
 		unsigned long *signal = (unsigned long *)dmaBuffers[dmaBufferActive]->buffer;
@@ -84,7 +95,7 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4A2
 		int y = (currentLine - vfront - vsync - vback) / vdivider;
 		if (y >= 0 && y < yres)
 		{
-			unsigned short *line = frame[y];
+			unsigned short *line = frontBuffer[y];
 			for (int i = 0; i < xres / 2; i++)
 			{
 				//writing two pixels improves speed drastically (avoids reading in higher word)
@@ -100,10 +111,4 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4A2
 		dmaBufferActive = (dmaBufferActive + 1) % dmaBufferCount;
 	}
 
-	virtual void setResolution(int xres, int yres)
-	{
-		this->xres = xres;
-		this->yres = yres;
-		initBuffers();
-	}
 };

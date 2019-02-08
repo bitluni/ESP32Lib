@@ -21,8 +21,6 @@ class VGA : public I2S
 
 	bool init(const int *mode, const int *pinMap);
 
-	virtual float pixelAspect() const;
-
 	static const int MODE320x480[];
 	static const int MODE320x240[];
 	static const int MODE320x120[];
@@ -77,5 +75,5 @@ class VGA : public I2S
 	int vdivider;
 
 	virtual void allocateLineBuffers(const int lines);
-	virtual void setResolution(int xres, int yres) = 0;
+	virtual void propagateResolution(const int xres, const int yres) = 0;
 };
