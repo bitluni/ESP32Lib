@@ -86,15 +86,15 @@ void VGA::setLineBufferCount(int lineBufferCount)
 /// simple ringbuffer of blocks of size bytes each
 void VGA::allocateLineBuffers(const int lines)
 {
-	dmaBufferCount = lines;
-	dmaBuffers = (DMABuffer **)malloc(sizeof(DMABuffer *) * dmaBufferCount);
-	if (!dmaBuffers)
+	dmaBufferDescriptorCount = lines;
+	dmaBufferDescriptors = (DMABufferDescriptor **)malloc(sizeof(DMABufferDescriptor *) * dmaBufferDescriptorCount);
+	if (!dmaBufferDescriptors)
 		DEBUG_PRINTLN("Failed to allocate DMABuffer array");
-	for (int i = 0; i < dmaBufferCount; i++)
+	for (int i = 0; i < dmaBufferDescriptorCount; i++)
 	{
-		dmaBuffers[i] = DMABuffer::allocate((hfront + hsync + hback + hres) * bytesPerSample); //front porch + hsync + back porch + pixels
+		dmaBufferDescriptors[i] = DMABufferDescriptor::allocateDescriptor((hfront + hsync + hback + hres) * bytesPerSample, true, true); //front porch + hsync + back porch + pixels
 		if (i)
-			dmaBuffers[i - 1]->next(dmaBuffers[i]);
+			dmaBufferDescriptors[i - 1]->next(dmaBufferDescriptors[i]);
 	}
-	dmaBuffers[dmaBufferCount - 1]->next(dmaBuffers[0]);
+	dmaBufferDescriptors[dmaBufferDescriptorCount - 1]->next(dmaBufferDescriptors[0]);
 }

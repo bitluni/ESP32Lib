@@ -19,9 +19,9 @@ I2S::I2S(const int i2sIndex)
 {
 	this->i2sIndex = i2sIndex;
 	interruptHandle = 0;
-	dmaBufferCount = 0;
-	dmaBufferActive = 0;
-	dmaBuffers = 0;
+	dmaBufferDescriptorCount = 0;
+	dmaBufferDescriptorActive = 0;
+	dmaBufferDescriptors = 0;
 	stopSignal = false;
 }
 
@@ -77,10 +77,10 @@ void I2S::startTX()
 	DEBUG_PRINTLN("I2S TX");
 	esp_intr_disable(interruptHandle);
 	reset();
-	dmaBufferActive = 0;
+	dmaBufferDescriptorActive = 0;
 	DEBUG_PRINT("Sample count ");
-	DEBUG_PRINTLN(dmaBuffers[0]->sampleCount());
-	i2s.out_link.addr = (uint32_t) & (dmaBuffers[0]->descriptor);
+	DEBUG_PRINTLN(dmaBufferDescriptors[0]->sampleCount());
+	i2s.out_link.addr = (uint32_t)dmaBufferDescriptors[0];
 	i2s.out_link.start = 1;
 	i2s.int_clr.val = i2s.int_raw.val;
 	i2s.int_ena.val = 0;
@@ -98,11 +98,11 @@ void I2S::startRX()
 	DEBUG_PRINTLN("I2S RX");
 	esp_intr_disable(interruptHandle);
 	reset();
-	dmaBufferActive = 0;
+	dmaBufferDescriptorActive = 0;
 	DEBUG_PRINT("Sample count ");
-	DEBUG_PRINTLN(dmaBuffers[0]->sampleCount());
-	i2s.rx_eof_num = dmaBuffers[0]->sampleCount();
-	i2s.in_link.addr = (uint32_t) & (dmaBuffers[0]->descriptor);
+	DEBUG_PRINTLN(dmaBufferDescriptors[0]->sampleCount());
+	i2s.rx_eof_num = dmaBufferDescriptors[0]->sampleCount();
+	i2s.in_link.addr = (uint32_t)dmaBufferDescriptors[0];
 	i2s.in_link.start = 1;
 	i2s.int_clr.val = i2s.int_raw.val;
 	i2s.int_ena.val = 0;
@@ -310,28 +310,28 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClo
 /// simple ringbuffer of blocks of size bytes each
 void I2S::allocateDMABuffers(int count, int bytes)
 {
-	dmaBufferCount = count;
-	dmaBuffers = (DMABuffer **)malloc(sizeof(DMABuffer *) * dmaBufferCount);
-	if (!dmaBuffers)
+	dmaBufferDescriptorCount = count;
+	dmaBufferDescriptors = (DMABufferDescriptor **)malloc(sizeof(DMABufferDescriptor *) * dmaBufferDescriptorCount);
+	if (!dmaBufferDescriptors)
 		DEBUG_PRINTLN("Failed to allocate DMABuffer array");
-	for (int i = 0; i < dmaBufferCount; i++)
+	for (int i = 0; i < dmaBufferDescriptorCount; i++)
 	{
-		dmaBuffers[i] = DMABuffer::allocate(bytes);
+		dmaBufferDescriptors[i] = DMABufferDescriptor::allocateDescriptor(bytes, true, true);
 		if (i)
-			dmaBuffers[i - 1]->next(dmaBuffers[i]);
+			dmaBufferDescriptors[i - 1]->next(dmaBufferDescriptors[i]);
 	}
-	dmaBuffers[dmaBufferCount - 1]->next(dmaBuffers[0]);
+	dmaBufferDescriptors[dmaBufferDescriptorCount - 1]->next(dmaBufferDescriptors[0]);
 }
 
 void I2S::deleteDMABuffers()
 {
-	if (!dmaBuffers)
+	if (!dmaBufferDescriptors)
 		return;
-	for (int i = 0; i < dmaBufferCount; i++)
-		dmaBuffers[i]->destroy();
-	free(dmaBuffers);
-	dmaBuffers = 0;
-	dmaBufferCount = 0;
+	for (int i = 0; i < dmaBufferDescriptorCount; i++)
+		dmaBufferDescriptors[i]->destroy();
+	free(dmaBufferDescriptors);
+	dmaBufferDescriptors = 0;
+	dmaBufferDescriptorCount = 0;
 }
 
 void I2S::stop()

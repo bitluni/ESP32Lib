@@ -20,16 +20,16 @@
 #include "driver/gpio.h"
 #include "driver/periph_ctrl.h"
 #include "rom/lldesc.h"
-#include "DMABuffer.h"
+#include "DMABufferDescriptor.h"
 
 class I2S
 {
   public:
 	int i2sIndex;
 	intr_handle_t interruptHandle;
-	int dmaBufferCount;
-	int dmaBufferActive;
-	DMABuffer **dmaBuffers;
+	int dmaBufferDescriptorCount;
+	int dmaBufferDescriptorActive;
+	DMABufferDescriptor **dmaBufferDescriptors;
 	volatile bool stopSignal;
 
 	/// hardware index [0, 1]

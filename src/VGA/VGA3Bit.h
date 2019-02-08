@@ -53,8 +53,8 @@ class VGA3Bit : public VGA, public GraphicsR1G1B1A1
   protected:
 	virtual void interrupt()
 	{
-		unsigned long *signal = (unsigned long *)dmaBuffers[dmaBufferActive]->buffer;
-		unsigned long *pixels = &((unsigned long *)dmaBuffers[dmaBufferActive]->buffer)[(hfront + hsync + hback) / 2];
+		unsigned long *signal = dmaBufferDescriptors[dmaBufferDescriptorActive]->buffer();
+		unsigned long *pixels = &(dmaBufferDescriptors[dmaBufferDescriptorActive]->buffer())[(hfront + hsync + hback) / 2];
 		unsigned long base, baseh;
 		if (currentLine >= vfront && currentLine < vfront + vsync)
 		{
@@ -89,6 +89,6 @@ class VGA3Bit : public VGA, public GraphicsR1G1B1A1
 				pixels[i] = base | (base << 16);
 			}
 		currentLine = (currentLine + 1) % totalLines;
-		dmaBufferActive = (dmaBufferActive + 1) % dmaBufferCount;
+		dmaBufferDescriptorActive = (dmaBufferDescriptorActive + 1) % dmaBufferDescriptorCount;
 	}
 };
