@@ -1,32 +1,26 @@
 #include <ESP32Lib.h>
+#include <math.h>
+#include <Ressources/Font6x8.h>
 
-#include "gfx/font6x8.h"
-Font<Graphics<Color>> font(6, 8, font6x8::pixels);
-
-//Note that the I/O GPIO pads are 0-19, 21-23, 25-27, 32-39, while the output GPIOs are 0-19, 21-23, 25-27, 32-33. GPIO pads 34-39 are input-only
-//0, 2, 4, 5, 12,  13, 14, 15, 16,  17, 18, 19, 21,  22, 23, 27, 32, 33
-//0 (boot mode: use only as blank output)
-//5 (LED)
-//21 (SDA), 22(SCL)
-//25, 26 (DAC)
-//1(TX), 3(RX)
-
-const int redPins[] = {-1, -1, -1, -1, 14};
-const int greenPins[] = {-1, -1, -1, -1, 19};
-const int bluePins[] = {-1, -1, -1, 27};
+//pin configuration
+const int redPin = 14;
+const int greenPin = 19;
+const int bluePin = 27;
 const int hsyncPin = 0;
 const int vsyncPin = 5;
 
 //VGA Device
-I2SVGA graphics(1);
+VGA3Bit vga;
+//VGA14Bit vga;
 
 void setup()
 {
   Serial.begin(115200);
   //initializing i2s vga and frame buffers
-  graphics.init(graphics.MODE320x120, redPins, greenPins, bluePins, hsyncPin, vsyncPin, 16);
+  vga.init(vga.MODE320x240, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
+  //vga.init(vga.MODE200x150, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
   //select font
-  graphics.setFont(font);
+  vga.setFont(Font6x8);
 }
 
 void draw()
@@ -35,15 +29,14 @@ void draw()
   int t = millis();
   int fps = 1000 / (t - lastMillis);
   lastMillis = t;
-  graphics.begin();
-  graphics.clear();
-  graphics.setTextColor(0xffff);
-  graphics.setCursor(0, 0);
-  graphics.print("mem: ");
-  graphics.print((int)heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
-  graphics.print(" fps: ");
-  graphics.print(fps, 10, 2);
-  graphics.end();
+  vga.clear();
+  vga.setTextColor(0xffff);
+  vga.setCursor(0, 0);
+  vga.print("mem: ");
+  vga.print((int)heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
+  vga.print(" fps: ");
+  vga.print(fps);
+  vga.show();
 }
 
 void loop()

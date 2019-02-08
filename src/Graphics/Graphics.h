@@ -150,11 +150,15 @@ class Graphics
 	{
 		long p = long(pow(10, fractionalDigits));
 		long long n = (double(number) * p + 0.5f);
-		print(int(number / p), 10, minCharacters - 1 - fractionalDigits);
+		print(long(n / p), 10, minCharacters - 1 - fractionalDigits);
 		if(fractionalDigits)
 		{
 			print(".");
-			print(long(n % p));
+			for(int i = 0; i < fractionalDigits; i++)
+			{
+				p /= 10;
+				print(long(n / p) % 10);
+			}
 		}
 	}
 
@@ -369,7 +373,7 @@ class Graphics
 		int oxr = r;
 		for(int i = 0; i < r + 1; i++)
 		{
-			int xr = (int)sqrt(r *r - i * i);
+			int xr = (int)sqrt(r * r - i * i);
 			xLine(x - oxr, x - xr + 1, y + i, color);
 			xLine(x + xr, x + oxr + 1, y + i, color);
 			if(i) 
@@ -399,7 +403,8 @@ class Graphics
 		f *= f;
 		for(int i = 0; i < ry + 1; i++)
 		{
-			int xr = (int)sqrt(rx * rx - i * i * f);
+			float s = rx * rx - i * i * f;
+			int xr = (int)sqrt(s <= 0 ? 0 : s);
 			xLine(x - oxr, x - xr + 1, y + i, color);
 			xLine(x + xr, x + oxr + 1, y + i, color);
 			if(i) 
@@ -417,7 +422,8 @@ class Graphics
 		f *= f;		
 		for(int i = 0; i < ry + 1; i++)
 		{
-			int xr = (int)sqrt(rx * rx - i * i * f);
+			float s = rx * rx - i * i * f;
+			int xr = (int)sqrt(s <= 0 ? 0 : s);
 			xLine(x - xr, x + xr + 1, y + i, color);
 			if(i) 
 				xLine(x - xr, x + xr + 1, y - i, color);
