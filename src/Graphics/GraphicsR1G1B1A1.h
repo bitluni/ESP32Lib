@@ -74,9 +74,9 @@ class GraphicsR1G1B1A1: public Graphics<unsigned char>
 		if ((unsigned int)x < xres && (unsigned int)y < yres && (color & 8) != 0)
 		{
 			if(x & 1)
-				backBuffer[y][x >> 1] = color << 4;
+				backBuffer[y][x >> 1] = (backBuffer[y][x >> 1] & 0xf) | color << 4;
 			else
-				backBuffer[y][x >> 1] = color & 0xf;
+				backBuffer[y][x >> 1] =  (backBuffer[y][x >> 1] & 0xf0) | color & 0xf;
 		}	
 	}
 	

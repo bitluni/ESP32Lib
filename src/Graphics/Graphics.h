@@ -67,7 +67,7 @@ class Graphics
 		frameBufferCount = i > 3 ? 3 : i;
 	}
 
-	virtual void show()
+	virtual void show(bool vSync = false)
 	{
 		if(!frameBufferCount)
 			return;

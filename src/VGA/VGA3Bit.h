@@ -55,26 +55,25 @@ class VGA3Bit : public VGA, public GraphicsR5G5B4A1X10S2Swapped
 	void *inactiveBuffer;
 	void *blankActiveBuffer;
 
-	virtual Color** allocateFrameBuffer()
+	virtual Color **allocateFrameBuffer()
 	{
-		Color** frame = (Color **)malloc(yres * sizeof(Color *));
-		for (int y = 0; y < vres; y++)
-			frame[y] = (Color *)DMABufferDescriptor::allocateBuffer(hres * bytesPerSample, true, (hsyncBitI | vsyncBitI) * 0x10001);
-		return frame;
+		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, hres * bytesPerSample, (hsyncBitI | vsyncBitI) * 0x10001);
 	}
 
 	virtual void allocateLineBuffers()
 	{
-		VGA::allocateLineBuffers((void**)frameBuffers[0]);
+		VGA::allocateLineBuffers((void **)frameBuffers[0]);
 	}
 
-	virtual void show()
+	virtual void show(bool vSync = false)
 	{
-		if(!frameBufferCount)
+		if (!frameBufferCount)
 			return;
-		currentFrameBuffer = (currentFrameBuffer + 1) % frameBufferCount;
-		frontBuffer = frameBuffers[currentFrameBuffer];
-		backBuffer = frameBuffers[(currentFrameBuffer + frameBufferCount - 1) % frameBufferCount];
+		if (vSync)
+		{
+			//TODO read the I2S docs to find out
+		}
+		Graphics::show(vSync);
 		for (int i = 0; i < yres * vdivider; i++)
 			dmaBufferDescriptors[(vfront + vsync + vback + i) * 2 + 1].setBuffer(frontBuffer[i / vdivider], hres * bytesPerSample);
 	}
@@ -82,10 +81,11 @@ class VGA3Bit : public VGA, public GraphicsR5G5B4A1X10S2Swapped
 	virtual void scroll(int dy, Color color)
 	{
 		Graphics::scroll(dy, color);
-		if(frameBufferCount == 1)
+		if (frameBufferCount == 1)
 			show();
 	}
-protected:
+
+  protected:
 	virtual void interrupt()
 	{
 	}

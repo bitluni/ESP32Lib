@@ -43,50 +43,32 @@ class VGA3BitI : public VGA, public GraphicsR1G1B1A1
 		setResolution(xres, yres);
 	}
 
+	virtual void show(bool vSync = false)
+	{
+		if (!frameBufferCount)
+			return;
+		if (vSync)
+		{
+			vSyncPassed = false;
+			while (!vSyncPassed)
+				delay(0);
+		}
+		Graphics::show(vSync);
+	}
+
   protected:
-	virtual bool useInterrupt()
+	bool useInterrupt()
 	{ 
 		return true; 
 	};
 
-	virtual void interrupt()
+	void interruptPixelLine(int y, unsigned long *pixels, unsigned long syncBits)
 	{
-		unsigned long *signal = (unsigned long*)dmaBufferDescriptors[dmaBufferDescriptorActive].buffer();
-		unsigned long *pixels = &((unsigned long*)dmaBufferDescriptors[dmaBufferDescriptorActive].buffer())[(hfront + hsync + hback) / 2];
-		unsigned long base, baseh;
-		if (currentLine >= vfront && currentLine < vfront + vsync)
+		unsigned char *line = frontBuffer[y];
+		for (int i = 0; i < hres / 2; i++)
 		{
-			baseh = (vsyncBit | hsyncBit) | ((vsyncBit | hsyncBit) << 16);
-			base = (vsyncBit | hsyncBitI) | ((vsyncBit | hsyncBitI) << 16);
+			//writing two pixels improves speed drastically (avoids memory reads)
+			pixels[i] = syncBits | ((line[i] >> 4) & 7) | ((line[i] & 7) << 16);
 		}
-		else
-		{
-			baseh = (vsyncBitI | hsyncBit) | ((vsyncBitI | hsyncBit) << 16);
-			base = (vsyncBitI | hsyncBitI) | ((vsyncBitI | hsyncBitI) << 16);
-		}
-		for (int i = 0; i < hfront / 2; i++)
-			signal[i] = base;
-		for (int i = hfront / 2; i < (hfront + hsync) / 2; i++)
-			signal[i] = baseh;
-		for (int i = (hfront + hsync) / 2; i < (hfront + hsync + hback) / 2; i++)
-			signal[i] = base;
-
-		int y = (currentLine - vfront - vsync - vback) / vdivider;
-		if (y >= 0 && y < yres)
-		{
-			unsigned char *line = frontBuffer[y];
-			for (int i = 0; i < xres / 2; i++)
-			{
-				//writing two pixels improves speed drastically (avoids reading in higher word)
-				pixels[i] = base | ((line[i] >> 4) & 7) | ((line[i] & 7) << 16);
-			}
-		}
-		else
-			for (int i = 0; i < xres / 2; i++)
-			{
-				pixels[i] = base | (base << 16);
-			}
-		currentLine = (currentLine + 1) % totalLines;
-		dmaBufferDescriptorActive = (dmaBufferDescriptorActive + 1) % dmaBufferDescriptorCount;
 	}
 };

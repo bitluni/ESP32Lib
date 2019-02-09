@@ -82,6 +82,7 @@ bool VGA::init(const int *mode, const int *pinMap)
 	initParallelOutputMode(pinMap, mode[10] / hdivider);
 	allocateLineBuffers();
 	currentLine = 0;
+	vSyncPassed = false;
 	startTX();
 	return true;
 }
@@ -120,27 +121,27 @@ void VGA::allocateLineBuffers(void **frameBuffer)
 	vSyncActiveBuffer = DMABufferDescriptor::allocateBuffer(hres * bytesPerSample, true);
 	inactiveBuffer = DMABufferDescriptor::allocateBuffer(inactiveSamples * bytesPerSample, true);
 	blankActiveBuffer = DMABufferDescriptor::allocateBuffer(hres * bytesPerSample, true);
-	for(int i = 0; i < inactiveSamples; i++)
+	for (int i = 0; i < inactiveSamples; i++)
 	{
-		if(i >= hfront && i < hfront + hsync)
+		if (i >= hfront && i < hfront + hsync)
 		{
-			((unsigned short*)vSyncInactiveBuffer)[i^1] = hsyncBit | vsyncBit;
-			((unsigned short*)inactiveBuffer)[i^1] = hsyncBit | vsyncBitI;
+			((unsigned short *)vSyncInactiveBuffer)[i ^ 1] = hsyncBit | vsyncBit;
+			((unsigned short *)inactiveBuffer)[i ^ 1] = hsyncBit | vsyncBitI;
 		}
 		else
 		{
-			((unsigned short*)vSyncInactiveBuffer)[i^1] = hsyncBitI | vsyncBit;
-			((unsigned short*)inactiveBuffer)[i^1] = hsyncBitI | vsyncBitI;
+			((unsigned short *)vSyncInactiveBuffer)[i ^ 1] = hsyncBitI | vsyncBit;
+			((unsigned short *)inactiveBuffer)[i ^ 1] = hsyncBitI | vsyncBitI;
 		}
 	}
-	for(int i = 0; i < hres; i++)
+	for (int i = 0; i < hres; i++)
 	{
-		((unsigned short*)vSyncActiveBuffer)[i^1] = hsyncBitI | vsyncBit;
-		((unsigned short*)blankActiveBuffer)[i^1] = hsyncBitI | vsyncBitI;
+		((unsigned short *)vSyncActiveBuffer)[i ^ 1] = hsyncBitI | vsyncBit;
+		((unsigned short *)blankActiveBuffer)[i ^ 1] = hsyncBitI | vsyncBitI;
 	}
 
 	dmaBufferDescriptors = DMABufferDescriptor::allocateDescriptors(dmaBufferDescriptorCount);
-	for(int i = 0; i < dmaBufferDescriptorCount; i++)
+	for (int i = 0; i < dmaBufferDescriptorCount; i++)
 		dmaBufferDescriptors[i].next(dmaBufferDescriptors[(i + 1) % dmaBufferDescriptorCount]);
 	int d = 0;
 	for (int i = 0; i < vfront; i++)
@@ -163,4 +164,45 @@ void VGA::allocateLineBuffers(void **frameBuffer)
 		dmaBufferDescriptors[d++].setBuffer(inactiveBuffer, inactiveSamples * bytesPerSample);
 		dmaBufferDescriptors[d++].setBuffer(frameBuffer[i / vdivider], hres * bytesPerSample);
 	}
+}
+
+void VGA::vSync()
+{
+	vSyncPassed = true;
+}
+
+void VGA::interrupt()
+{
+	unsigned long *signal = (unsigned long *)dmaBufferDescriptors[dmaBufferDescriptorActive].buffer();
+	unsigned long *pixels = &((unsigned long *)dmaBufferDescriptors[dmaBufferDescriptorActive].buffer())[(hfront + hsync + hback) / 2];
+	unsigned long base, baseh;
+	if (currentLine >= vfront && currentLine < vfront + vsync)
+	{
+		baseh = (vsyncBit | hsyncBit) | ((vsyncBit | hsyncBit) << 16);
+		base = (vsyncBit | hsyncBitI) | ((vsyncBit | hsyncBitI) << 16);
+	}
+	else
+	{
+		baseh = (vsyncBitI | hsyncBit) | ((vsyncBitI | hsyncBit) << 16);
+		base = (vsyncBitI | hsyncBitI) | ((vsyncBitI | hsyncBitI) << 16);
+	}
+	for (int i = 0; i < hfront / 2; i++)
+		signal[i] = base;
+	for (int i = hfront / 2; i < (hfront + hsync) / 2; i++)
+		signal[i] = baseh;
+	for (int i = (hfront + hsync) / 2; i < (hfront + hsync + hback) / 2; i++)
+		signal[i] = base;
+
+	int y = (currentLine - vfront - vsync - vback) / vdivider;
+	if (y >= 0 && y < vres)
+		interruptPixelLine(y, pixels, base);
+	else
+		for (int i = 0; i < hres / 2; i++)
+		{
+			pixels[i] = base | (base << 16);
+		}
+	currentLine = (currentLine + 1) % totalLines;
+	dmaBufferDescriptorActive = (dmaBufferDescriptorActive + 1) % dmaBufferDescriptorCount;
+	if (currentLine == 0)
+		vSync();
 }

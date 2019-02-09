@@ -15,26 +15,24 @@
 
 class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 {
-	public:
-
+  public:
 	VGA14Bit(const int i2sIndex = 1)
 		: VGA(i2sIndex)
 	{
 	}
 
-	bool init(const int *mode, 
-		const int R0Pin, const int R1Pin, const int R2Pin, const int R3Pin, const int R4Pin,
-		const int G0Pin, const int G1Pin, const int G2Pin, const int G3Pin, const int G4Pin,
-		const int B0Pin, const int B1Pin, const int B2Pin, const int B3Pin, 
-		const int hsyncPin, const int vsyncPin)
+	bool init(const int *mode,
+			  const int R0Pin, const int R1Pin, const int R2Pin, const int R3Pin, const int R4Pin,
+			  const int G0Pin, const int G1Pin, const int G2Pin, const int G3Pin, const int G4Pin,
+			  const int B0Pin, const int B1Pin, const int B2Pin, const int B3Pin,
+			  const int hsyncPin, const int vsyncPin)
 	{
 		int pinMap[24] = {
 			-1, -1, -1, -1, -1, -1, -1, -1,
 			R0Pin, R1Pin, R2Pin, R3Pin, R4Pin,
 			G0Pin, G1Pin, G2Pin, G3Pin, G4Pin,
 			B0Pin, B1Pin, B2Pin, B3Pin,
-			hsyncPin, vsyncPin
-			};
+			hsyncPin, vsyncPin};
 		hsyncBitI = mode[11] << 14;
 		vsyncBitI = mode[12] << 15;
 		hsyncBit = hsyncBitI ^ 0x4000;
@@ -61,7 +59,7 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 		vsyncBitI = mode[12] << 15;
 		hsyncBit = hsyncBitI ^ 0x4000;
 		vsyncBit = vsyncBitI ^ 0x8000;
-		SBits = hsyncBitI | vsyncBitI;		
+		SBits = hsyncBitI | vsyncBitI;
 		return VGA::init(mode, pinMap);
 	}
 
@@ -75,26 +73,25 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 		setResolution(xres, yres);
 	}
 
-	virtual Color** allocateFrameBuffer()
+	virtual Color **allocateFrameBuffer()
 	{
-		Color** frame = (Color **)malloc(yres * sizeof(Color *));
-		for (int y = 0; y < vres; y++)
-			frame[y] = (Color *)DMABufferDescriptor::allocateBuffer(hres * bytesPerSample, true, (hsyncBitI | vsyncBitI) * 0x10001);
-		return frame;
+		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, hres * bytesPerSample, (hsyncBitI | vsyncBitI) * 0x10001);
 	}
 
 	virtual void allocateLineBuffers()
 	{
-		VGA::allocateLineBuffers((void**)frameBuffers[0]);
+		VGA::allocateLineBuffers((void **)frameBuffers[0]);
 	}
 
-	virtual void show()
+	virtual void show(bool vSync = false)
 	{
-		if(!frameBufferCount)
+		if (!frameBufferCount)
 			return;
-		currentFrameBuffer = (currentFrameBuffer + 1) % frameBufferCount;
-		frontBuffer = frameBuffers[currentFrameBuffer];
-		backBuffer = frameBuffers[(currentFrameBuffer + frameBufferCount - 1) % frameBufferCount];
+		if (vSync)
+		{
+			//TODO read the I2S docs to find out
+		}
+		Graphics::show(vSync);
 		for (int i = 0; i < yres * vdivider; i++)
 			dmaBufferDescriptors[(vfront + vsync + vback + i) * 2 + 1].setBuffer(frontBuffer[i / vdivider], hres * bytesPerSample);
 	}
@@ -102,12 +99,12 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 	virtual void scroll(int dy, Color color)
 	{
 		Graphics::scroll(dy, color);
-		if(frameBufferCount == 1)
+		if (frameBufferCount == 1)
 			show();
 	}
-protected:
+
+  protected:
 	virtual void interrupt()
 	{
 	}
-
 };

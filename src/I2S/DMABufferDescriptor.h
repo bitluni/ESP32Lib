@@ -21,11 +21,18 @@ class DMABufferDescriptor : protected lldesc_t
 		void *b = heap_caps_malloc(bytes, MALLOC_CAP_DMA);
 		if (!b)
 			DEBUG_PRINTLN("Failed to alloc dma buffer");
-		else
-			if (clear)
-				for (int i = 0; i < bytes / 4; i++)
-					((unsigned long*)b)[i] = clearValue;
+		else if (clear)
+			for (int i = 0; i < bytes / 4; i++)
+				((unsigned long *)b)[i] = clearValue;
 		return b;
+	}
+
+	static void **allocateDMABufferArray(int count, int bytes, bool clear = true, unsigned long clearValue = 0)
+	{
+		void **arr = (void **)malloc(count * sizeof(void *));
+		for (int i = 0; i < count; i++)
+			arr[i] = DMABufferDescriptor::allocateBuffer(bytes, true, clearValue);
+		return arr;
 	}
 
 	void setBuffer(void *buffer, int bytes)
@@ -58,7 +65,7 @@ class DMABufferDescriptor : protected lldesc_t
 		DMABufferDescriptor *b = (DMABufferDescriptor *)heap_caps_malloc(sizeof(DMABufferDescriptor) * count, MALLOC_CAP_DMA);
 		if (!b)
 			DEBUG_PRINTLN("Failed to alloc DMABufferDescriptors");
-		for(int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++)
 			b[i].init();
 		return b;
 	}
@@ -70,7 +77,7 @@ class DMABufferDescriptor : protected lldesc_t
 		if (!b)
 			DEBUG_PRINTLN("Failed to alloc DMABufferDescriptor");
 		b->init();
-		if(allocateBuffer)
+		if (allocateBuffer)
 			b->setBuffer(allocateBuffer(bytes, clear, clearValue), bytes);
 		return b;
 	}
@@ -89,7 +96,7 @@ class DMABufferDescriptor : protected lldesc_t
 	{
 		if (buf)
 		{
-			free((void*)buf);
+			free((void *)buf);
 			buf = 0;
 		}
 		free(this);
