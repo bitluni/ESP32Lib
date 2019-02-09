@@ -1,4 +1,5 @@
 #include <ESP32Lib.h>
+#include <Ressources/Font6x8.h>
 #include <math.h>
 
 //pin configuration
@@ -15,10 +16,17 @@ void setup()
 {
 	//initializing i2s vga and frame buffers
 	vga.init(vga.MODE200x150, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
+	vga.setFont(Font6x8);
 }
 
 void loop()
 {
+	vga.setCursor(0, vga.yres - 8);
+	vga.setTextColor(vga.RGB(0xffffff), vga.RGBA(0, 0, 0, 255));
+	vga.print(" fps: ");
+	static long f = 0;
+	vga.print(long((f++ * 1000) / millis()));
+
 	float factors[][2] = {{1, 1.1f}, {0.9f, 1.02f}, {1.1, 0.8}};
 	int colors[] = {vga.RGB(0xff0000), vga.RGB(0x00ff00), vga.RGB(0x0000ff)};
 	float p = millis() * 0.002f;
@@ -29,13 +37,13 @@ void loop()
 		vga.fillCircle(x, y, 8, 0);
 		vga.circle(x, y, 10, colors[i]);
 	}
-	for (int y = 0; y < vga.yres - 1; y++)
+	for (int y = 0; y < vga.yres - 9; y++)
 		for (int x = 1; x < vga.xres - 1; x++)
 		{
-			int c0 = vga.get(x, y) & 0x3fff;
-			int c1 = vga.get(x, y + 1) & 0x3fff;
-			int c2 = vga.get(x - 1, y + 1) & 0x3fff;
-			int c3 = vga.get(x + 1, y + 1) & 0x3fff;
+			int c0 = vga.get(x, y);
+			int c1 = vga.get(x, y + 1);
+			int c2 = vga.get(x - 1, y + 1);
+			int c3 = vga.get(x + 1, y + 1);
 			int r = ((c0 & 0x1f) + (c1 & 0x1f) + ((c2 & 0x1f) + (c3 & 0x1f)) / 2) / 3;
 			int g = (((c0 & 0x3e0) + (c1 & 0x3e0) + ((c2 & 0x3e0) + (c3 & 0x3e0)) / 2) / 3) & 0x3e0;
 			int b = (((c0 & 0x3c00) + (c1 & 0x3c00) + ((c2 & 0x3c00) + (c3 & 0x3c00)) / 2) / 3) & 0x3c00;

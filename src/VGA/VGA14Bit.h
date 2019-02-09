@@ -11,19 +11,15 @@
 */
 #pragma once
 #include "VGA.h"
-#include "../Graphics/GraphicsR5G5B4A2.h"
+#include "../Graphics/GraphicsR5G5B4S2Swapped.h"
 
-class VGA14BitFast : public VGA, public GraphicsR5G5B4A2
+class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 {
 	public:
 
-	VGA14BitFast(const int i2sIndex = 1)
+	VGA14Bit(const int i2sIndex = 1)
 		: VGA(i2sIndex)
 	{
-		hsyncBit = 0x0000;
-		vsyncBit = 0x0000;
-		hsyncBitI = 0x4000;
-		vsyncBitI = 0x8000;
 	}
 
 	bool init(const int *mode, 
@@ -39,6 +35,11 @@ class VGA14BitFast : public VGA, public GraphicsR5G5B4A2
 			B0Pin, B1Pin, B2Pin, B3Pin,
 			hsyncPin, vsyncPin
 			};
+		hsyncBitI = mode[11] << 14;
+		vsyncBitI = mode[12] << 15;
+		hsyncBit = hsyncBitI ^ 0x4000;
+		vsyncBit = vsyncBitI ^ 0x8000;
+		SBits = hsyncBitI | vsyncBitI;
 		return VGA::init(mode, pinMap);
 	}
 
@@ -56,6 +57,11 @@ class VGA14BitFast : public VGA, public GraphicsR5G5B4A2
 		}
 		pinMap[22] = hsyncPin;
 		pinMap[23] = vsyncPin;
+		hsyncBitI = mode[11] << 14;
+		vsyncBitI = mode[12] << 15;
+		hsyncBit = hsyncBitI ^ 0x4000;
+		vsyncBit = vsyncBitI ^ 0x8000;
+		SBits = hsyncBitI | vsyncBitI;		
 		return VGA::init(mode, pinMap);
 	}
 
@@ -69,70 +75,17 @@ class VGA14BitFast : public VGA, public GraphicsR5G5B4A2
 		setResolution(xres, yres);
 	}
 
-	void *vSyncInactiveBuffer;
-	void *vSyncActiveBuffer;
-	void *inactiveBuffer;
-	void *blankActiveBuffer;
-
 	virtual Color** allocateFrameBuffer()
 	{
 		Color** frame = (Color **)malloc(yres * sizeof(Color *));
-		for (int y = 0; y < yres; y++)
-			frame[y] = (Color *)DMABufferDescriptor::allocateBuffer(hres * bytesPerSample, true, 0xc000c000);
+		for (int y = 0; y < vres; y++)
+			frame[y] = (Color *)DMABufferDescriptor::allocateBuffer(hres * bytesPerSample, true, (hsyncBitI | vsyncBitI) * 0x10001);
 		return frame;
 	}
 
-	virtual void allocateLineBuffers(const int lines)
+	virtual void allocateLineBuffers()
 	{
-		dmaBufferDescriptorCount = totalLines * 2;
-		int inactiveSamples = (hfront + hsync + hback + 1) & 0xfffffffe;
-		vSyncInactiveBuffer = DMABufferDescriptor::allocateBuffer(inactiveSamples * bytesPerSample, true);
-		vSyncActiveBuffer = DMABufferDescriptor::allocateBuffer(hres * bytesPerSample, true);
-		inactiveBuffer = DMABufferDescriptor::allocateBuffer(inactiveSamples * bytesPerSample, true);
-		blankActiveBuffer = DMABufferDescriptor::allocateBuffer(hres * bytesPerSample, true);
-		for(int i = 0; i < inactiveSamples; i++)
-		{
-			if(i >= hfront && i < hfront + hsync)
-			{
-				((unsigned short*)vSyncInactiveBuffer)[i^1] = hsyncBit | vsyncBit;
-				((unsigned short*)inactiveBuffer)[i^1] = hsyncBit | vsyncBitI;
-			}
-			else
-			{
-				((unsigned short*)vSyncInactiveBuffer)[i^1] = hsyncBitI | vsyncBit;
-				((unsigned short*)inactiveBuffer)[i^1] = hsyncBitI | vsyncBitI;
-			}
-		}
-		for(int i = 0; i < hres; i++)
-		{
-			((unsigned short*)vSyncActiveBuffer)[i^1] = hsyncBitI | vsyncBit;
-			((unsigned short*)blankActiveBuffer)[i^1] = hsyncBitI | vsyncBitI;
-		}
-
-		dmaBufferDescriptors = DMABufferDescriptor::allocateDescriptors(dmaBufferDescriptorCount);
-		for(int i = 0; i < dmaBufferDescriptorCount; i++)
-			dmaBufferDescriptors[i].next(dmaBufferDescriptors[(i + 1) % dmaBufferDescriptorCount]);
-		int d = 0;
-		for (int i = 0; i < vfront; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(inactiveBuffer, inactiveSamples * bytesPerSample);
-			dmaBufferDescriptors[d++].setBuffer(blankActiveBuffer, hres * bytesPerSample);
-		}
-		for (int i = 0; i < vsync; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(vSyncInactiveBuffer, inactiveSamples * bytesPerSample);
-			dmaBufferDescriptors[d++].setBuffer(vSyncActiveBuffer, hres * bytesPerSample);
-		}
-		for (int i = 0; i < vback; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(inactiveBuffer, inactiveSamples * bytesPerSample);
-			dmaBufferDescriptors[d++].setBuffer(blankActiveBuffer, hres * bytesPerSample);
-		}
-		for (int i = 0; i < yres * vdivider; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(inactiveBuffer, inactiveSamples * bytesPerSample);
-			dmaBufferDescriptors[d++].setBuffer(frameBuffers[0][i / vdivider], hres * bytesPerSample);
-		}
+		VGA::allocateLineBuffers((void**)frameBuffers[0]);
 	}
 
 	virtual void show()
@@ -146,55 +99,12 @@ class VGA14BitFast : public VGA, public GraphicsR5G5B4A2
 			dmaBufferDescriptors[(vfront + vsync + vback + i) * 2 + 1].setBuffer(frontBuffer[i / vdivider], hres * bytesPerSample);
 	}
 
-	virtual void dotFast(int x, int y, Color color)
+	virtual void scroll(int dy, Color color)
 	{
-		backBuffer[y][x^1] = color | 0xc000;
+		Graphics::scroll(dy, color);
+		if(frameBufferCount == 1)
+			show();
 	}
-
-	virtual void dot(int x, int y, Color color)
-	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backBuffer[y][x^1] = color | 0xc000;
-	}
-
-	virtual void dotAdd(int x, int y, Color color)
-	{
-		//todo repair this
-		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backBuffer[y][x^1] = (color + backBuffer[y][x^1]) | 0xc000;
-	}
-	
-	virtual void dotMix(int x, int y, Color color)
-	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres && (color >> 14) != 0)
-		{
-			unsigned int ai = (3 - (color >> 14)) * (65536 / 3);
-			unsigned int a = 65536 - ai;
-			unsigned int co = backBuffer[y][x^1];
-			unsigned int ro = (co & 0b11111) * ai;
-			unsigned int go = (co & 0b1111100000) * ai;
-			unsigned int bo = (co & 0b11110000000000) * ai;
-			unsigned int r = (color & 0b11111) * a + ro;
-			unsigned int g = ((color & 0b1111100000) * a + go) & 0b11111000000000000000000000;
-			unsigned int b = ((color & 0b11110000000000) * a + bo) & 0b111100000000000000000000000000;
-			backBuffer[y][x^1] = ((r | g | b) >> 16) | 0xc000;
-		}	
-	}
-	
-	virtual Color get(int x, int y)
-	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			return backBuffer[y][x^1];
-		return 0;
-	}
-
-	virtual void clear(Color clear = 0)
-	{
-		for (int y = 0; y < this->yres; y++)
-			for (int x = 0; x < this->xres; x++)
-				backBuffer[y][x^1] = clear | 0xc000;
-	}
-
 protected:
 	virtual void interrupt()
 	{

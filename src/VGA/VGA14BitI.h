@@ -13,17 +13,12 @@
 #include "VGA.h"
 #include "../Graphics/GraphicsR5G5B4A2.h"
 
-class VGA14Bit : public VGA, public GraphicsR5G5B4A2
+class VGA14BitI : public VGA, public GraphicsR5G5B4A2
 {
 	public:
-
-	VGA14Bit(const int i2sIndex = 1)
+	VGA14BitI(const int i2sIndex = 1)
 		: VGA(i2sIndex)
 	{
-		hsyncBit = 0x0000;
-		vsyncBit = 0x0000;
-		hsyncBitI = 0x4000;
-		vsyncBitI = 0x8000;
 	}
 
 	bool init(const int *mode, 
@@ -38,7 +33,7 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4A2
 			G0Pin, G1Pin, G2Pin, G3Pin, G4Pin,
 			B0Pin, B1Pin, B2Pin, B3Pin,
 			hsyncPin, vsyncPin
-			};
+			};		
 		return VGA::init(mode, pinMap);
 	}
 
@@ -55,7 +50,7 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4A2
 				pinMap[i + 18] = bluePins[i];
 		}
 		pinMap[22] = hsyncPin;
-		pinMap[23] = vsyncPin;
+		pinMap[23] = vsyncPin;		
 		return VGA::init(mode, pinMap);
 	}
 
@@ -115,5 +110,4 @@ protected:
 		currentLine = (currentLine + 1) % totalLines;
 		dmaBufferDescriptorActive = (dmaBufferDescriptorActive + 1) % dmaBufferDescriptorCount;
 	}
-
 };

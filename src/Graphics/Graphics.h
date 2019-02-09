@@ -82,7 +82,7 @@ class Graphics
 		this->yres = yres;
 		font = 0;
 		cursorX = cursorY = cursorBaseX = 0;
-		frontColor = 0;
+		frontColor = -1;
 		backColor = 0;
 		frameBufferCount = 1;
 		for(int i = 0; i < 3; i++)
@@ -116,9 +116,8 @@ class Graphics
 		return 1;
 	}
 
-	void setTextColor(long front, long back = -1)
+	void setTextColor(long front, long back = 0)
 	{
-		//-1 = transparent back;
 		frontColor = front;
 		backColor = back;
 	}
@@ -142,9 +141,9 @@ class Graphics
 		for (int py = 0; py < font->charHeight; py++)
 			for (int px = 0; px < font->charWidth; px++)
 				if (*(pix++))
-					dot(px + x, py + y, frontColor);
-				else if (backColor >= 0)
-					dot(px + x, py + y, backColor);
+					dotMix(px + x, py + y, frontColor);
+				else
+					dotMix(px + x, py + y, backColor);
 	}
 
 	void print(const char *str)
@@ -233,15 +232,17 @@ class Graphics
 		print("\n");
 	}
 
-	virtual void clear(Color clear = 0)
+	virtual void clear(Color color = 0)
 	{
 		for (int y = 0; y < yres; y++)
 			for (int x = 0; x < xres; x++)
-				dotFast(x, y, clear);
+				dotFast(x, y, color);
 	}
 
 	virtual void xLine(int x0, int x1, int y, Color color)
 	{
+		if (y < 0 || y >= yres)
+			return;
 		if (x0 > x1)
 		{
 			int xb = x0;

@@ -34,6 +34,9 @@ class VGA : public I2S
 	static const int MODE360x175[];
 	static const int MODE360x88[];
 
+	static const int MODE320x350[];
+	static const int MODE320x175[];
+
 	//not supported on all of my screens
 	static const int MODE384x576[];
 	static const int MODE384x288[];
@@ -49,6 +52,7 @@ class VGA : public I2S
 	static const int MODE400x300[];
 	static const int MODE400x150[];
 	static const int MODE400x100[];
+	//works
 	static const int MODE200x150[];
 	
   protected:
@@ -64,6 +68,7 @@ class VGA : public I2S
 	int hsyncBitI;
 
 	int hres;
+	int vres;
 	int hfront;
 	int hsync;
 	int hback;
@@ -74,6 +79,13 @@ class VGA : public I2S
 	int hdivider;
 	int vdivider;
 
-	virtual void allocateLineBuffers(const int lines);
+	void *vSyncInactiveBuffer;
+	void *vSyncActiveBuffer;
+	void *inactiveBuffer;
+	void *blankActiveBuffer;
+
+	void allocateLineBuffers(const int lines);
+	virtual void allocateLineBuffers();
+	virtual void allocateLineBuffers(void **frameBuffer);
 	virtual void propagateResolution(const int xres, const int yres) = 0;
 };

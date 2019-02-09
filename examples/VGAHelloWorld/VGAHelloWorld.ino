@@ -15,22 +15,19 @@ void setup()
 {
 	//initializing i2s vga and frame buffers
 	vga.setFrameBufferCount(2);
-	vga.init(vga.MODE320x240, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
+	vga.init(vga.MODE320x200, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
 	vga.setFont(Font6x8);
 }
 
 void loop()
 {
-	static int lastMillis = 0;
-	int t = millis();
-	int fps = 1000 / (t - lastMillis);
-	lastMillis = t;
-	vga.clear();
-	vga.setTextColor(0xffff);
-	vga.setCursor(0, 0);
-	vga.print("mem: ");
+	vga.clear(vga.RGB(0xffffff));
+	vga.setCursor(10, 10);
+	vga.setTextColor(8); //vga.RGB(0));
+	vga.print("free memory: ");
 	vga.print((int)heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
 	vga.print(" fps: ");
-	vga.print(fps);
+	static int f = 0;
+	vga.print(long((f++ * 1000) / millis()));
 	vga.show();
 }

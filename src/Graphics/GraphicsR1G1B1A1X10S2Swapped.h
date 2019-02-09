@@ -12,13 +12,17 @@
 #pragma once
 #include "Graphics.h"
 
-class GraphicsR1G1B1A1: public Graphics<unsigned char>
+class GraphicsR5G5B4A1X10S2Swapped: public Graphics<unsigned short>
 {
 	public:
-	typedef unsigned char Color;
-	GraphicsR1G1B1A1()
+	typedef unsigned short Color;
+	static const Color RGBAXMask = 0x3fff;
+	Color SBits;
+	
+	GraphicsR5G5B4A1X10S2Swapped()
 	{
-		frontColor = 0xf;
+		SBits = 0xc000;
+		frontColor = 0x3fff;
 	}
 
 	virtual int R(Color c) const
@@ -45,56 +49,39 @@ class GraphicsR1G1B1A1: public Graphics<unsigned char>
 
 	virtual void dotFast(int x, int y, Color color)
 	{
-		if(x & 1)
-			backBuffer[y][x >> 1] =  (backBuffer[y][x >> 1] & 0xf) | (color << 4);
-		else
-			backBuffer[y][x >> 1] = (backBuffer[y][x >> 1] & 0xf0) | (color & 0xf);
+		backBuffer[y][x^1] = (color & RGBAXMask) | SBits;
 	}
 
 	virtual void dot(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			if(x & 1)
-				backBuffer[y][x >> 1] = (backBuffer[y][x >> 1] & 0xf) | (color << 4);
-			else
-				backBuffer[y][x >> 1] = (backBuffer[y][x >> 1] & 0xf0) | (color & 0xf);
+			backBuffer[y][x^1] = (color & RGBAXMask) | SBits;
 	}
 
 	virtual void dotAdd(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			if(x & 1)
-				backBuffer[y][x >> 1] = backBuffer[y][x >> 1] | (color << 4);
-			else
-				backBuffer[y][x >> 1] = backBuffer[y][x >> 1] | (color & 0xf);
+			backBuffer[y][x^1] = backBuffer[y][x^1] | (color & RGBAXMask);
 	}
 	
 	virtual void dotMix(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres && (color & 8) != 0)
-		{
-			if(x & 1)
-				backBuffer[y][x >> 1] = color << 4;
-			else
-				backBuffer[y][x >> 1] = color & 0xf;
-		}	
+			backBuffer[y][x^1] = (color & RGBAXMask) | SBits;
 	}
 	
 	virtual Color get(int x, int y)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			if(x & 1)
-				return backBuffer[y][x >> 1] = backBuffer[y][x >> 1] >> 4;
-			else
-				return backBuffer[y][x >> 1] = backBuffer[y][x >> 1] & 0xf;
+			return backBuffer[y][x^1] & RGBAXMask;
 		return 0;
 	}
 
 	virtual void clear(Color color = 0)
 	{
 		for (int y = 0; y < this->yres; y++)
-			for (int x = 0; x < this->xres / 2; x++)
-				this->backBuffer[y][x] = color | (color << 4);
+			for (int x = 0; x < this->xres; x++)
+				backBuffer[y][x^1] = (color & RGBAXMask) | SBits;
 	}
 
 	virtual Color** allocateFrameBuffer()
@@ -102,9 +89,9 @@ class GraphicsR1G1B1A1: public Graphics<unsigned char>
 		Color** frame = (Color **)malloc(yres * sizeof(Color *));
 		for (int y = 0; y < yres; y++)
 		{
-			frame[y] = (Color *)malloc(xres / 2 * sizeof(Color));
-			for (int x = 0; x < xres / 2; x++)
-				frame[y][x] = 0;
+			frame[y] = (Color *)malloc(xres * sizeof(Color));
+			for (int x = 0; x < xres; x++)
+				frame[y][x] = SBits;
 		}
 		return frame;
 	}

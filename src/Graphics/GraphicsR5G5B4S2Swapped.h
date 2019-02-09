@@ -12,13 +12,17 @@
 #pragma once
 #include "Graphics.h"
 
-class GraphicsR5G5B4A2: public Graphics<unsigned short>
+class GraphicsR5G5B4S2Swapped: public Graphics<unsigned short>
 {
 	public:
 	typedef unsigned short Color;
-	GraphicsR5G5B4A2()
+	static const Color RGBMask = 0x3fff;
+	Color SBits;
+
+	GraphicsR5G5B4S2Swapped()
 	{
-		frontColor = 0xffff;
+		SBits = 0xc000;
+		frontColor = 0x3fff;
 	}
 
 	virtual int R(Color c) const
@@ -45,20 +49,20 @@ class GraphicsR5G5B4A2: public Graphics<unsigned short>
 
 	virtual void dotFast(int x, int y, Color color)
 	{
-		backBuffer[y][x] = color;
+		backBuffer[y][x^1] = (color & RGBMask) | SBits;
 	}
 
 	virtual void dot(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backBuffer[y][x] = color;
+			backBuffer[y][x^1] = (color & RGBMask) | SBits;
 	}
 
 	virtual void dotAdd(int x, int y, Color color)
 	{
 		//todo repair this
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backBuffer[y][x] = color + backBuffer[y][x];
+			backBuffer[y][x^1] = (color + backBuffer[y][x^1]) | SBits;
 	}
 	
 	virtual void dotMix(int x, int y, Color color)
@@ -67,21 +71,21 @@ class GraphicsR5G5B4A2: public Graphics<unsigned short>
 		{
 			unsigned int ai = (3 - (color >> 14)) * (65536 / 3);
 			unsigned int a = 65536 - ai;
-			unsigned int co = backBuffer[y][x];
+			unsigned int co = backBuffer[y][x^1];
 			unsigned int ro = (co & 0b11111) * ai;
 			unsigned int go = (co & 0b1111100000) * ai;
 			unsigned int bo = (co & 0b11110000000000) * ai;
 			unsigned int r = (color & 0b11111) * a + ro;
 			unsigned int g = ((color & 0b1111100000) * a + go) & 0b11111000000000000000000000;
 			unsigned int b = ((color & 0b11110000000000) * a + bo) & 0b111100000000000000000000000000;
-			backBuffer[y][x] = (r | g | b) >> 16;
+			backBuffer[y][x^1] = ((r | g | b) >> 16) | SBits;
 		}	
 	}
 	
 	virtual Color get(int x, int y)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			return backBuffer[y][x];
+			return backBuffer[y][x^1] & RGBMask;
 		return 0;
 	}
 
@@ -89,7 +93,7 @@ class GraphicsR5G5B4A2: public Graphics<unsigned short>
 	{
 		for (int y = 0; y < this->yres; y++)
 			for (int x = 0; x < this->xres; x++)
-				backBuffer[y][x] = color;
+				backBuffer[y][x^1] = (color & RGBMask) | SBits;
 	}
 
 	virtual Color** allocateFrameBuffer()
@@ -99,7 +103,7 @@ class GraphicsR5G5B4A2: public Graphics<unsigned short>
 		{
 			frame[y] = (Color *)malloc(xres * sizeof(Color));
 			for (int x = 0; x < xres; x++)
-				frame[y][x] = 0;
+				frame[y][x] = SBits;
 		}
 		return frame;
 	}
