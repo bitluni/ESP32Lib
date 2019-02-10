@@ -255,12 +255,20 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClo
 	//rtc_clk_apll_enable(enable, sdm0, sdm1, sdm2, odir);
 	//                           0-255 0-255  0-63  0-31
 	//sdm seems to be simply a fixpoint number with 16bits frational part
-	//0xA7f00 is the highest value I was able to use. it's just shy of 580MHz. That's a max freq of 145MHz
-	//freq = 40000000L * (4 + sdm) / 4
-	//sdm = freq / 10000000L - 4;
+	//0xA7fff is the highest value I was able to use. it's just shy of 580MHz. That's a max freq of 145MHz
+	//freq = 40000000L * (4 + sdm) / (2 * (odir + 2))
+	//sdm = freq / (20000000L / (odir + 2)) - 4;
+
 	long freq = min(sampleRate, 36249999L) * 8; //there are two 1/2 factors in the I2S pipeline for the frequency and another I missed
-	long sdm = long(freq * 0.0065536) - 0x40000;
-	rtc_clk_apll_enable(true, sdm & 255, (sdm >> 8) & 255, sdm >> 16, 0);
+	int sdm, sdmn;
+	int odir = -1;
+	do
+	{	
+		odir++;
+		sdm = long((double(freq) / (20000000. / (odir + 2))) * 0x10000) - 0x40000;
+		sdmn = long((double(freq) / (20000000. / (odir + 2 + 1))) * 0x10000) - 0x40000;
+	}while(sdm < 0x8c0ecL && odir < 31 && sdmn < 0xA7fffL);
+	rtc_clk_apll_enable(true, sdm & 255, (sdm >> 8) & 255, sdm >> 16, odir);
 	i2s.clkm_conf.val = 0;
 	i2s.clkm_conf.clka_en = 1;
 	i2s.clkm_conf.clkm_div_num = 2; //clockN;

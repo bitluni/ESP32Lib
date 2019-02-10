@@ -19,6 +19,9 @@ class VGA : public I2S
 	VGA(const int i2sIndex = 0);
 	void setLineBufferCount(int lineBufferCount);
 
+	int maxXRes(const int *baseMode);
+	int *customMode(const int *baseMode, int xres, int yres, int* modeBuffer, int fiyedYDivider = 0); 
+	int *customWideMode(int xres, int yres, int* modeBuffer, int fiyedYDivider = 0); 
 	bool init(const int *mode, const int *pinMap);
 
 	static const int MODE320x480[];
@@ -32,16 +35,9 @@ class VGA : public I2S
 	static const int MODE360x100[];
 	static const int MODE360x350[];
 	static const int MODE360x175[];
-	static const int MODE360x88[];
 
 	static const int MODE320x350[];
 	static const int MODE320x175[];
-
-	//not supported on all of my screens
-	static const int MODE384x576[];
-	static const int MODE384x288[];
-	static const int MODE384x144[];
-	static const int MODE384x96[];
 
 	static const int MODE460x480[];
 	static const int MODE460x240[];
@@ -54,6 +50,15 @@ class VGA : public I2S
 	static const int MODE400x100[];
 	//works
 	static const int MODE200x150[];
+
+	static const int MODE1280x1024[];
+	static const int MODE1280x960[];
+	static const int MODE1280x800[];
+	static const int MODE1024x768[];
+	static const int MODE800x600[];
+	static const int MODE720x400[];
+	static const int MODE720x350[];
+	static const int MODE640x480[];
 
   protected:
 	static const int bytesPerSample;

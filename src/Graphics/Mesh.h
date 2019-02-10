@@ -63,7 +63,8 @@ class Mesh
 
 		const float L[3] = {0, 0, -1};
 
-		const float NdotL = max(0.0f, nx * L[0] + ny * L[1] + nz * L[2]);
+		float NdotL = nx * L[0] + ny * L[1] + nz * L[2];
+		if(NdotL < 0) NdotL = 0; 
 		return  int(NdotL * (color & 0x1f)) | (int(NdotL * ((color >> 5) & 0x1f)) << 5) | (int(NdotL * ((color >> 10) & 0xf)) << 10);
 	}
 

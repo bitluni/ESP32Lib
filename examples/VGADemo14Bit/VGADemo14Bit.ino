@@ -34,7 +34,7 @@ void loop()
 	//setting the text color to white with opaque black background
 	vga.setTextColor(vga.RGB(0xffffff), vga.RGBA(0, 0, 0, 255));
 	//printing the fps
-	vga.print(" fps: ");
+	vga.print("fps: ");
 	static long f = 0;
 	vga.print(long((f++ * 1000) / millis()));
 

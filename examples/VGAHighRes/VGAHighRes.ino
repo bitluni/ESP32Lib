@@ -52,7 +52,7 @@ void bitluni(int x, int y, int s)
 	vga.fillRect(x + 9 * s, y + 10 * s, 4 * s, s, vga.RGB(255, 255, 255));
 }
 
-///draws a bounsing ball
+///draws a bouncing ball
 void ball()
 {
 	//some basic gravity physics

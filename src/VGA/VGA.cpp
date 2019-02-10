@@ -16,32 +16,23 @@
 const int VGA::MODE320x480[] = {16, 96, 52, 640, 11, 2, 31, 480, 2, 1, 25175000, 1, 1};
 const int VGA::MODE320x240[] = {16, 96, 52, 640, 11, 2, 31, 480, 2, 2, 25175000, 1, 1};
 const int VGA::MODE320x120[] = {16, 96, 52, 640, 11, 2, 31, 480, 2, 4, 25175000, 1, 1};
-const int VGA::MODE320x400[] = {16, 96, 48, 640, 11, 2, 31, 400, 2, 1, 25175000, 1, 0};
-const int VGA::MODE320x200[] = {16, 96, 48, 640, 11, 2, 31, 400, 2, 2, 25175000, 1, 0};
-const int VGA::MODE320x100[] = {16, 96, 48, 640, 11, 2, 31, 400, 2, 4, 25175000, 1, 0};
+const int VGA::MODE320x400[] = {16, 96, 48, 640, 12, 2, 35, 400, 2, 1, 25175000, 1, 0};
+const int VGA::MODE320x200[] = {16, 96, 48, 640, 12, 2, 35, 400, 2, 2, 25175000, 1, 0};
+const int VGA::MODE320x100[] = {16, 96, 48, 640, 12, 2, 35, 400, 2, 4, 25175000, 1, 0};
 const int VGA::MODE360x400[] = {16, 108, 56, 720, 11, 2, 32, 400, 2, 1, 28322000, 1, 0};
 const int VGA::MODE360x200[] = {16, 108, 56, 720, 11, 2, 32, 400, 2, 2, 28322000, 1, 0};
 const int VGA::MODE360x100[] = {16, 108, 56, 720, 11, 2, 32, 400, 2, 4, 28322000, 1, 0};
 const int VGA::MODE360x350[] = {16, 108, 56, 720, 11, 2, 32, 350, 2, 1, 28322000, 1, 1};
 const int VGA::MODE360x175[] = {16, 108, 56, 720, 11, 2, 32, 350, 2, 2, 28322000, 1, 1};
-const int VGA::MODE360x88[] = {16, 108, 56, 720, 11, 2, 31, 350, 2, 4, 28322000, 1, 1};
 
-const int VGA::MODE320x350[] = {16, 96, 48, 640, 37, 2, 60, 350, 2, 1, 25175000, 1, 1};
-const int VGA::MODE320x175[] = {16, 96, 48, 640, 37, 2, 60, 350, 2, 2, 25175000, 1, 1};
+const int VGA::MODE320x350[] = {16, 96, 48, 640, 37, 2, 60, 350, 2, 1, 25175000, 0, 1};
+const int VGA::MODE320x175[] = {16, 96, 48, 640, 37, 2, 60, 350, 2, 2, 25175000, 0, 1};
 
-//not supported on any of my screens
-const int VGA::MODE384x576[] = {24, 80, 104, 768, 1, 3, 17, 576, 2, 1, 34960000, 1, 0};
-const int VGA::MODE384x288[] = {24, 80, 104, 768, 1, 3, 17, 576, 2, 2, 34960000, 1, 0};
-const int VGA::MODE384x144[] = {24, 80, 104, 768, 1, 3, 17, 576, 2, 4, 34960000, 1, 0};
-const int VGA::MODE384x96[] = {24, 80, 104, 768, 1, 3, 17, 576, 2, 6, 34960000, 1, 0};
-
-//not stable (can't reach 40MHz pixel clock, it's clipped by the driver to 36249999 at undivided resolution)
-//you can mod the timings a bit the get it running on your system
-const int VGA::MODE400x300[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 2, 39700000, 0, 0};
-const int VGA::MODE400x150[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 4, 39700000, 0, 0};
-const int VGA::MODE400x100[] = {40, 128, 88, 800, 1, 4, 23, 600, 2, 6, 39700000, 0, 0};
-//works
-const int VGA::MODE200x150[] = {40, 128, 88, 800, 1, 4, 23, 600, 4, 4, 39700000, 0, 0};
+const int VGA::MODE400x300[] = {24, 72, 128, 800, 1, 2, 22, 600, 2, 2, 36000000, 0, 0};
+const int VGA::MODE400x150[] = {24, 72, 128, 800, 1, 2, 22, 600, 2, 4, 36000000, 0, 0};
+const int VGA::MODE400x100[] = {24, 72, 128, 800, 1, 2, 22, 600, 2, 6, 36000000, 0, 0};
+const int VGA::MODE200x150[] = {24, 72, 128, 800, 1, 2, 22, 600, 4, 4, 36000000, 0, 0};
+//const int VGA::MODE200x150[] = {40, 128, 88, 800, 1, 4, 23, 600, 4, 4, 40000000, 0, 0};	//60Hz version
 
 //460 pixels horizontal it's based on 640x480
 const int VGA::MODE460x480[] = {24, 136, 76, 920, 11, 2, 31, 480, 2, 1, 36249999, 1, 1};
@@ -49,12 +40,47 @@ const int VGA::MODE460x240[] = {24, 136, 76, 920, 11, 2, 31, 480, 2, 2, 36249999
 const int VGA::MODE460x120[] = {24, 136, 76, 920, 11, 2, 31, 480, 2, 4, 36249999, 1, 1};
 const int VGA::MODE460x96[] = {24, 136, 76, 920, 11, 2, 31, 480, 2, 5, 36249999, 1, 1};
 
+//base modes for custom mode calculations
+const int VGA::MODE1280x1024[] = {48, 112, 248, 1280, 1, 3, 38, 1024, 1, 1, 108000000, 0, 0};
+const int VGA::MODE1280x960[] = {80, 136, 216, 1280, 1, 3, 30, 960, 1, 1, 101200000, 1, 0};
+const int VGA::MODE1280x800[] = {64, 136, 200, 1280, 1, 3, 24, 800, 1, 1, 83640000, 1, 0};
+const int VGA::MODE1024x768[] = {24, 136, 160, 1024, 3, 6, 29, 768, 1, 1, 65000000, 1, 1};
+const int VGA::MODE800x600[] = {24, 72, 128, 800, 1, 2, 22, 600, 1, 1, 36000000, 0, 0};
+const int VGA::MODE720x400[] = {16, 108, 56, 720, 11, 2, 32, 400, 1, 1, 28322000, 1, 0};
+const int VGA::MODE720x350[] = {16, 108, 56, 720, 11, 2, 32, 350, 2, 1, 28322000, 1, 1};
+const int VGA::MODE640x480[] = {16, 96, 52, 640, 11, 2, 31, 480, 1, 1, 25175000, 1, 1};
+
 const int VGA::bytesPerSample = 2;
 
 VGA::VGA(const int i2sIndex)
 	: I2S(i2sIndex)
 {
 	lineBufferCount = 8;
+}
+
+int VGA::maxXRes(const int *baseMode)
+{
+	return (int(baseMode[3] * 36249999. * .5 / baseMode[10]) & 0xfffffffe);
+}
+
+int *VGA::customMode(const int *baseMode, int xres, int yres, int* modeBuffer, int fixedYDivider)
+{
+	xres = (xres + 1) & 0xfffffffe;
+	float f = float(xres) / baseMode[3];
+	modeBuffer[1] = int(baseMode[1] * f + 1) & 0xfffffffe;
+	modeBuffer[2] = int((baseMode[1] + baseMode[2] - modeBuffer[1] / f) * f + 1) & 0xfffffffe;
+	modeBuffer[3] = xres;
+	modeBuffer[0] = int(((baseMode[0] + baseMode[1] + baseMode[2] + baseMode[3]) - (modeBuffer[1] + modeBuffer[2] + modeBuffer[3]) / f) * f + 1) & 0xfffffffe;
+	modeBuffer[8] = 1;
+	
+	modeBuffer[5] = baseMode[5];
+	modeBuffer[9] = fixedYDivider ? fixedYDivider : (baseMode[7] / yres);
+	modeBuffer[7] = yres * modeBuffer[9];
+	modeBuffer[4] = baseMode[4] + baseMode[7] / 2 - modeBuffer[7] / 2;
+	modeBuffer[6] = baseMode[6] + baseMode[7] / 2 - (modeBuffer[7] - modeBuffer[7] / 2);
+	modeBuffer[10] = baseMode[10] * f;
+	modeBuffer[11] = baseMode[11];
+	modeBuffer[12] = baseMode[12];
 }
 
 bool VGA::init(const int *mode, const int *pinMap)
@@ -174,7 +200,7 @@ void VGA::vSync()
 void VGA::interrupt()
 {
 	unsigned long *signal = (unsigned long *)dmaBufferDescriptors[dmaBufferDescriptorActive].buffer();
-	unsigned long *pixels = &((unsigned long *)dmaBufferDescriptors[dmaBufferDescriptorActive].buffer())[(hfront + hsync + hback) / 2];
+	unsigned long *pixels = &((unsigned long *)dmaBufferDescriptors[dmaBufferDescriptorActive].buffer())[(hsync + hback) / 2];
 	unsigned long base, baseh;
 	if (currentLine >= vfront && currentLine < vfront + vsync)
 	{
@@ -186,11 +212,9 @@ void VGA::interrupt()
 		baseh = (vsyncBitI | hsyncBit) | ((vsyncBitI | hsyncBit) << 16);
 		base = (vsyncBitI | hsyncBitI) | ((vsyncBitI | hsyncBitI) << 16);
 	}
-	for (int i = 0; i < hfront / 2; i++)
-		signal[i] = base;
-	for (int i = hfront / 2; i < (hfront + hsync) / 2; i++)
+	for (int i = 0; i < hsync / 2; i++)
 		signal[i] = baseh;
-	for (int i = (hfront + hsync) / 2; i < (hfront + hsync + hback) / 2; i++)
+	for (int i = hsync / 2; i < (hsync + hback) / 2; i++)
 		signal[i] = base;
 
 	int y = (currentLine - vfront - vsync - vback) / vdivider;
@@ -201,6 +225,8 @@ void VGA::interrupt()
 		{
 			pixels[i] = base | (base << 16);
 		}
+	for (int i = 0; i < hfront / 2; i++)
+		signal[i + (hsync + hback + hres) / 2] = base;
 	currentLine = (currentLine + 1) % totalLines;
 	dmaBufferDescriptorActive = (dmaBufferDescriptorActive + 1) % dmaBufferDescriptorCount;
 	if (currentLine == 0)
