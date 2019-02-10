@@ -22,7 +22,7 @@ class GraphicsR5G5B4S2Swapped: public Graphics<unsigned short>
 	GraphicsR5G5B4S2Swapped()
 	{
 		SBits = 0xc000;
-		frontColor = 0x3fff;
+		frontColor = 0xffff;
 	}
 
 	virtual int R(Color c) const

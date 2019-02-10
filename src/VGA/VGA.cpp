@@ -206,3 +206,7 @@ void VGA::interrupt()
 	if (currentLine == 0)
 		vSync();
 }
+
+void VGA::interruptPixelLine(int y, unsigned long *pixels, unsigned long syncBits)
+{
+}

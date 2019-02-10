@@ -57,7 +57,7 @@ class VGA3Bit : public VGA, public GraphicsR5G5B4A1X10S2Swapped
 
 	virtual Color **allocateFrameBuffer()
 	{
-		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, hres * bytesPerSample, (hsyncBitI | vsyncBitI) * 0x10001);
+		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, hres * bytesPerSample, true, (hsyncBitI | vsyncBitI) * 0x10001);
 	}
 
 	virtual void allocateLineBuffers()

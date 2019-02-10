@@ -11,11 +11,13 @@
 */
 #pragma once
 #include "../Math/Matrix.h"
+#include "Engine3D.h"
 
-template <typename Color = unsigned short>
+template <typename Graphics>
 class Mesh
 {
   public:
+	typedef typename Graphics::Color Color;
 	int vertexCount;
 	int triangleCount;
 	int edgeCount;
@@ -49,7 +51,10 @@ class Mesh
 
 	static Color basicVertexShader(int trinangleNo, short *v0, short *v1, short *v2, const signed char *normal, Color color)
 	{
-		return color;
+		const float nx = normal[0] * scaleN;
+		const float ny = normal[1] * scaleN;
+		const float nz = normal[2] * scaleN;
+		return (int(15 * nx + 16)) | (int(15 * nz + 16) << 5) | (int(7 * ny + 8) << 10);
 	}
 
 	static Color basicVertexShaderNormals(int trinangleNo, short *v0, short *v1, short *v2, const signed char *normal, Color color)
@@ -65,15 +70,15 @@ class Mesh
 		return  int(NdotL * (color & 0x1f)) | (int(NdotL * ((color >> 5) & 0x1f)) << 5) | (int(NdotL * ((color >> 10) & 0xf)) << 10);
 	}
 
-	/*TODO
-	void drawTriangles(Graphics &g, Color color = -1, vertexShader vs = 0)
+	void drawTriangles(Engine3D<Graphics> &e, Color color = -1, vertexShader vs = 0)
 	{
-		vertexShader v = vs;
-		if(v == 0)
+		if(vs == 0)
+		{
 			if(tTriNormals)
-				v = basicVertexShader;
+				vs = basicVertexShaderNormals;
 			else
-				v = basicVertexShaderNormals;
+				vs = basicVertexShader;
+		}
 
 		for (int i = 0; i < triangleCount; i++)
 		{
@@ -86,8 +91,8 @@ class Mesh
 			int dy2 = v2[1] - v0[1];
 			if (dx1 * dy2 - dx2 * dy1 < 0)
 			{
-				Color c = v(i, v0, v1, v2, tTriNormals ? tTriNormals[i] : 0, color);
-				g.enqueueTriangle(tvertices[triangles[i][0]], tvertices[triangles[i][1]], tvertices[triangles[i][2]], c);
+				Color c = vs(i, v0, v1, v2, tTriNormals ? tTriNormals[i] : 0, color);
+				e.enqueueTriangle(tvertices[triangles[i][0]], tvertices[triangles[i][1]], tvertices[triangles[i][2]], c);
 			}
 		}
 	}
@@ -105,7 +110,7 @@ class Mesh
 		for (int i = 0; i < vertexCount; i++)
 			g.dot(tvertices[i][0], tvertices[i][1], color);
 	}
-*/
+
 	void transform(Matrix m, Matrix normTrans = Matrix())
 	{
 		for (int i = 0; i < vertexCount; i++)

@@ -1,0 +1,198 @@
+<head>
+<script>
+function readStl(stl, removeDouble) 
+{
+	//digital high five to @tonylukasavage for his https://github.com/tonylukasavage/jsstl
+	var data = {
+		vertexCount: 0,
+		triangleCount: 0,
+		edgeCount: 0,
+		triangles: [],
+		edges: [],
+		vertices: [],
+		triangleNormals: []
+	}
+	var map = [];
+	
+	var o = 80;
+	var dv = new DataView(stl);
+	var triangleCount = dv.getUint32(o, true); 
+	o += 4;
+	for (var j = 0; j < triangleCount; j++) 
+	{
+		var t = [];
+		data.triangleNormals.push([dv.getFloat32(o, true), dv.getFloat32(o + 4, true), dv.getFloat32(o + 8, true)]);
+		o += 12;
+		for (var i = 0; i < 3; i++) 
+		{
+			var v = [dv.getFloat32(o, true), dv.getFloat32(o + 4, true), dv.getFloat32(o + 8, true)];
+			if(removeDouble)
+			{
+				var newv = false;
+				if(map["f"+v[0]] === undefined)
+					map["f"+v[0]] = [];
+				if(map["f"+v[0]]["f"+v[1]] === undefined)
+					map["f"+v[0]]["f"+v[1]] = [];
+				if(map["f"+v[0]]["f"+v[1]]["f"+v[2]] === undefined)
+				{
+					map["f"+v[0]]["f"+v[1]]["f"+v[2]] = data.vertices.length;
+					t.push(data.vertices.length);
+					data.vertices.push(v);
+				}
+				else
+					t.push(map["f"+v[0]]["f"+v[1]]["f"+v[2]]);
+				
+			}
+			else
+			{
+				t.push(data.vertices.length);
+				data.vertices.push(v);
+			}
+			o += 12;
+		}
+		data.triangles.push(t);
+		o += 2;
+	}
+	return data;
+};
+
+function scaleMesh(mesh)
+{
+	if(!mesh.vertices.length) return;
+	var min = [mesh.vertices[0][0], mesh.vertices[0][1], mesh.vertices[0][2]];
+	var max = [min[0], min[1], min[2]];
+	for(var i = 0; i < mesh.vertices.length; i++)
+	{
+		var v = mesh.vertices[i];
+		min[0] = Math.min(min[0], v[0]);
+		min[1] = Math.min(min[1], v[1]);
+		min[2] = Math.min(min[2], v[2]);
+		max[0] = Math.max(max[0], v[0]);
+		max[1] = Math.max(max[1], v[1]);
+		max[2] = Math.max(max[2], v[2]);
+	}
+	size = Math.max(Math.max(max[0] - min[0], max[1] - min[1]), max[2] - min[2]);
+	for(var i = 0; i < mesh.vertices.length; i++)
+	{
+		var v = mesh.vertices[i];
+		v[0] = (v[0] - (max[0] + min[0]) * 0.5) / size;
+		v[1] = (v[1] - (max[1] + min[1]) * 0.5) / size;
+		v[2] = (v[2] - (max[2] + min[2]) * 0.5) / size;
+	}
+}
+
+function createEdges(mesh)
+{
+	var map = [];
+	mesh.edges = [];
+	
+	for(var i = 0; i < mesh.triangles.length; i++)
+	{
+		var t = mesh.triangles[i];
+		for(var j = 0; j < 3; j++)
+		{
+			var v0 = t[j];
+			var v1 = t[(j + 1) % 3];
+			if(v0 > v1)
+			{
+				var v = v0; v0 = v1; v1 = v;
+			}
+			if(map["v" + v0] === undefined)
+				map["v" + v0] = [];
+			if(map["v" + v0]["v" + v1] === undefined)
+			{
+				mesh.edges.push([v0, v1]);
+				map["v" + v0]["v" + v1] = true;
+			}
+		}
+	}	
+}
+
+function meshToText(mesh, digits, edges, triangles, normals, name)
+{
+	var text = "namespace " + name + "\r\n{\r\n";
+	text += "const int vertexCount = " + mesh.vertices.length + ";\r\n";
+	if(edges)
+		text += "const int edgeCount = " + mesh.edges.length + ";\r\n";
+	if(triangles)
+		text += "const int triangleCount = " + mesh.triangles.length + ";\r\n";			   
+
+	text += "const float vertices[][3] = {"
+	for(var i = 0; i < mesh.vertices.length; i++)
+	{
+		if((i & 15) == 0) text += "\r\n";
+		text += mesh.vertices[i][0].toFixed(digits) + ", " + mesh.vertices[i][1].toFixed(digits) + ", " + mesh.vertices[i][2].toFixed(digits) + ", ";
+	}	
+	text += "};\r\n";
+
+	if(triangles)
+	{
+		text += "const unsigned short triangles[][3] = {";
+		for(var i = 0; i < mesh.triangles.length; i++)
+		{
+			if((i & 15) == 0) text += "\r\n";
+			text += mesh.triangles[i][0] + ", " + mesh.triangles[i][1] + ", " + mesh.triangles[i][2] + ", ";
+		}	
+		text += "};\r\n";
+	}
+
+	if(edges)
+	{
+		text += "const unsigned short edges[][2] = {";
+		for(var i = 0; i < mesh.edges.length; i++)
+		{
+			if((i & 15) == 0) text += "\r\n";
+			text += mesh.edges[i][0] + ", " + mesh.edges[i][1] + ", ";
+		}	
+		text += "};\r\n";
+	}
+	
+	if(normals)
+	{
+		text += "const float triangleNormals[][3] = {";
+		for(var i = 0; i < mesh.triangles.length; i++)
+		{
+			if((i & 15) == 0) text += "\r\n";
+			text += mesh.triangleNormals[i][0].toFixed(digits) + ", " + mesh.triangleNormals[i][1].toFixed(digits) + ", " + mesh.triangleNormals[i][2].toFixed(digits) + ", ";
+		}	
+		text += "};\r\n";
+	}
+	text += "};\r\n";
+	return text;
+}
+
+function convert(event)
+{
+	var reader = new FileReader();
+	var file = event.target.files[0];
+	reader.onload = function(){
+		mesh = readStl(reader.result, true);
+		scaleMesh(mesh);
+		createEdges(mesh);
+		var link = document.createElement("a");
+		var name = file.name.split('.', 1)[0];
+		link.download = name + ".h";
+		link.href = URL.createObjectURL(new Blob(
+		[meshToText(mesh, 4, 
+			document.getElementById("edges").checked, 
+			document.getElementById("tris").checked, 
+			document.getElementById("triNorms").checked, name)], {type: "text/plain"}));
+		document.body.appendChild(document.createElement("br"));
+		document.body.appendChild(link);
+		link.innerHTML = link.download;
+		link.click();
+		//document.body.removeChild(link);
+		event.target.value = "";
+	}
+	reader.readAsArrayBuffer(file);
+}
+</script>
+</head>
+<body>
+Choose data structures to export and open the binary STL file to convert to a c++ header file.<br>
+Export: <input id="edges" type="checkbox">edges <input  id="tris" type="checkbox" checked>triangles <input  id="triNorms" type="checkbox" checked>triangle normals<br>
+<input type="file" onchange="convert(event)">
+</body></html>
+
+<script>
+</script>

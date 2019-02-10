@@ -93,5 +93,5 @@ class VGA : public I2S
   protected:
 	virtual void interrupt();
 	virtual void vSync();
-	virtual void interruptPixelLine(int y, unsigned long *pixels, unsigned long syncBits) = 0;
+	virtual void interruptPixelLine(int y, unsigned long *pixels, unsigned long syncBits);
 };

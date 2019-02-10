@@ -16,6 +16,7 @@ template<class Graphics>
 class Engine3D
 {
 	public:
+	typedef typename Graphics::Color Color;
 	TriangleTree *triangleBuffer;
 	TriangleTree *triangleRoot;
 	int trinagleBufferSize;
@@ -42,13 +43,13 @@ class Engine3D
 			triangleRoot = &t;
 	}
 	
-	void drawTriangleTree(Graphics &g TriangleTree *t)
+	void drawTriangleTree(Graphics &g, TriangleTree *t)
 	{
 		if (t->left)
-			triangleTree(t->left);
+			drawTriangleTree(g, t->left);
 		g.triangle(t->v[0], t->v[1], t->v[2], t->color);
 		if (t->right)
-			triangleTree(t->right);
+			drawTriangleTree(g, t->right);
 	}
 
 	virtual void begin()
@@ -60,6 +61,6 @@ class Engine3D
 	virtual void end(Graphics &g)
 	{
 		if (triangleRoot)
-			drawTriangleTree(triangleRoot);
+			drawTriangleTree(g, triangleRoot);
 	}
 };
