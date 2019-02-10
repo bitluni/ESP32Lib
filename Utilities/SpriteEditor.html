@@ -1,0 +1,608 @@
+<!--
+	Author: bitluni 2019
+	License: 
+	Creative Commons Attribution ShareAlike 2.0
+	https://creativecommons.org/licenses/by-sa/2.0/
+	
+	For further details check out: 
+		https://youtube.com/bitlunislab
+		https://github.com/bitluni
+		http://bitluni.net
+-->
+<head>
+<title>bitluni's Sprite Editor</title>
+<script>
+
+var project = {
+	name: "sprites",
+	zoom: 4,
+	sprites: []
+	};
+
+function objFromId(id)
+{
+	for(var i = 0; i < project.sprites.length; i++)
+		if(project.sprites[i].id === id)
+			return project.sprites[i];
+	return null;
+}
+
+function upSprite(id)
+{
+	var sprites = project.sprites;
+	for(var i = 1; i < sprites.length; i++)
+		if(sprites[i].id === id)
+		{
+			var w = sprites[i - 1];
+			sprites[i - 1] = sprites[i];
+			sprites[i] = w;
+			update();
+			return;
+		}
+}
+
+function downSprite(id)
+{
+	var sprites = project.sprites;
+	for(var i = 0; i < sprites.length - 1; i++)
+		if(sprites[i].id === id)
+		{
+			var w = sprites[i + 1];
+			sprites[i + 1] = sprites[i];
+			sprites[i] = w;
+			update();
+			return;
+		}
+}
+
+function deleteSprite(id)
+{
+	var sprites = project.sprites;
+	for(var i = 0; i < sprites.length; i++)
+		if(sprites[i].id === id)
+		{
+			sprites.splice(i, 1);
+			update();
+			return;
+		}
+}
+
+function newButton(text, cb)
+{
+	var b = document.createElement("button");
+	b.innerHTML = text;
+	b.onclick = cb;
+	return b;
+}
+
+function checker(ctx, xres, yres)
+{
+	for(var y = 0; y < yres; y++)
+		for(var x = 0; x < xres; x++)
+		{
+			ctx.fillStyle = (x + y) & 1 ? "#eeeeee" : "#ffffff";
+			ctx.fillRect(x * 10, y * 10, 10, 10);
+		}
+}
+
+function draw(obj)
+{
+	checker(obj.ctx, obj.xres, obj.yres);
+	var img = obj.ctx.getImageData(0, 0, obj.xres, obj.yres);
+	var p = 0;
+	for(var y = 0; y < obj.yres; y++)
+		for(var x = 0; x < obj.xres; x++)
+		{
+			var a = obj.source[p + 3];
+			var ra = 255 - a;
+			img.data[p + 0] = Math.round((img.data[p + 0] * ra + obj.source[p + 0] * a) / 255.);
+			img.data[p + 1] = Math.round((img.data[p + 1] * ra + obj.source[p + 1] * a) / 255.);
+			img.data[p + 2] = Math.round((img.data[p + 2] * ra + obj.source[p + 2] * a) / 255.);
+			img.data[p + 3] = 255;
+			p += 4;
+		}
+	obj.ctx.putImageData(img, 0, 0);
+	obj.ctx.fillStyle = "rgba(0, 255, 0, 0.7)";
+	for(var i = 0; i < obj.points.length; i++)
+	{
+		var p = obj.points[i];
+		obj.ctx.fillRect(p[0] - 3, p[1], 7, 1);
+		obj.ctx.fillRect(p[0], p[1] - 3, 1, 7);
+	}
+}
+
+function getXY(obj, e)
+{
+	var r = obj.canvas.getBoundingClientRect();
+	return [Math.floor(e.offsetX / project.zoom), Math.floor(e.offsetY / project.zoom)];
+}
+
+function canvasClick(obj, e)
+{
+	var pos = getXY(obj, e);
+	obj.points.push(pos);
+	draw(obj);
+	updatePoints(obj);
+}
+
+function canvasMove(obj, e)
+{
+	var pos = getXY(obj, e);
+	draw(obj);
+	obj.ctx.fillStyle = "rgba(255, 0, 0, 0.7)";
+	obj.ctx.fillRect(0, pos[1], pos[0], 1);
+	obj.ctx.fillRect(pos[0] + 1, pos[1], obj.xres - pos[0] - 1, 1);
+	obj.ctx.fillRect(pos[0], 0, 1, pos[1]);
+	obj.ctx.fillRect(pos[0], pos[1] + 1, 1, obj.yres - pos[1] - 1);
+}
+
+function canvasOut(obj)
+{
+	draw(obj);
+}
+
+function createCanvas(obj)
+{
+	var canvas = obj.canvas = document.createElement('canvas');
+	var ctx = obj.ctx = canvas.getContext('2d');
+	canvas.width = obj.xres;
+	canvas.height = obj.yres;
+	canvas.addEventListener("mousedown", function(e){ canvasClick(obj, e); }, false);
+	canvas.addEventListener("mouseout", function(){ canvasOut(obj); }, false);
+	canvas.addEventListener("mousemove", function(e){ canvasMove(obj, e); }, false);	
+}
+
+function addFile(file, id)
+{		
+	var obj = {"id": id, "name": file.name, "type": file.type, "xres": 0, "yres": 0, "points":[]};
+	project.sprites.push(obj);
+	var reader = new FileReader();
+	reader.onload = function()
+	{
+		var img = document.createElement('img');
+		img.onload = function()
+		{
+			obj.xres = img.width;
+			obj.yres = img.height;
+			createCanvas(obj);
+			obj.ctx.drawImage(img, 0, 0);
+			obj.source = Array.from(obj.ctx.getImageData(0, 0, obj.xres, obj.yres).data);
+			obj.points.push([Math.floor(obj.xres * 0.5), Math.floor(obj.yres * 0.5)]);
+			update();
+		};
+		img.src = reader.result;
+	};
+	reader.readAsDataURL(file);
+}
+
+function addFiles(event)
+{
+	for(var i = 0; i < event.target.files.length; i++)
+	{
+		var file = event.target.files[i];
+		addFile(file, "f" + file.name.replace(/[^A-Z0-9]/ig, "_") + Math.floor(Math.random() * 1000000))
+	}
+	event.target.value = "";
+}
+
+function spritesToHeader(pixelformat, template)
+{
+	var name = project.name;
+	var sprites = project.sprites;
+	var offsets = [0];
+	var pointOffsets = [0];
+	var rf, rshift, gf, gshift, bf, bshift, af, ashift, type;
+	switch(pixelformat)
+	{
+		case "R4G4B4A4":
+		{
+			rf = gf = bf = af = 15.;
+			rshift = 0;
+			gshift = 4;
+			bshift = 8;
+			ashift = 12;
+			type = "unsigned short";
+			break;
+		}
+		case "R5G5B4A2":
+		{
+			rf = gf = 31.;
+			bf = 15.;
+			af = 3.;
+			rshift = 0;
+			gshift = 5;
+			bshift = 10;
+			ashift = 14;
+			type = "unsigned short";
+			break;
+		}
+		default:
+			alert("Unsupported pixel format " + pixelformat);
+			return;
+	}
+
+	for(var i = 0; i < sprites.length; i++)
+	{
+		offsets.push(offsets[i] + sprites[i].source.length / 4);
+		pointOffsets.push(pointOffsets[i] + sprites[i].points.length);
+	}
+	var text = "const int " + name + "Offsets[] = {"
+	for(var i = 0; i < offsets.length; i++)
+		text += offsets[i] + ", ";
+	text += "};\r\n";
+	text += "const short " + name + "PointOffsets[] = {"
+	for(var i = 0; i < pointOffsets.length; i++)
+		text += pointOffsets[i] + ", ";
+	text += "};\r\n";
+	
+	text += "const " + type + " " + name + "Res[][2] = {"
+	for(var i = 0; i < sprites.length; i++)
+	{
+		text += "{" + sprites[i].xres + ", " + sprites[i].yres + "}, ";
+	}
+	text += "};\r\n";
+
+	text += "const signed short " + name + "Points[][2] = {"
+	for(var i = 0; i < sprites.length; i++)
+		for(var j = 0; j < sprites[i].points.length; j++)
+			text += "{" + sprites[i].points[j][0] + ", " + sprites[i].points[j][1] + "}, ";
+	text += "};\r\n";
+	
+	text += "const unsigned short " + name + "Pixels[] = {"
+	for(var i = 0; i < sprites.length; i++)
+	{
+		if((i & 63) == 0) text += "\r\n";
+		var s = sprites[i].source;
+		for(var j = 0; j < s.length; j+=4)
+		{
+			var r = s[j + 0];
+			var g = s[j + 1];
+			var b = s[j + 2];
+			var a = s[j + 3];
+			var c = 0;
+			c = (Math.round(r / 255. * rf) << rshift) + (Math.round(g / 255. * gf) << gshift) + (Math.round(b / 255. * bf) << bshift) + (Math.round(a / 255. * af) << ashift);
+			text += c + ", ";
+		}
+	}
+	text += "};\r\n";
+	text += "Sprites" + (template?"<" + template + "> " : " ") + name + "(" + sprites.length + ", " + name + "Pixels, " + name + "Offsets, " + name + "Res, " + name + "Points, " + name + "PointOffsets);\r\n";
+	return text;
+}
+
+function cropSprite(obj)
+{
+	var bx = [obj.xres, 0];
+	var by = [obj.yres, 0];
+	var p = 3;
+	for(var y = 0; y < obj.yres; y++)
+		for(var x = 0; x < obj.xres; x++)
+		{
+			if(obj.source[p] > 0)
+			{
+				bx[0] = Math.min(bx[0], x);
+				bx[1] = Math.max(bx[1], x);
+				by[0] = Math.min(by[0], y);
+				by[1] = Math.max(by[1], y);
+			}
+			p += 4;
+		}
+	if(bx[0] > bx[1])
+	{
+		bx = [0, 0];
+		by = [0, 0];
+	}
+	var xres = bx[1] - bx[0] + 1;
+	var yres = by[1] - by[0] + 1;
+	var source = new Array(xres * yres * 4);
+	var p = 0;
+	for(var y = by[0]; y <= by[1]; y++)
+		for(var x = bx[0]; x <= bx[1]; x++)
+		{
+			var p0 = (y * obj.xres + x) * 4;
+			source[p++] = obj.source[p0++];
+			source[p++] = obj.source[p0++];
+			source[p++] = obj.source[p0++];
+			source[p++] = obj.source[p0++];
+		}
+	for(var i = 0; i < obj.points.length; i++)
+	{
+		obj.points[i][0] -= bx[0];
+		obj.points[i][1] -= by[0];
+	}
+	obj.source = source;
+	obj.xres = xres;
+	obj.yres = yres;
+	obj.canvas.width = xres;
+	obj.canvas.height = yres;
+}
+
+function crop()
+{
+	for(var i = 0; i < project.sprites.length; i++)
+		cropSprite(project.sprites[i]);
+	update();
+}
+
+function getMeta()
+{
+	var text = "";
+	for(var i = 0; i < project.sprites.length; i++)
+		text += i + ", " + project.sprites[i].name + "\r\n";
+	return text;
+}
+
+function deletePoint(id, i)
+{
+	var obj = objFromId(id);
+	obj.points.splice(i, 1);
+	draw(obj);
+	updatePoints(obj);
+}
+
+function changePointX(id, i, value)
+{
+	var obj = objFromId(id);
+	obj.points[i][0] = value;
+	draw(obj);
+}
+
+function changePointY(id, i, value)
+{
+	var obj = objFromId(id);
+	obj.points[i][1] = value;
+	draw(obj);
+}
+
+function addPointItem(parent, id, i, point)
+{
+	var pointElement = document.createElement("div");			
+	pointElement.className = "point";
+	var coord = document.createElement("span");
+	coord.innerHTML = 
+		'<input type="number" value="' + point[0] + '" style="width: 50px" onchange="changePointX(\'' + id + '\', ' + i + ', this.value)">' + 
+		'<input type="number" value="' + point[1] + '" style="width: 50px" onchange="changePointY(\'' + id + '\', ' + i + ', this.value)">';
+	pointElement.appendChild(coord);
+	pointElement.appendChild(newButton("&#10008;", function(){ deletePoint(id, i)}));
+	parent.appendChild(pointElement);
+}
+
+function updatePoints(obj)
+{
+	var pointList = document.querySelector("#" + obj.id + " .points");
+	pointList.innerHTML = "";
+	for(var j = 0; j < obj.points.length; j++)
+		addPointItem(pointList, obj.id, j, obj.points[j]);
+}
+
+function addListItem(i, id, name, canvas)
+{
+	var spriteDiv = document.createElement("div");			
+	spriteDiv.id = id;
+	var index = document.createElement("span");
+	index.className = "num";
+	index.innerHTML = i;
+	spriteDiv.appendChild(index);
+	spriteDiv.appendChild(canvas);
+	canvas.style.zoom = project.zoom;
+	spriteDiv.appendChild(newButton("&#10008;", function(){ deleteSprite(id)}));
+	spriteDiv.appendChild(newButton("&#x2B07;", function(){ downSprite(id)}));
+	spriteDiv.appendChild(newButton("&#x2B06;", function(){ upSprite(id)}));	
+	var points = document.createElement("span");
+	points.className = "points block right";
+	spriteDiv.appendChild(points);
+	var span = document.createElement("span");
+	span.className = "right";
+	span.innerHTML = name;
+	spriteDiv.appendChild(span);
+	document.getElementById("sprites").appendChild(spriteDiv);
+}
+
+function loadProject(event)
+{
+	var reader = new FileReader();
+	reader.onload = function(e){
+		project = JSON.parse(e.target.result);
+		document.getElementById("name").value =	project.name;
+		document.getElementById("zoom").value = project.zoom;
+		for(var i = 0; i < project.sprites.length; i++)
+			createCanvas(project.sprites[i]);
+		update();
+	};
+	reader.readAsText(event.target.files[0]);
+	document.getElementById("files").className = "hidden";
+	document.getElementById("filearea").innerHTML = "";	
+}
+
+function saveProject()
+{	
+	document.getElementById("filearea").innerHTML = "";
+	var fileArea = document.getElementById("filearea");
+	var file = document.createElement("a");
+	file.className = "block file";
+	file.download = file.innerHTML = document.getElementById("name").value + ".json";
+	for(var i = 0; i < project.sprites.length; i++)
+		if(project.sprites[i].bs)
+			delete project.sprites[i].bs;
+	file.href = URL.createObjectURL(new Blob([JSON.stringify(project)], {type: "application/json"}));
+	fileArea.appendChild(file);
+	document.getElementById("files").className = "menu";
+}
+
+function saveHeader()
+{	
+	document.getElementById("filearea").innerHTML = "";
+	var fileArea = document.getElementById("filearea");
+	var file = document.createElement("a");
+	var meta = document.createElement("a");
+	meta.className = file.className = "block file";
+	file.download = file.innerHTML = project.name + ".h";
+	meta.download = meta.innerHTML = project.name + ".txt";
+	var e = document.getElementById("pixelformat");
+	var pixelformat = e.options[e.selectedIndex].value;
+	var template = document.getElementById("template").value;
+	file.href = URL.createObjectURL(new Blob([spritesToHeader(pixelformat, template)], {type: "text/plain"}));
+	meta.href = URL.createObjectURL(new Blob([getMeta()], {type: "text/plain"}));
+	fileArea.appendChild(file);
+	fileArea.appendChild(meta);
+	document.getElementById("files").className = "menu";
+}
+
+function update()
+{
+	for(var i = 0; i < project.sprites.length; i++)
+		if(!project.sprites[i].canvas)
+			return;
+	project.name = document.getElementById("name").value;
+	project.zoom = document.getElementById("zoom").value;
+
+	document.getElementById("sprites").innerHTML = "";
+	for(var i = 0; i < project.sprites.length; i++)
+	{
+		addListItem(i, project.sprites[i].id, project.sprites[i].name, project.sprites[i].canvas);
+		updatePoints(project.sprites[i]);
+		draw(project.sprites[i]);
+	}
+	document.getElementById("files").className = "hidden";
+	document.getElementById("filearea").innerHTML = "";
+}
+
+</script>
+<style>
+	#sprites
+	{
+	}
+	.num
+	{
+		width: 20px;
+		display: inline-block;
+	}
+	.option
+	{
+		margin: 3px;
+	}
+	.options
+	{
+		background-color: #aeaeee;
+	}
+	.spritefiles
+	{
+		background-color: #aeeeee;
+	}
+	.menu
+	{
+		background-color: #eeeeee;
+		padding: 1px;
+		display: block;
+		margin: 3px;
+		padding: 5px;
+		border-radius: 3px;		
+	}
+	#sprites > div
+	{
+		margin: 2px;
+		border-radius: 3px;
+		background-color: #aeeeae;
+		padding: 10px;
+		overflow: hidden;
+	}
+	#sprites > div > *
+	{
+		margin-right: 5px;
+		vertical-align: top;
+	}
+	#sprites button
+	{
+		float: right;
+	}
+	.right
+	{
+		float: right;
+	}
+	h1
+	{
+		color: white;
+		background: #800000;
+		padding: 10px;
+		border-radius: 5px;
+	}
+	.block
+	{
+		padding: 5px;
+		display: inline-block;
+		border-radius: 3px;
+	}
+	.project
+	{
+		background-color: #eeeeae;
+	}
+	.hidden
+	{
+		display: none;
+	}
+	.file
+	{
+		background-color: #ffdddd;
+		margin-right: 5px;
+	}
+	h1
+	{
+		margin-bottom: 5px;
+	}
+	canvas
+	{
+		cursor: none;
+		image-rendering: pixelated;
+	}
+	.points
+	{
+		background-color: #eeddcc;
+	}
+	.point
+	{
+		background-color: #ccddee;
+		margin: 2px;
+		border-radius: 3px;
+		padding: 10px;
+		overflow: hidden;
+	}
+	.point input
+	{
+		height: 23px;
+	}
+</style>
+</head>
+<body style="font-family: arial">
+<h1>bitluni's Sprite Editor</h1>
+<div style="max-width: 800px">
+	<div class="menu">
+		<span class="project block">
+			<button title="Open project file" onclick="document.getElementById('openproject').click()">&#x1F4C2;</button> 
+			<input id="openproject" type="file" onchange="loadProject(event)" accept=".json" hidden>
+			<button title="Generate project file" onclick="saveProject();">&#128190;</button>
+		</span>
+		<span class="block spritefiles">
+			<button title="Add image files" onclick="document.getElementById('addimages').click()">&#127750;</button>
+			<input id="addimages" type="file" onchange="addFiles(event)" accept="image/*" multiple hidden>
+            <button title="Export sprite header" onclick="saveHeader();" style="font-size: 15px; font-weight:bold">.h</button>
+            <select id="pixelformat" title="Export pixel format">
+				<option vlaue="R4G4B4A4">R4G4B4A4</option>
+				<option vlaue="R5G5B4A2">R5G5B4A2</option>
+			</select>
+			<input id="template" type="input" placeholder="template" style="width: 60px">
+		</span>
+		<span class="block options">
+			<span class="option">name <input id="name" type="text" value="sprites" style="width: 80px" onchange="update()"></span>
+			<span class="option">&#128270;<input id="zoom" type="number" value="4" style="width: 50px" onchange="update()"></span>
+			<span class="option"><button title="Crop sprites" onclick="crop();">&#8983;</button></span>		
+		</span>
+	</div>
+	<div class="hidden" id="files">
+		Files
+		<div id="filearea">
+		</div>
+	</div>
+	<div id="sprites"></div>
+</div>
+
+<small>check out <a href="https://youtube.com/bitlunislab">bitluni's lab</a></small>
+</body></html>

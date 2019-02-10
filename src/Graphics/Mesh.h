@@ -28,7 +28,7 @@ class Mesh
 	const unsigned short (*triangles)[3];
 	const unsigned short (*edges)[2];
 
-	typedef Color (*vertexShader)(int trinangleNo, short *v0, short *v1, short *v2, const signed char *normal, Color color);
+	typedef Color (*triangleShader)(int trinangleNo, short *v0, short *v1, short *v2, const signed char *normal, Color color);
 
 	Mesh(int vertCount, const float verts[][3], int edgeCount_ = 0, const unsigned short edges_[][2] = 0, int triCount = 0, const unsigned short tris[][3] = 0, const float triNorms[][3] = 0)
 		: vertexCount(vertCount),
@@ -49,15 +49,12 @@ class Mesh
 		delete (tvertices);
 	}
 
-	static Color basicVertexShader(int trinangleNo, short *v0, short *v1, short *v2, const signed char *normal, Color color)
+	static Color basicTriangleShader(int trinangleNo, short *v0, short *v1, short *v2, const signed char *normal, Color color)
 	{
-		const float nx = normal[0] * scaleN;
-		const float ny = normal[1] * scaleN;
-		const float nz = normal[2] * scaleN;
-		return (int(15 * nx + 16)) | (int(15 * nz + 16) << 5) | (int(7 * ny + 8) << 10);
+		return color;
 	}
 
-	static Color basicVertexShaderNormals(int trinangleNo, short *v0, short *v1, short *v2, const signed char *normal, Color color)
+	static Color basicTriangleShaderNormals(int trinangleNo, short *v0, short *v1, short *v2, const signed char *normal, Color color)
 	{
 		const float scaleN = 1.0f / 127.0f;
 		const float nx = normal[0] * scaleN;
@@ -70,14 +67,14 @@ class Mesh
 		return  int(NdotL * (color & 0x1f)) | (int(NdotL * ((color >> 5) & 0x1f)) << 5) | (int(NdotL * ((color >> 10) & 0xf)) << 10);
 	}
 
-	void drawTriangles(Engine3D<Graphics> &e, Color color = -1, vertexShader vs = 0)
+	void drawTriangles(Engine3D<Graphics> &e, Color color = -1, triangleShader ts = 0)
 	{
-		if(vs == 0)
+		if(ts == 0)
 		{
 			if(tTriNormals)
-				vs = basicVertexShaderNormals;
+				ts = basicTriangleShaderNormals;
 			else
-				vs = basicVertexShader;
+				ts = basicTriangleShader;
 		}
 
 		for (int i = 0; i < triangleCount; i++)
@@ -91,7 +88,7 @@ class Mesh
 			int dy2 = v2[1] - v0[1];
 			if (dx1 * dy2 - dx2 * dy1 < 0)
 			{
-				Color c = vs(i, v0, v1, v2, tTriNormals ? tTriNormals[i] : 0, color);
+				Color c = ts(i, v0, v1, v2, tTriNormals ? tTriNormals[i] : 0, color);
 				e.enqueueTriangle(tvertices[triangles[i][0]], tvertices[triangles[i][1]], tvertices[triangles[i][2]], c);
 			}
 		}

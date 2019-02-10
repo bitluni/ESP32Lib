@@ -11,10 +11,11 @@
 */
 #pragma once
 
-template <typename Color = unsigned short>
-class ImageT
+template <class Graphics>
+class Image
 {
   public:
+ 	typedef typename Graphics::Color Color; 
 	int xres;
 	int yres;
 	const Color *pixels;
@@ -26,17 +27,17 @@ class ImageT
 		this->pixels = pixels;    
 	}
 
-	ImageT(){};
+	Image(){};
 
-	ImageT(int xres, int yres, const Color *pixels)
+	Image(int xres, int yres, const Color *pixels)
 	{
 		init(xres, yres, pixels);
 	}
 	
-	~ImageT()
+	~Image()
 	{
 	}
-/* TODO
+
 	void draw(Graphics &g, int x, int y)
 	{
 		int i = 0;
@@ -82,7 +83,7 @@ class ImageT
 			for(int px = 0; px < xres; px++)
 				g.dotMix(px + x, py + y, pixels[i++]);
 	}	
-  */
+
 	Color get(int x, int y) const
 	{
 		return pixels[y * xres + x];

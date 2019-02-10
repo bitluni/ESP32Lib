@@ -34,13 +34,15 @@ void setup()
 	vga.setFont(Font6x8);
 }
 
-///a colorful vertex shader actually calculated per triangle
-VGA14Bit::Color myVertexShader(int trinangleNo, short *v0, short *v1, short *v2, const signed char *normal, VGA14Bit::Color color)
+///a colorful triangle shader actually calculated per triangle
+VGA14Bit::Color myTriangleShader(int trinangleNo, short *v0, short *v1, short *v2, const signed char *normal, VGA14Bit::Color color)
   {
+	//normals packed in 1 signed byte per axis
     const float scaleN = 1.0f / 127.0f;
     const float nx = normal[0] * scaleN;
     const float ny = normal[1] * scaleN;
     const float nz = normal[2] * scaleN;
+	//return R5G5B4 color each normal axis controls each color component
     return (int(15 * nx + 16)) | (int(15 * nz + 16) << 5) | (int(7 * ny + 8) << 10);
   }
   
@@ -58,8 +60,9 @@ void drawModel()
   model.transform(m0, rotation);
   //begin adding triangles to render pipeline
   engine.begin();
-  //add this model to the render pipeline. it will sort the triangles from back to front and remode backfaced
-  model.drawTriangles(engine, vga.RGB(128, 70, 20), myVertexShader);
+  //add this model to the render pipeline. it will sort the triangles from back to front and remove backfaced. The tiangle shader will determine the color of the tirangle.
+  //the RGB color gien in the second parameter is not used in this case but could be used for calculations in the triangle shader 
+  model.drawTriangles(engine, vga.RGB(128, 70, 20), myTriangleShader);
   //render all triangles in the pipeline. if you render multiple models you want to do this once at the end
   engine.end(vga);
 }

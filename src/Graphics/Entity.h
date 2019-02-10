@@ -13,15 +13,15 @@
 #include "Graphics.h"
 #include "Sprites.h"
 
-template<typename Color = unsigned int>
-class EntityT
+template<class Graphics>
+class Entity
 {
   public:
 	int x, y;
 	int vx, vy;
 	int life;
 	int faction;
-	SpritesT<Color> *sprites;
+	Sprites<Graphics> *sprites;
 	virtual bool act(int dt);
-	//virtual void draw(Graphics &g);
+	virtual void draw(Graphics &g);
 };

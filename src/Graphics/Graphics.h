@@ -21,10 +21,6 @@ template<typename Color>
 class Graphics
 {
   public:
-	typedef ImageT<Color> Image;
-	typedef SpriteT<Color> Sprite;
-	typedef SpritesT<Color> Sprites;
-
 	int cursorX, cursorY, cursorBaseX;
 	long frontColor, backColor;
 	Font *font;
