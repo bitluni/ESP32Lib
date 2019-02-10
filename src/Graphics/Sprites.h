@@ -80,7 +80,7 @@ class Sprites
 
 	void drawAdd(Graphics &g, int sprite, int x, int y)
 	{
-		sprites[sprite].drawMix(g, x, y);
+		sprites[sprite].drawAdd(g, x, y);
 	}
 
 	int xres(int sprite) const

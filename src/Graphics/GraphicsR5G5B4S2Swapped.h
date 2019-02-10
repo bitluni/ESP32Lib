@@ -60,9 +60,18 @@ class GraphicsR5G5B4S2Swapped: public Graphics<unsigned short>
 
 	virtual void dotAdd(int x, int y, Color color)
 	{
-		//todo repair this
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backBuffer[y][x^1] = (color + backBuffer[y][x^1]) | SBits;
+		{
+			int c0 = backBuffer[y][x^1];
+			int c1 = color;
+			int r = (c0 & 0b11111) + (c1 & 0b11111);
+			if(r > 0b11111) r = 0b11111;
+			int g = (c0 & 0b1111100000) + (c1 & 0b1111100000);
+			if(g > 0b1111100000) g = 0b1111100000;
+			int b = (c0 & 0b11110000000000) + (c1 & 0b11110000000000);
+			if(b > 0b11110000000000) b = 0b11110000000000;
+			backBuffer[y][x^1] = r | (g & 0b1111100000) | (b & 0b11110000000000) | SBits;
+		}
 	}
 	
 	virtual void dotMix(int x, int y, Color color)

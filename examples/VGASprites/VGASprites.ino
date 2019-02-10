@@ -23,30 +23,30 @@ VGA14Bit vga;
 //initial setup
 void setup()
 {
-  //need double buffering
-    vga.setFrameBufferCount(2);
-  //initializing i2s vga
-  vga.init(vga.MODE200x150, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
-  //setting the font
-  vga.setFont(Font6x8);
+	//need double buffering
+	vga.setFrameBufferCount(2);
+	//initializing i2s vga
+	vga.init(vga.MODE200x150, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
+	//setting the font
+	vga.setFont(Font6x8);
 }
 
 //just draw each frame
 void loop()
 {
-  //draw a background
-  for(int y = 0; y < vga.yres / 10; y++)
-    for(int x = 0; x < vga.xres / 10; x++)
-      vga.fillRect(x * 10, y * 10, 10, 10, (x + y) & 1 ? vga.RGB(0, 127, 0) : vga.RGB(0, 0, 127));
-  //there are 20 sprites for the explosion. The second parameter is the index of the sprite.
-  //We used the milliseconds to calculate the current index of the animation.
-  //the last two parameters is the position. During the conversion of the sprite the origin of each sprite is defined.
-  //"draw" draws the sprite opaque ignoring any existing alpha channel
-  explosion.draw(vga, (millis() / 50) % 20, vga.xres / 4, vga.yres / 2);
-  //"drawMix" uses the alpha channel
-  explosion.drawMix(vga, (millis() / 50) % 20, vga.xres / 2, vga.yres / 2);
-  //"drawAdd" adds the color components of the back ground and the sprite
-  explosion.drawAdd(vga, (millis() / 50) % 20, vga.xres * 3 / 4, vga.yres / 2);
-  //swap the frame buffers and show the rendering
-  vga.show();
+	//draw a background
+	for (int y = 0; y < vga.yres / 10; y++)
+		for (int x = 0; x < vga.xres / 10; x++)
+			vga.fillRect(x * 10, y * 10, 10, 10, (x + y) & 1 ? vga.RGB(0, 128, 0) : vga.RGB(0, 0, 128));
+	//there are 20 sprites for the explosion. The second parameter is the index of the sprite.
+	//We used the milliseconds to calculate the current index of the animation.
+	//the last two parameters is the position. During the conversion of the sprite the origin of each sprite is defined.
+	//"draw" draws the sprite opaque ignoring any existing alpha channel
+	explosion.draw(vga, (millis() / 50) % 20, vga.xres / 4, vga.yres / 2);
+	//"drawMix" uses the alpha channel
+	explosion.drawMix(vga, (millis() / 50) % 20, vga.xres / 2, vga.yres / 2);
+	//"drawAdd" adds the color components of the back ground and the sprite
+	explosion.drawAdd(vga, (millis() / 50) % 20, vga.xres * 3 / 4, vga.yres / 2);
+	//swap the frame buffers and show the rendering
+	vga.show();
 }
