@@ -1,8 +1,8 @@
 /*
 	Author: bitluni 2019
 	License: 
-	Creative Commons Attribution ShareAlike 2.0
-	https://creativecommons.org/licenses/by-sa/2.0/
+	Creative Commons Attribution ShareAlike 4.0
+	https://creativecommons.org/licenses/by-sa/4.0/
 	
 	For further details check out: 
 		https://youtube.com/bitlunislab
@@ -13,12 +13,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include "Font.h"
-#include "Image.h"
-#include "Entity.h"
-#include "Sprites.h"
+#include "ImageDrawer.h"
 
 template<typename Color>
-class Graphics
+class Graphics: public ImageDrawer
 {
   public:
 	int cursorX, cursorY, cursorBaseX;
@@ -92,7 +90,6 @@ class Graphics
 	{
 		if(yres <= 0 || xres <= 0)
 			return false;
-
 		for(int i = 0; i < frameBufferCount; i++)
 			frameBuffers[i] = allocateFrameBuffer();
 		currentFrameBuffer = 0;
@@ -448,6 +445,8 @@ class Graphics
 
 	void ellipse(int x, int y, int rx, int ry, Color color)
 	{
+		if(ry == 0)
+			return;
 		int oxr = rx;
 		float f = float(rx) / ry;
 		f *= f;
@@ -468,6 +467,8 @@ class Graphics
 
 	void fillEllipse(int x, int y, int rx, int ry, Color color)
 	{
+		if(ry == 0)
+			return;
 		float f = float(rx) / ry;
 		f *= f;		
 		for(int i = 0; i < ry + 1; i++)
@@ -509,5 +510,44 @@ class Graphics
 			}
 		}
 		cursorY -= dy;
+	}
+
+	virtual Color R5G5B4A2ToColor(unsigned short c)
+	{
+		int r = (((c << 1) & 0x3e) * 255 + 1) / 0x3e;
+		int g = (((c >> 4) & 0x3e) * 255 + 1) / 0x3e;
+		int b = (((c >> 9) & 0x1e) * 255 + 1) / 0x1e;
+		int a = (((c >> 13) & 6) * 255 + 1) / 6;
+		return RGBA(r, g, b, a);
+	}
+
+	virtual void imageR5G5B4A2(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dot(px + x, py + y, R5G5B4A2ToColor(((unsigned short*)image.pixels)[i++]));
+		}		
+	}
+
+	virtual void imageAddR5G5B4A2(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dotAdd(px + x, py + y, R5G5B4A2ToColor(((unsigned short*)image.pixels)[i++]));
+		}
+	}
+
+	virtual void imageMixR5G5B4A2(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dotMix(px + x, py + y, R5G5B4A2ToColor(((unsigned short*)image.pixels)[i++]));
+		}
 	}	
 };

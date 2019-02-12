@@ -1,8 +1,8 @@
 /*
 	Author: bitluni 2019
 	License: 
-	Creative Commons Attribution ShareAlike 2.0
-	https://creativecommons.org/licenses/by-sa/2.0/
+	Creative Commons Attribution ShareAlike 4.0
+	https://creativecommons.org/licenses/by-sa/4.0/
 	
 	For further details check out: 
 		https://youtube.com/bitlunislab
@@ -21,7 +21,7 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 	{
 	}
 
-	bool init(const int *mode,
+	bool init(Mode &mode,
 			  const int R0Pin, const int R1Pin, const int R2Pin, const int R3Pin, const int R4Pin,
 			  const int G0Pin, const int G1Pin, const int G2Pin, const int G3Pin, const int G4Pin,
 			  const int B0Pin, const int B1Pin, const int B2Pin, const int B3Pin,
@@ -33,15 +33,15 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 			G0Pin, G1Pin, G2Pin, G3Pin, G4Pin,
 			B0Pin, B1Pin, B2Pin, B3Pin,
 			hsyncPin, vsyncPin};
-		hsyncBitI = mode[11] << 14;
-		vsyncBitI = mode[12] << 15;
+		hsyncBitI = mode.hSyncPolarity ? 0x4000 : 0;
+		vsyncBitI = mode.vSyncPolarity ? 0x8000 : 0;
 		hsyncBit = hsyncBitI ^ 0x4000;
 		vsyncBit = vsyncBitI ^ 0x8000;
 		SBits = hsyncBitI | vsyncBitI;
 		return VGA::init(mode, pinMap);
 	}
 
-	bool init(const int *mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin)
+	bool init(const Mode &mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin)
 	{
 		int pinMap[24];
 		for (int i = 0; i < 8; i++)
@@ -55,8 +55,8 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 		}
 		pinMap[22] = hsyncPin;
 		pinMap[23] = vsyncPin;
-		hsyncBitI = mode[11] << 14;
-		vsyncBitI = mode[12] << 15;
+		hsyncBitI = mode.hSyncPolarity ? 0x4000 : 0;
+		vsyncBitI = mode.vSyncPolarity ? 0x8000 : 0;
 		hsyncBit = hsyncBitI ^ 0x4000;
 		vsyncBit = vsyncBitI ^ 0x8000;
 		SBits = hsyncBitI | vsyncBitI;
@@ -65,7 +65,7 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 
 	virtual float pixelAspect() const
 	{
-		return float(vdivider) / hdivider;
+		return 1;
 	}
 
 	virtual void propagateResolution(const int xres, const int yres)
@@ -75,7 +75,7 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 
 	virtual Color **allocateFrameBuffer()
 	{
-		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, hres * bytesPerSample, true, (hsyncBitI | vsyncBitI) * 0x10001);
+		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample, true, (hsyncBitI | vsyncBitI) * 0x10001);
 	}
 
 	virtual void allocateLineBuffers()
@@ -92,8 +92,9 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 			//TODO read the I2S docs to find out
 		}
 		Graphics::show(vSync);
-		for (int i = 0; i < yres * vdivider; i++)
-			dmaBufferDescriptors[(vfront + vsync + vback + i) * 2 + 1].setBuffer(frontBuffer[i / vdivider], hres * bytesPerSample);
+		if(dmaBufferDescriptors)
+			for (int i = 0; i < yres * mode.vDiv; i++)
+				dmaBufferDescriptors[(mode.vFront + mode.vSync + mode.vBack + i) * 2 + 1].setBuffer(frontBuffer[i / mode.vDiv], mode.hRes * bytesPerSample);
 	}
 
 	virtual void scroll(int dy, Color color)

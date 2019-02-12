@@ -1,6 +1,6 @@
 //This example shows the three methods of how sprites can be rendered on a VGA screen
 //You need to connect a VGA screen cable and an external DAC (simple R2R does the job) to the pins specified below.
-//cc by-sa 2.0 license
+//cc by-sa 4.0 license
 //bitluni
 
 //include libraries
@@ -38,9 +38,13 @@ void loop()
 	for (int y = 0; y < vga.yres / 10; y++)
 		for (int x = 0; x < vga.xres / 10; x++)
 			vga.fillRect(x * 10, y * 10, 10, 10, (x + y) & 1 ? vga.RGB(0, 128, 0) : vga.RGB(0, 0, 128));
+	//print some labels
+	vga.setCursor(36, 41);
+	vga.print("draw   drawMix  drawAdd");
 	//there are 20 sprites for the explosion. The second parameter is the index of the sprite.
 	//We used the milliseconds to calculate the current index of the animation.
 	//the last two parameters is the position. During the conversion of the sprite the origin of each sprite is defined.
+	//check the Utilities folder for the converter
 	//"draw" draws the sprite opaque ignoring any existing alpha channel
 	explosion.draw(vga, (millis() / 50) % 20, vga.xres / 4, vga.yres / 2);
 	//"drawMix" uses the alpha channel

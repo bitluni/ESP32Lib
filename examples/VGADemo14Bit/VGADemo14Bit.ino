@@ -1,6 +1,6 @@
 //This example shows how to animate graphics on a VGA screen. No backbuffering is used... just try it.
 //You need to connect a VGA screen cable and an external DAC (simple R2R does the job) to the pins specified below.
-//cc by-sa 2.0 license
+//cc by-sa 4.0 license
 //bitluni
 
 #include <ESP32Lib.h>

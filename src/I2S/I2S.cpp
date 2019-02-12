@@ -1,8 +1,8 @@
 /*
 	Author: bitluni 2019
 	License: 
-	Creative Commons Attribution ShareAlike 2.0
-	https://creativecommons.org/licenses/by-sa/2.0/
+	Creative Commons Attribution ShareAlike 4.0
+	https://creativecommons.org/licenses/by-sa/4.0/
 	
 	For further details check out: 
 		https://youtube.com/bitlunislab

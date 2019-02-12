@@ -1,8 +1,8 @@
 <!--
 	Author: bitluni 2019
 	License: 
-	Creative Commons Attribution ShareAlike 2.0
-	https://creativecommons.org/licenses/by-sa/2.0/
+	Creative Commons Attribution ShareAlike 4.0
+	https://creativecommons.org/licenses/by-sa/4.0/
 	
 	For further details check out: 
 		https://youtube.com/bitlunislab
@@ -185,13 +185,13 @@ function addFiles(event)
 	event.target.value = "";
 }
 
-function spritesToHeader(pixelformat, template)
+function spritesToHeader(pixelformat)
 {
 	var name = project.name;
 	var sprites = project.sprites;
 	var offsets = [0];
 	var pointOffsets = [0];
-	var rf, rshift, gf, gshift, bf, bshift, af, ashift, type;
+	var rf, rshift, gf, gshift, bf, bshift, af, ashift, type, bytesPerPixel;
 	switch(pixelformat)
 	{
 		case "R4G4B4A4":
@@ -202,6 +202,7 @@ function spritesToHeader(pixelformat, template)
 			bshift = 8;
 			ashift = 12;
 			type = "unsigned short";
+			bytesPerPixel = 2;
 			break;
 		}
 		case "R5G5B4A2":
@@ -214,6 +215,7 @@ function spritesToHeader(pixelformat, template)
 			bshift = 10;
 			ashift = 14;
 			type = "unsigned short";
+			bytesPerPixel = 2;
 			break;
 		}
 		default:
@@ -223,7 +225,7 @@ function spritesToHeader(pixelformat, template)
 
 	for(var i = 0; i < sprites.length; i++)
 	{
-		offsets.push(offsets[i] + sprites[i].source.length / 4);
+		offsets.push(offsets[i] + (sprites[i].source.length / 4) * bytesPerPixel);
 		pointOffsets.push(pointOffsets[i] + sprites[i].points.length);
 	}
 	var text = "const int " + name + "Offsets[] = {"
@@ -265,7 +267,7 @@ function spritesToHeader(pixelformat, template)
 		}
 	}
 	text += "};\r\n";
-	text += "Sprites" + (template?"<" + template + "> " : " ") + name + "(" + sprites.length + ", " + name + "Pixels, " + name + "Offsets, " + name + "Res, " + name + "Points, " + name + "PointOffsets);\r\n";
+	text += "Sprites " + name + "(" + sprites.length + ", " + name + "Pixels, " + name + "Offsets, " + name + "Res, " + name + "Points, " + name + "PointOffsets, Sprites::PixelFormat::" + pixelformat + ");\r\n";
 	return text;
 }
 
@@ -439,8 +441,7 @@ function saveHeader()
 	meta.download = meta.innerHTML = project.name + ".txt";
 	var e = document.getElementById("pixelformat");
 	var pixelformat = e.options[e.selectedIndex].value;
-	var template = document.getElementById("template").value;
-	file.href = URL.createObjectURL(new Blob([spritesToHeader(pixelformat, template)], {type: "text/plain"}));
+	file.href = URL.createObjectURL(new Blob([spritesToHeader(pixelformat)], {type: "text/plain"}));
 	meta.href = URL.createObjectURL(new Blob([getMeta()], {type: "text/plain"}));
 	fileArea.appendChild(file);
 	fileArea.appendChild(meta);
@@ -585,10 +586,9 @@ function update()
 			<input id="addimages" type="file" onchange="addFiles(event)" accept="image/*" multiple hidden>
             <button title="Export sprite header" onclick="saveHeader();" style="font-size: 15px; font-weight:bold">.h</button>
             <select id="pixelformat" title="Export pixel format">
-				<option vlaue="R4G4B4A4">R4G4B4A4</option>
 				<option vlaue="R5G5B4A2">R5G5B4A2</option>
+				<option vlaue="R4G4B4A4">R4G4B4A4</option>
 			</select>
-			<input id="template" type="input" placeholder="template" style="width: 60px">
 		</span>
 		<span class="block options">
 			<span class="option">name <input id="name" type="text" value="sprites" style="width: 80px" onchange="update()"></span>

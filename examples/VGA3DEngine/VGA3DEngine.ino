@@ -1,6 +1,6 @@
 //This example displays a 3D model on a VGA screen. Double buffering is used to avoid flickering.
 //You need to connect a VGA screen cable and an external DAC (simple R2R does the job) to the pins specified below.
-//cc by-sa 2.0 license
+//cc by-sa 4.0 license
 //bitluni
 
 //include libraries

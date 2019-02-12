@@ -1,7 +1,7 @@
 //This example acts like a websever. It can create an access point or join an existing WiFI network.
 //All text that's entered in the served page will bis displayed on the connected VGA screen.
 //You need to connect a VGA screen cable to the pins specified below.
-//cc by-sa 2.0 license
+//cc by-sa 4.0 license
 //bitluni
 
 #include <stdio.h>

@@ -1,8 +1,8 @@
 /*
 	Author: bitluni 2019
 	License: 
-	Creative Commons Attribution ShareAlike 2.0
-	https://creativecommons.org/licenses/by-sa/2.0/
+	Creative Commons Attribution ShareAlike 4.0
+	https://creativecommons.org/licenses/by-sa/4.0/
 	
 	For further details check out: 
 		https://youtube.com/bitlunislab
@@ -13,7 +13,6 @@
 #include "Graphics.h"
 #include "Sprites.h"
 
-template<class Graphics>
 class Entity
 {
   public:
@@ -21,7 +20,7 @@ class Entity
 	int vx, vy;
 	int life;
 	int faction;
-	Sprites<Graphics> *sprites;
+	Sprites *sprites;
 	virtual bool act(int dt);
-	virtual void draw(Graphics &g);
+	virtual void draw() = 0;
 };

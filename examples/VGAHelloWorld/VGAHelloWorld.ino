@@ -1,6 +1,6 @@
 //This example shows a simple "Hello world!" on a VGA screen.
 //You need to connect a VGA screen cable to the pins specified below.
-//cc by-sa 2.0 license
+//cc by-sa 4.0 license
 //bitluni
 
 #include <ESP32Lib.h>

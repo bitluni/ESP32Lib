@@ -1,8 +1,8 @@
 /*
 	Author: bitluni 2019
 	License: 
-	Creative Commons Attribution ShareAlike 2.0
-	https://creativecommons.org/licenses/by-sa/2.0/
+	Creative Commons Attribution ShareAlike 4.0
+	https://creativecommons.org/licenses/by-sa/4.0/
 	
 	For further details check out: 
 		https://youtube.com/bitlunislab
@@ -12,53 +12,46 @@
 #pragma once
 
 #include "../I2S/I2S.h"
+#include "Mode.h"
 
 class VGA : public I2S
 {
   public:
 	VGA(const int i2sIndex = 0);
 	void setLineBufferCount(int lineBufferCount);
+	bool init(const Mode &mode, const int *pinMap);
 
-	int maxXRes(const int *baseMode);
-	int *customMode(const int *baseMode, int xres, int yres, int* modeBuffer, int fiyedYDivider = 0); 
-	int *customWideMode(int xres, int yres, int* modeBuffer, int fiyedYDivider = 0); 
-	bool init(const int *mode, const int *pinMap);
+	static const Mode MODE320x480;
+	static const Mode MODE320x240;
+	static const Mode MODE320x120;
+	static const Mode MODE320x400;
+	static const Mode MODE320x200;
+	static const Mode MODE360x400;
+	static const Mode MODE360x200;
+	static const Mode MODE360x350;
+	static const Mode MODE360x175;
 
-	static const int MODE320x480[];
-	static const int MODE320x240[];
-	static const int MODE320x120[];
-	static const int MODE320x400[];
-	static const int MODE320x200[];
-	static const int MODE320x100[];
-	static const int MODE360x400[];
-	static const int MODE360x200[];
-	static const int MODE360x100[];
-	static const int MODE360x350[];
-	static const int MODE360x175[];
+	static const Mode MODE320x350;
+	static const Mode MODE320x175;
 
-	static const int MODE320x350[];
-	static const int MODE320x175[];
+	static const Mode MODE400x300;
+	static const Mode MODE400x150;
+	static const Mode MODE400x100;
+	static const Mode MODE200x150;
 
-	static const int MODE460x480[];
-	static const int MODE460x240[];
-	static const int MODE460x120[];
-	static const int MODE460x96[];
+	static const Mode MODE460x480;
+	static const Mode MODE460x240;
 
-	//unusable atm
-	static const int MODE400x300[];
-	static const int MODE400x150[];
-	static const int MODE400x100[];
-	//works
-	static const int MODE200x150[];
+	static const Mode MODE1280x1024;
+	static const Mode MODE1280x960;
+	static const Mode MODE1280x800;
+	static const Mode MODE1024x768;
+	static const Mode MODE800x600;
+	static const Mode MODE720x400;
+	static const Mode MODE720x350;
+	static const Mode MODE640x480;
 
-	static const int MODE1280x1024[];
-	static const int MODE1280x960[];
-	static const int MODE1280x800[];
-	static const int MODE1024x768[];
-	static const int MODE800x600[];
-	static const int MODE720x400[];
-	static const int MODE720x350[];
-	static const int MODE640x480[];
+	Mode mode;
 
   protected:
 	static const int bytesPerSample;
@@ -72,17 +65,7 @@ class VGA : public I2S
 	int vsyncBitI;
 	int hsyncBitI;
 
-	int hres;
-	int vres;
-	int hfront;
-	int hsync;
-	int hback;
 	int totalLines;
-	int vfront;
-	int vsync;
-	int vback;
-	int hdivider;
-	int vdivider;
 	volatile bool vSyncPassed;
 
 	void *vSyncInactiveBuffer;

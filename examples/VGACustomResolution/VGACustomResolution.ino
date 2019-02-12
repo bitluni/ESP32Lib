@@ -1,6 +1,6 @@
 //This example shows how a custom VGA resolution can be created for one of the base modes
 //You need to connect a VGA screen cable to the pins specified below.
-//cc by-sa 2.0 license
+//cc by-sa 4.0 license
 //bitluni
 
 //including the needed header
@@ -23,54 +23,58 @@ void setup()
 	//enabling double buffering
 	vga.setFrameBufferCount(2);
 	//let's calculate the max horizontal resolution we can get from a given mode
-	int maxy = vga.maxXRes(vga.MODE800x600);
-	int myMode[13];
-	//calculate the parameters for our custom resolution.
+	int maxX = vga.MODE800x600.maxXRes();
+	//Mode::custom(xres, yres, fixedYDivider = 1) calculates the parameters for our custom resolution.
 	//the y resolution is only scaling integer divisors (yet).
-	//if you don't like to let it scale automatically add a fith parameter with the divisor.
-	vga.customMode(vga.MODE800x600, maxy, 300, myMode);
-	//initializing the graphics mode
-	vga.init(myMode, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
+	//if you don't like to let it scale automatically pass a fixed parameter with a fixed divider.
+	Serial.begin(115200);
+	vga.MODE800x600.custom(maxX, 300).print<HardwareSerial>(Serial);
+	vga.init(vga.MODE800x600.custom(maxX, 300), redPin, greenPin, bluePin, hsyncPin, vsyncPin);
 	//setting the font
 	vga.setFont(Font6x8);
 }
 
-///draws a bouncing ball
-void ball()
+///draws a bouncing balls
+void balls()
 {
 	//some basic gravity physics
-	static float y = 400;
-	static float x = 200;
-	static float vx = 10;
-	static float vy = 0;
+	static VGA3BitI::Color c[4] = {vga.RGB(0, 255, 0), vga.RGB(0, 255, 255), vga.RGB(255, 0, 255), vga.RGB(255, 255, 0)};
+	static float y[4] = {400, 400, 400, 400};
+	static float x[4] = {200, 200, 200, 200};
+	static float vx[4] = {10, -7, 5, -3};
+	static float vy[4] = {0, 1, 2, 3};
 	static unsigned long lastT = 0;
 	unsigned long t = millis();
 	float dt = (t - lastT) * 0.001f;
 	lastT = t;
-	const int r = 40;
-	int rx = r;
-	int ry = r;
-	vy += -9.81f * dt * 100;
-	x += vx;
-	y += vy * dt;
-	//check for boundaries and bounce back
-	if (y < r && vy < 0)
+	const int r = 20;
+	for (int i = 0; i < 4; i++)
 	{
-		vy = 700;
-		ry = y;
+		int rx = r;
+		int ry = r;
+		vy[i] += -9.81f * dt * 100;
+		x[i] += vx[i];
+		y[i] += vy[i] * dt;
+		//check for boundaries and bounce back
+		if (y[i] < r && vy[i] < 0)
+		{
+			vy[i] = 600 + i * 50;
+			ry = y[i];
+		}
+		if (x[i] < r && vx[i] < 0)
+		{
+			vx[i] = -vx[i];
+			rx = x[i];
+		}
+		if (x[i] >= vga.xres - r && vx[i] > 0)
+		{
+			vx[i] = -vx[i];
+			rx = vga.xres - x[i];
+		}
+		//draw a filled ellipse
+		vga.fillEllipse(x[i], vga.yres - y[i] - 1, rx, ry, c[i]);
+		vga.ellipse(x[i], vga.yres - y[i] - 1, rx, ry, 0);
 	}
-	if (x < r && vx < 0)
-	{
-		vx = -vx;
-		rx = x;
-	}
-	if (x >= vga.xres - r && vx > 0)
-	{
-		vx = -vx;
-		rx = vga.xres - x;
-	}
-	//draw a filled ellipse
-	vga.fillEllipse(x, vga.yres - y - 1, rx, ry, vga.RGB(0, 0, 255));
 }
 
 //mainloop
@@ -90,8 +94,8 @@ void loop()
 	vga.println(vga.yres);
 	vga.print("free memory: ");
 	vga.print((int)heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
-	//draw bouncing ball
-	ball();
+	//draw bouncing balls
+	balls();
 	//show the backbuffer (only needed when using backbuffering)
 	vga.show();
 }

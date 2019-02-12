@@ -1,8 +1,8 @@
 /*
 	Author: bitluni 2019
 	License: 
-	Creative Commons Attribution ShareAlike 2.0
-	https://creativecommons.org/licenses/by-sa/2.0/
+	Creative Commons Attribution ShareAlike 4.0
+	https://creativecommons.org/licenses/by-sa/4.0/
 	
 	For further details check out: 
 		https://youtube.com/bitlunislab
@@ -21,7 +21,7 @@ class VGA14BitI : public VGA, public GraphicsR5G5B4A2
 	{
 	}
 
-	bool init(const int *mode, 
+	bool init(const Mode &mode, 
 		const int R0Pin, const int R1Pin, const int R2Pin, const int R3Pin, const int R4Pin,
 		const int G0Pin, const int G1Pin, const int G2Pin, const int G3Pin, const int G4Pin,
 		const int B0Pin, const int B1Pin, const int B2Pin, const int B3Pin, 
@@ -37,7 +37,7 @@ class VGA14BitI : public VGA, public GraphicsR5G5B4A2
 		return VGA::init(mode, pinMap);
 	}
 
-	bool init(const int *mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin)
+	bool init(const Mode &mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin)
 	{
 		int pinMap[24];
 		for (int i = 0; i < 8; i++)
@@ -56,7 +56,7 @@ class VGA14BitI : public VGA, public GraphicsR5G5B4A2
 
 	virtual float pixelAspect() const
 	{
-		return float(vdivider) / hdivider;
+		return 1;
 	}
 
 	virtual void propagateResolution(const int xres, const int yres)
@@ -86,7 +86,8 @@ protected:
 	void interruptPixelLine(int y, unsigned long *pixels, unsigned long syncBits)
 	{
 		unsigned short *line = frontBuffer[y];
-		for (int i = 0; i < hres / 2; i++)
+		static int c = 0;
+		for (int i = 0; i < mode.hRes / 2; i++)
 		{
 			//writing two pixels improves speed drastically (avoids memory reads)
 			pixels[i] = syncBits | (line[i * 2 + 1] & 0x3fff) | ((line[i * 2] & 0x3fff) << 16);

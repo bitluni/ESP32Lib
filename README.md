@@ -13,8 +13,8 @@ Thanks to Ivan Grokhotkov & Jeroen Domburg (aka Sprite_tm) for their great work 
 
 # License
 bitluni 2019
-Creative Commons Attribution ShareAlike 2.0
-https://creativecommons.org/licenses/by-sa/2.0/
+Creative Commons Attribution ShareAlike 4.0
+https://creativecommons.org/licenses/by-sa/4.0/
 
 If you need another license, please feel free to contact me
 

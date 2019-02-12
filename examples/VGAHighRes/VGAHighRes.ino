@@ -1,9 +1,9 @@
-//This example shows the highest VGA resolution 3Bit mode with double buffering.
+//This example shows a high VGA resolution 3Bit mode with double buffering.
 //The VGA3BitI implementation uses the I²S interrupt to transcode a dense frame buffer to the needed
 //16Bit/sample. Using the dense frame buffer allows to fit the two buffers in memory at the price of
 //a lot cpu performance.
 //You need to connect a VGA screen cable to the pins specified below.
-//cc by-sa 2.0 license
+//cc by-sa 4.0 license
 //bitluni
 
 //including the needed header

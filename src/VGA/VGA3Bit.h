@@ -1,8 +1,8 @@
 /*
 	Author: bitluni 2019
 	License: 
-	Creative Commons Attribution ShareAlike 2.0
-	https://creativecommons.org/licenses/by-sa/2.0/
+	Creative Commons Attribution ShareAlike 4.0
+	https://creativecommons.org/licenses/by-sa/4.0/
 	
 	For further details check out: 
 		https://youtube.com/bitlunislab
@@ -21,7 +21,7 @@ class VGA3Bit : public VGA, public GraphicsR5G5B4A1X10S2Swapped
 	{
 	}
 
-	bool init(const int *mode, const int RPin, const int GPin, const int BPin, const int hsyncPin, const int vsyncPin)
+	bool init(const Mode &mode, const int RPin, const int GPin, const int BPin, const int hsyncPin, const int vsyncPin)
 	{
 		int pinMap[24] = {
 			-1, -1, -1, -1, -1, -1, -1, -1,
@@ -31,8 +31,8 @@ class VGA3Bit : public VGA, public GraphicsR5G5B4A1X10S2Swapped
 			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 			hsyncPin, vsyncPin};
 
-		hsyncBitI = mode[11] << 14;
-		vsyncBitI = mode[12] << 15;
+		hsyncBitI = mode.hSyncPolarity ? 0x4000 : 0;
+		vsyncBitI = mode.vSyncPolarity ? 0x8000 : 0;
 		hsyncBit = hsyncBitI ^ 0x4000;
 		vsyncBit = vsyncBitI ^ 0x8000;
 		SBits = hsyncBitI | vsyncBitI;
@@ -42,7 +42,7 @@ class VGA3Bit : public VGA, public GraphicsR5G5B4A1X10S2Swapped
 
 	virtual float pixelAspect() const
 	{
-		return float(vdivider) / hdivider;
+		return 1;
 	}
 
 	virtual void propagateResolution(const int xres, const int yres)
@@ -57,7 +57,7 @@ class VGA3Bit : public VGA, public GraphicsR5G5B4A1X10S2Swapped
 
 	virtual Color **allocateFrameBuffer()
 	{
-		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, hres * bytesPerSample, true, (hsyncBitI | vsyncBitI) * 0x10001);
+		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample, true, (hsyncBitI | vsyncBitI) * 0x10001);
 	}
 
 	virtual void allocateLineBuffers()
@@ -74,8 +74,9 @@ class VGA3Bit : public VGA, public GraphicsR5G5B4A1X10S2Swapped
 			//TODO read the I2S docs to find out
 		}
 		Graphics::show(vSync);
-		for (int i = 0; i < yres * vdivider; i++)
-			dmaBufferDescriptors[(vfront + vsync + vback + i) * 2 + 1].setBuffer(frontBuffer[i / vdivider], hres * bytesPerSample);
+		if(dmaBufferDescriptors)
+		for (int i = 0; i < yres * mode.vDiv; i++)
+			dmaBufferDescriptors[(mode.vFront + mode.vSync + mode.vBack + i) * 2 + 1].setBuffer(frontBuffer[i / mode.vDiv], mode.hRes * bytesPerSample);
 	}
 
 	virtual void scroll(int dy, Color color)

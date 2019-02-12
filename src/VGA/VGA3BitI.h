@@ -1,8 +1,8 @@
 /*
 	Author: bitluni 2019
 	License: 
-	Creative Commons Attribution ShareAlike 2.0
-	https://creativecommons.org/licenses/by-sa/2.0/
+	Creative Commons Attribution ShareAlike 4.0
+	https://creativecommons.org/licenses/by-sa/4.0/
 	
 	For further details check out: 
 		https://youtube.com/bitlunislab
@@ -21,7 +21,7 @@ class VGA3BitI : public VGA, public GraphicsR1G1B1A1
 	{
 	}
 
-	bool init(const int *mode, const int RPin, const int GPin, const int BPin, const int hsyncPin, const int vsyncPin)
+	bool init(const Mode &mode, const int RPin, const int GPin, const int BPin, const int hsyncPin, const int vsyncPin)
 	{
 		int pinMap[24] = {
 			-1, -1, -1, -1, -1, -1, -1, -1,
@@ -35,7 +35,7 @@ class VGA3BitI : public VGA, public GraphicsR1G1B1A1
 
 	virtual float pixelAspect() const
 	{
-		return float(vdivider) / hdivider;
+		return 1;
 	}
 
 	virtual void propagateResolution(const int xres, const int yres)
@@ -65,7 +65,7 @@ class VGA3BitI : public VGA, public GraphicsR1G1B1A1
 	void interruptPixelLine(int y, unsigned long *pixels, unsigned long syncBits)
 	{
 		unsigned char *line = frontBuffer[y];
-		for (int i = 0; i < hres / 2; i++)
+		for (int i = 0; i < mode.hRes / 2; i++)
 		{
 			//writing two pixels improves speed drastically (avoids memory reads)
 			pixels[i] = syncBits | ((line[i] >> 4) & 7) | ((line[i] & 7) << 16);
