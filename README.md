@@ -23,7 +23,9 @@ If you need another license, please feel free to contact me
 
 This library only supports the ESP32.
 I be able to install the ESP32 features in the board manager you need to add an additional Boards Manager URL in the Preferences (File -> Preferences)
-> https://dl.espressif.com/dl/package_esp32_index.json
+```
+https://dl.espressif.com/dl/package_esp32_index.json
+```
 The ESP32Lib can be found in the Library Manager (Sketch -> Include Library -> Manage Libaries)
 To be able to use the library featues the main header needs to included in the sketch
 ```cpp
@@ -43,8 +45,11 @@ An VGA cable can be used to connect to the ESP32
 The connector pins can be found here: https://en.wikipedia.org/wiki/VGA_connector
 The 3Bit modes are very easy to set up. You can connect 
 the Ground, Red, Green, Blue, hSync and vSync to output pins of the ESP32.
+
 ![3Bit color setup](/Documentation/schematic3bit.png)
+
 The 14Bit mode require a resistor ladder to be set up for each color (DAC) as shown here
+
 ![14Bit color setup](/Documentation/schematic.png)
 
 There are limitation on which the VGA output an DACs can work:
@@ -71,7 +76,7 @@ VGA3Bit, VGA14Bit are the high performance drivers that don't need any CPU time 
 serve the VGA. However the VGA3Bit driver is very memory hungry compared to VGA3BitI.
 The high performace drivers work the best with the WiFi features. The other driver might
 cause errors. WiFi should connect first before VGA3BitI and VGA14BitI is initialized.
-The *I* drivers are using an interrupt to feed the pixels to the I²S. This feature can be used for realtime outputs (Check the VGANoFramebuffer example).
+The *I* drivers are using an interrupt to feed the pixels to the I²S. This feature can be used for realtime outputs (Check the **VGANoFramebuffer** example).
 An instance of the driver has to be created. The optional parameter is the I²S bus to be used. If no parameter is given 1 is used by default to keep I²S0 free for audio output.
 ```cpp
 VGA14Bit vga(1);
@@ -107,7 +112,8 @@ The following modes are predefined:
 - MODE200x150
 - MODE460x480
 - MODE460x240
-These native modes require a too high pixel clock but can be used as a base to create a custom resolution. Please check out the VGACustomResolution example:
+
+These native modes require a too high pixel clock but can be used as a base to create a custom resolution. Please check out the **VGACustomResolution** example:
 - MODE1280x1024
 - MODE1280x960
 - MODE1280x800
@@ -116,3 +122,6 @@ These native modes require a too high pixel clock but can be used as a base to c
 - MODE720x400
 - MODE720x350
 - MODE640x480
+### 2D features
+The vga instance implements several drawing methods that can be seen in the **VGA2DFeatures** example.
+A complete list will be available in an API documentation soon...
