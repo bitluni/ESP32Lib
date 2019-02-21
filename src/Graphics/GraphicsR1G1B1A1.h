@@ -99,13 +99,6 @@ class GraphicsR1G1B1A1: public Graphics<unsigned char>
 
 	virtual Color** allocateFrameBuffer()
 	{
-		Color** frame = (Color **)malloc(yres * sizeof(Color *));
-		for (int y = 0; y < yres; y++)
-		{
-			frame[y] = (Color *)malloc(xres / 2 * sizeof(Color));
-			for (int x = 0; x < xres / 2; x++)
-				frame[y][x] = 0;
-		}
-		return frame;
+		return Graphics<Color>::allocateFrameBuffer(xres / 2, yres, (Color)0);
 	}
 };

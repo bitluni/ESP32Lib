@@ -12,6 +12,7 @@
 #pragma once
 #include "../Math/Matrix.h"
 #include "Engine3D.h"
+#include "../Tools/Log.h"
 
 template <typename Graphics>
 class Mesh
@@ -40,8 +41,14 @@ class Mesh
 		  triangleNormals(triNorms)
 	{
 		tvertices = (short(*)[3])malloc(sizeof(short) * 3 * vertexCount);
+		if(!tvertices)
+			ERROR("Not enough memory for vertices");
 		if (triangleNormals)
+		{
 			tTriNormals = (signed char(*)[3])malloc(sizeof(signed char) * 3 * triangleCount);
+			if(!tTriNormals)
+				ERROR("Not enough memory for triangle normals");
+		}
 	}
 
 	~Mesh()

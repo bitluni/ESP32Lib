@@ -103,13 +103,6 @@ class GraphicsR5G5B4A2: public Graphics<unsigned short>
 
 	virtual Color** allocateFrameBuffer()
 	{
-		Color** frame = (Color **)malloc(yres * sizeof(Color *));
-		for (int y = 0; y < yres; y++)
-		{
-			frame[y] = (Color *)malloc(xres * sizeof(Color));
-			for (int x = 0; x < xres; x++)
-				frame[y][x] = 0;
-		}
-		return frame;
+		return Graphics<Color>::allocateFrameBuffer(xres, yres, (Color)0);
 	}
 };

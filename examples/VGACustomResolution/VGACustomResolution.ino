@@ -62,7 +62,7 @@ void balls()
 		//check for boundaries and bounce back
 		if (y[i] < r && vy[i] < 0)
 		{
-			vy[i] = 200 + i*10;
+			vy[i] = 200 + i * 10;
 			ry = y[i];
 		}
 		if (x[i] < r && vx[i] < 0)

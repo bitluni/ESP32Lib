@@ -10,6 +10,7 @@
 		http://bitluni.net
 */
 #pragma once
+#include "../Tools/Log.h"
 
 class Sound
 {
@@ -85,6 +86,8 @@ class AudioSystem
     this->bufferSize = bufferSize;
     sounds = 0;
     buffer = (unsigned char*)malloc(bufferSize * sizeof(unsigned char));
+	if(!buffer)
+		ERROR("Not enough memory for audio buffer");
     for(int i = 0; i < bufferSize; i++)
       buffer[i] = 128;
     swapped = true;

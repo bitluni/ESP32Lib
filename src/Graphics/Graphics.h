@@ -38,6 +38,21 @@ class Graphics: public ImageDrawer
 	virtual void dotMix(int x, int y, Color color) = 0;
 	virtual Color get(int x, int y) = 0;
 	virtual Color** allocateFrameBuffer() = 0;
+	virtual Color** allocateFrameBuffer(int xres, int yres, Color value)
+	{
+		Color** frame = (Color **)malloc(yres * sizeof(Color *));
+		if(!frame)
+			ERROR("Not enough memory for frame buffer");				
+		for (int y = 0; y < yres; y++)
+		{
+			frame[y] = (Color *)malloc(xres * sizeof(Color));
+			if(!frame[y])
+				ERROR("Not enough memory for frame buffer");
+			for (int x = 0; x < xres; x++)
+				frame[y][x] = value;
+		}
+		return frame;
+	}
 	virtual Color RGBA(int r, int g, int b, int a = 255) const = 0;
 	virtual int R(Color c) const = 0;
 	virtual int G(Color c) const = 0;

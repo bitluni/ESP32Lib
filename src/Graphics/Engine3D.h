@@ -12,6 +12,7 @@
 #pragma once
 #include <stdlib.h>
 #include "TriangleTree.h"
+#include "../Tools/Log.h"
 template<class Graphics>
 class Engine3D
 {
@@ -22,10 +23,12 @@ class Engine3D
 	int trinagleBufferSize;
 	int triangleCount;
 
-	Engine3D(const int initialTrinagleBufferSize = 0)
+	Engine3D(const int initialTrinagleBufferSize = 1)
 	{
 		trinagleBufferSize = initialTrinagleBufferSize;
 		triangleBuffer = (TriangleTree*)malloc(sizeof(TriangleTree) * trinagleBufferSize);
+		if(!triangleBuffer)
+			ERROR("Not enough memory for triangleBuffer");
 		triangleRoot = 0;
 		triangleCount = 0;
 	}

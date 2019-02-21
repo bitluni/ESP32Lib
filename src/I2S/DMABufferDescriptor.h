@@ -21,7 +21,7 @@ class DMABufferDescriptor : protected lldesc_t
 		void *b = heap_caps_malloc(bytes, MALLOC_CAP_DMA);
 		if (!b)
 			DEBUG_PRINTLN("Failed to alloc dma buffer");
-		else if (clear)
+		if (clear)
 			for (int i = 0; i < bytes / 4; i++)
 				((unsigned long *)b)[i] = clearValue;
 		return b;
@@ -30,8 +30,14 @@ class DMABufferDescriptor : protected lldesc_t
 	static void **allocateDMABufferArray(int count, int bytes, bool clear = true, unsigned long clearValue = 0)
 	{
 		void **arr = (void **)malloc(count * sizeof(void *));
+		if(!arr)
+			ERROR("Not enough DMA memory");
 		for (int i = 0; i < count; i++)
+		{
 			arr[i] = DMABufferDescriptor::allocateBuffer(bytes, true, clearValue);
+			if(!arr[i])
+				ERROR("Not enough DMA memory");
+		}
 		return arr;
 	}
 
