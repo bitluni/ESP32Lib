@@ -39,8 +39,8 @@ class VGA : public I2S
 	static const Mode MODE400x100;
 	static const Mode MODE200x150;
 
-	static const Mode MODE460x480;
-	static const Mode MODE460x240;
+	static const Mode MODE500x480;
+	static const Mode MODE500x240;
 
 	static const Mode MODE1280x1024;
 	static const Mode MODE1280x960;
@@ -50,6 +50,7 @@ class VGA : public I2S
 	static const Mode MODE720x400;
 	static const Mode MODE720x350;
 	static const Mode MODE640x480;
+	static const Mode MODE640x400;
 
 	Mode mode;
 

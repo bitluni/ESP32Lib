@@ -26,7 +26,7 @@ void setup()
 	//enabling double buffering
 	vga.setFrameBufferCount(2);
 	//initializing the graphics mode
-	vga.init(vga.MODE460x480, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
+	vga.init(vga.MODE500x480, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
 	//setting the font
 	vga.setFont(Font6x8);
 }

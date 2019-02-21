@@ -254,12 +254,12 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClo
 	//fxtal * (sdm2 + (sdm1 / 256) + (sdm0 / 65536) + 4) needs to be btween 350M and 500M
 	//rtc_clk_apll_enable(enable, sdm0, sdm1, sdm2, odir);
 	//                           0-255 0-255  0-63  0-31
-	//sdm seems to be simply a fixpoint number with 16bits frational part
+	//sdm seems to be simply a fixpoint number with 16bits fractional part
 	//0xA7fff is the highest value I was able to use. it's just shy of 580MHz. That's a max freq of 145MHz
 	//freq = 40000000L * (4 + sdm) / (2 * (odir + 2))
 	//sdm = freq / (20000000L / (odir + 2)) - 4;
 
-	long freq = min(sampleRate, 36249999L) * 8; //there are two 1/2 factors in the I2S pipeline for the frequency and another I missed
+	long freq = min(sampleRate, 36249999L) * 4; //there are two 1/2 factors in the I2S pipeline for the frequency and another I missed
 	int sdm, sdmn;
 	int odir = -1;
 	do
@@ -274,7 +274,7 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClo
 	i2s.clkm_conf.clkm_div_num = 2; //clockN;
 	i2s.clkm_conf.clkm_div_a = 1;   //clockA;
 	i2s.clkm_conf.clkm_div_b = 0;   //clockB;
-	i2s.sample_rate_conf.tx_bck_div_num = 2;
+	i2s.sample_rate_conf.tx_bck_div_num = 1;
 
 	i2s.fifo_conf.val = 0;
 	i2s.fifo_conf.tx_fifo_mod_force_en = 1;

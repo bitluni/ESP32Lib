@@ -61,7 +61,7 @@ class Mode
 
 	int maxXRes() const
 	{
-		return (int(hRes * 36249999. * .5 / pixelClock) & 0xfffffffe);
+		return (int(hRes * 19673499. / pixelClock) & 0xfffffffe);
 	}
 
 	int linesPerField() const
