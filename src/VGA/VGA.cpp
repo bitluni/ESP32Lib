@@ -32,8 +32,8 @@ const Mode VGA::MODE200x150(6, 18, 32, 200, 1, 2, 22, 600, 4, 9000000, 0, 0);
 //const Mode VGA::MODE200x150(10, 32, 22, 200, 1, 4, 23, 600, 4, 10000000, 0, 0);	//60Hz version
 
 //500 pixels horizontal it's based on 640x480
-const Mode VGA::MODE500x480(14, 76, 36, 500, 11, 2, 31, 480, 1, 19667968, 1, 1);
-const Mode VGA::MODE500x240(14, 76, 36, 500, 11, 2, 31, 480, 2, 19667968, 1, 1);
+const Mode VGA::MODE500x480(12, 76, 38, 500, 11, 2, 31, 480, 1, 19667968, 1, 1);
+const Mode VGA::MODE500x240(12, 76, 38, 500, 11, 2, 31, 480, 2, 19667968, 1, 1);
 
 //base modes for custom mode calculations
 const Mode VGA::MODE1280x1024(48, 112, 248, 1280, 1, 3, 38, 1024, 1, 108000000, 0, 0);

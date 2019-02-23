@@ -145,6 +145,8 @@ class Graphics: public ImageDrawer
 	{
 		if (!font)
 			return;
+		if (!font->valid(ch))
+			return;
 		const unsigned char *pix = &font->pixels[font->charWidth * font->charHeight * (ch - font->firstChar)];
 		for (int py = 0; py < font->charHeight; py++)
 			for (int px = 0; px < font->charWidth; px++)
@@ -154,22 +156,43 @@ class Graphics: public ImageDrawer
 					dotMix(px + x, py + y, backColor);
 	}
 
+	void print(const char ch)
+	{
+		if (!font)
+			return;
+		if (font->valid(ch))
+			drawChar(cursorX, cursorY, ch);
+		else
+			drawChar(cursorX, cursorY, ' ');		
+		cursorX += font->charWidth;
+		if (cursorX + font->charWidth > xres)
+		{
+			cursorX = cursorBaseX;
+			cursorY += font->charHeight;
+			if(autoScroll && cursorY + font->charHeight > yres)
+				scroll(cursorY + font->charHeight - yres, backColor);
+		}
+	}
+
+	void println(const char ch)
+	{
+		print(ch);
+		print("\n");
+	}
+
 	void print(const char *str)
 	{
 		if (!font)
 			return;
 		while (*str)
 		{
-			if (font->valid(*str))
-				drawChar(cursorX, cursorY, *str);
-			cursorX += font->charWidth;
-			if (cursorX + font->charWidth > xres || *str == '\n')
+			if(*str == '\n')
 			{
 				cursorX = cursorBaseX;
 				cursorY += font->charHeight;
-				if(autoScroll && cursorY + font->charHeight > yres)
-					scroll(cursorY + font->charHeight - yres, backColor);
 			}
+			else
+				print(*str);
 			str++;
 		}
 	}
@@ -203,7 +226,30 @@ class Graphics: public ImageDrawer
 		print(&temp[i + 1]);
 	}
 
+	void print(unsigned long number, int base = 10, int minCharacters = 1)
+	{
+		if(minCharacters < 1)
+			minCharacters = 1;
+		const char baseChars[] = "0123456789ABCDEF";
+		char temp[33];
+		temp[32] = 0;
+		int i = 31;
+		do
+		{
+			temp[i--] = baseChars[number % base];
+			number /= base;
+		} while (number > 0);
+		for (; i > 31 - minCharacters; i--)
+			temp[i] = ' ';
+		print(&temp[i + 1]);
+	}	
+
 	void println(long number, int base = 10, int minCharacters = 1)
+	{
+		print(number, base, minCharacters); print("\n");
+	}
+
+	void println(unsigned long number, int base = 10, int minCharacters = 1)
 	{
 		print(number, base, minCharacters); print("\n");
 	}
@@ -216,6 +262,51 @@ class Graphics: public ImageDrawer
 	void println(int number, int base = 10, int minCharacters = 1)
 	{
 		println(long(number), base, minCharacters);
+	}
+
+	void print(unsigned int number, int base = 10, int minCharacters = 1)
+	{
+		print((unsigned long)(number), base, minCharacters);
+	}
+
+	void println(unsigned int number, int base = 10, int minCharacters = 1)
+	{
+		println((unsigned long)(number), base, minCharacters);
+	}
+
+	void print(short number, int base = 10, int minCharacters = 1)
+	{
+		print(long(number), base, minCharacters);
+	}
+
+	void println(short number, int base = 10, int minCharacters = 1)
+	{
+		println(long(number), base, minCharacters);
+	}
+
+	void print(unsigned short number, int base = 10, int minCharacters = 1)
+	{
+		print(long(number), base, minCharacters);
+	}
+
+	void println(unsigned short number, int base = 10, int minCharacters = 1)
+	{
+		println(long(number), base, minCharacters);
+	}
+
+	void print(unsigned char number, int base = 10, int minCharacters = 1)
+	{
+		print(long(number), base, minCharacters);
+	}
+
+	void println(unsigned char number, int base = 10, int minCharacters = 1)
+	{
+		println(long(number), base, minCharacters);
+	}
+
+	void println()
+	{
+		print("\n");
 	}
 
 	void print(double number, int fractionalDigits = 2, int minCharacters = 1)
