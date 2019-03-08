@@ -134,5 +134,5 @@ Make sure your STL is low poly. The 3D example use a model with < 5000 triangles
 
 ## Converting Sprites and Images
 The Utilities folder provides a convenient [SpriteEditor](https://htmlpreview.github.io/?https://github.com/bitluni/ESP32Lib/blob/master/Utilities/SpriteEditor.html) that you can use directly from the browser. No worries, your files are not uploaded.
-Please select the correct pixel format: R5G5B4A2 for VGA14Bit and R1G1B1A1 for VGA3Bit. You can import PNG files to use transparency.
+The correct pixel format for VGA14Bit and VGA3Bit is R5G5B4A2 (that will be improved in future). You can import PNG files to use transparency.
 Each sprite has the origin in the center by default. You can modify it by changing the x/y values of the first point definition. Clicking on the image creates additional points that can be used for other purpouses like hit boxes etc.

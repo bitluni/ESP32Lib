@@ -250,6 +250,7 @@ function spritesToHeader(pixelformat)
 			text += "{" + sprites[i].points[j][0] + ", " + sprites[i].points[j][1] + "}, ";
 	text += "};\r\n";
 	
+	var k = 0;
 	text += "const unsigned short " + name + "Pixels[] = {"
 	for(var i = 0; i < sprites.length; i++)
 	{
@@ -264,6 +265,9 @@ function spritesToHeader(pixelformat)
 			var c = 0;
 			c = (Math.round(r / 255. * rf) << rshift) + (Math.round(g / 255. * gf) << gshift) + (Math.round(b / 255. * bf) << bshift) + (Math.round(a / 255. * af) << ashift);
 			text += c + ", ";
+			k++;
+			if(k & 31 == 0)
+				text += "\n";
 		}
 	}
 	text += "};\r\n";
