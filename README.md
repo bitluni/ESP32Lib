@@ -128,11 +128,11 @@ The vga instance implements several drawing methods that can be seen in the **VG
 A complete list will be available in an API documentation soon...
 
 ##Converting 3D Meshes
-The Utilities folder provides a convenient [StlConverter](ESP32Lib/Utilities/StlConverter.html) that you can use directly from the browser. No worries, your files are not uploaded.
+The Utilities folder provides a convenient [StlConverter](https://htmlpreview.github.io/?https://github.com/bitluni/ESP32Lib/blob/master/Utilities/StlConverter.html) that you can use directly from the browser. No worries, your files are not uploaded.
 Make sure your STL is low poly. The 3D example use a model with < 5000 triangles.
 
 
 ##Converting Sprites and Images
-The Utilities folder provides a convenient [SpriteEditor](ESP32Lib/Utilities/SpriteEditor.html) that you can use directly from the browser. No worries, your files are not uploaded.
+The Utilities folder provides a convenient [SpriteEditor](https://htmlpreview.github.io/?https://github.com/bitluni/ESP32Lib/blob/master/Utilities/SpriteEditor.html) that you can use directly from the browser. No worries, your files are not uploaded.
 Please select the correct pixel format: R5G5B4A2 for VGA14Bit and R1G1B1A1 for VGA3Bit. You can import PNG files to use transparency.
 Each sprite has the origin in the center by default. You can modify it by changing the x/y values of the first point definition. Clicking on the image creates additional points that can be used for other purpouses like hit boxes etc.
