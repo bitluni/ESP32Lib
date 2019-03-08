@@ -197,13 +197,59 @@ function convert(event)
 	}
 	reader.readAsArrayBuffer(file);
 }
-</script>
+</script><style>
+	.menu
+	{
+		background-color: #eeeeee;
+		padding: 1px;
+		display: block;
+		margin: 3px;
+		padding: 5px;
+		border-radius: 3px;		
+	}
+	h1
+	{
+		color: white;
+		background: #800000;
+		padding: 10px;
+		border-radius: 5px;
+	}
+	.file
+	{
+		background-color: #ffdddd;
+		margin-right: 5px;
+	}
+	h1
+	{
+		margin-bottom: 5px;
+	}
+	.block
+	{
+		padding: 5px;
+		display: inline-block;
+		border-radius: 3px;
+	}	
+	.options
+	{
+		background-color: #aeeeee;
+	}
+	.fileselection
+	{
+		background-color: #eeeeae;
+	}
+</style>
 </head>
-<body>
-Choose data structures to export and open the binary STL file to convert to a c++ header file.<br>
-Export: <input id="edges" type="checkbox">edges <input  id="tris" type="checkbox" checked>triangles <input  id="triNorms" type="checkbox" checked>triangle normals<br>
-<input type="file" onchange="convert(event)">
+<body style="font-family: arial">
+<h1>bitluni's STL Converter</h1>
+<div style="max-width: 800px">
+		<div class="menu">	
+				Choose data structures to export and open the binary STL file to convert it to a c++ header file.<br>
+				Normals are needed to calculate lighting.<br>
+		<span class="options block">
+			Export: <input id="edges" type="checkbox">edges <input  id="tris" type="checkbox" checked>triangles <input  id="triNorms" type="checkbox" checked>triangle normals<br>
+		</span>
+		<span class="fileselection block">
+				<input type="file" onchange="convert(event)" accept=".stl">
+		</span>
+</div>
 </body></html>
-
-<script>
-</script>
