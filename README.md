@@ -59,7 +59,7 @@ Input/Output GPIOs are 0-19, 21-23, 25-27, 32-33.
 GPIO pads 34-39 are input-only.
 
 Beware of pin 0. It selects the boot mode.
-It can only be used as syncs. (no resistors attached)
+It's not suitable for color channels and might cause problems as sync signals as well.
 
 Pin 5 is often tied to the LED but can be used as hSync if you don't need the LED.
 I²C is on 21 (SDA), 22(SCL)
@@ -110,8 +110,8 @@ The following modes are predefined:
 - MODE400x150
 - MODE400x100
 - MODE200x150
-- MODE460x480
-- MODE460x240
+- MODE500x480
+- MODE500x240
 
 These native modes require a too high pixel clock but can be used as a base to create a custom resolution. Please check out the **VGACustomResolution** example:
 - MODE1280x1024
@@ -122,6 +122,17 @@ These native modes require a too high pixel clock but can be used as a base to c
 - MODE720x400
 - MODE720x350
 - MODE640x480
+
 ### 2D features
 The vga instance implements several drawing methods that can be seen in the **VGA2DFeatures** example.
 A complete list will be available in an API documentation soon...
+
+##Converting 3D Meshes
+The Utilities folder provides a convenient [StlConverter](ESP32Lib/Utilities/StlConverter.html) that you can use directly from the browser. No worries, your files are not uploaded.
+Make sure your STL is low poly. The 3D example use a model with < 5000 triangles.
+
+
+##Converting Sprites and Images
+The Utilities folder provides a convenient [SpriteEditor](ESP32Lib/Utilities/SpriteEditor.html) that you can use directly from the browser. No worries, your files are not uploaded.
+Please select the correct pixel format: R5G5B4A2 for VGA14Bit and R1G1B1A1 for VGA3Bit. You can import PNG files to use transparency.
+Each sprite has the origin in the center by default. You can modify it by changing the x/y values of the first point definition. Clicking on the image creates additional points that can be used for other purpouses like hit boxes etc.

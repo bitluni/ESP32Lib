@@ -14,8 +14,8 @@
 const int redPin = 14;
 const int greenPin = 19;
 const int bluePin = 27;
-const int hsyncPin = 0;
-const int vsyncPin = 5;
+const int hsyncPin = 32;
+const int vsyncPin = 33;
 
 //VGA Device using an interrupt to unpack the pixels from 4bit to 16bit for the I²S
 //This takes some CPU time in the background but is able to fit two frame buffers in the memory
