@@ -239,8 +239,8 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClo
 	i2s.conf2.val = 0;
 	i2s.conf2.lcd_en = 1;
 	//from technical datasheet figure 64
-	//i2s.conf2.lcd_tx_sdx2_en = 1;
-	//i2s.conf2.lcd_tx_wrx2_en = 1;
+//	i2s.conf2.lcd_tx_sdx2_en = 0;
+//	i2s.conf2.lcd_tx_wrx2_en = 1;
 
 	i2s.sample_rate_conf.val = 0;
 	i2s.sample_rate_conf.tx_bits_mod = 16; //16
@@ -259,7 +259,7 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClo
 	//freq = 40000000L * (4 + sdm) / (2 * (odir + 2))
 	//sdm = freq / (20000000L / (odir + 2)) - 4;
 
-	long freq = min(sampleRate, 36249999L) * 4; //there are two 1/2 factors in the I2S pipeline for the frequency and another I missed
+	long freq = sampleRate * 4; //there are two 1/2 factors in the I2S pipeline for the frequency and another I missed
 	int sdm, sdmn;
 	int odir = -1;
 	do
@@ -267,7 +267,13 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClo
 		odir++;
 		sdm = long((double(freq) / (20000000. / (odir + 2))) * 0x10000) - 0x40000;
 		sdmn = long((double(freq) / (20000000. / (odir + 2 + 1))) * 0x10000) - 0x40000;
-	}while(sdm < 0x8c0ecL && odir < 31 && sdmn < 0xA7fffL);
+	}while(sdm < 0x8c0ecL && odir < 31 && sdmn < 0xA1fff); //0xA7fffL doesn't work on all mcus 
+	/*DEBUG_PRINTLN(sdm & 255);
+	DEBUG_PRINTLN((sdm >> 8) & 255);
+	DEBUG_PRINTLN(sdm >> 16);
+	DEBUG_PRINTLN(odir);*/
+//	sdm = 0x8c0ecL;
+//	odir = 3;
 	rtc_clk_apll_enable(true, sdm & 255, (sdm >> 8) & 255, sdm >> 16, odir);
 	i2s.clkm_conf.val = 0;
 	i2s.clkm_conf.clka_en = 1;
@@ -283,11 +289,11 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClo
 	i2s.fifo_conf.dscr_en = 1;		//fifo will use dma
 
 	i2s.conf1.val = 0;
-	i2s.conf1.tx_stop_en = 1;
+	i2s.conf1.tx_stop_en = 0;
 	i2s.conf1.tx_pcm_bypass = 1;
 
 	i2s.conf_chan.val = 0;
-	i2s.conf_chan.tx_chan_mod = 0;
+	i2s.conf_chan.tx_chan_mod = 1;
 
 	//high or low (stereo word order)
 	i2s.conf.tx_right_first = 1;
@@ -299,7 +305,7 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClo
 	i2s.conf.tx_msb_shift = 0;
 	i2s.conf.tx_mono = 0;
 	i2s.conf.tx_short_sync = 0;
-
+/**/
 	//allocate disabled i2s interrupt
 	const int interruptSource[] = {ETS_I2S0_INTR_SOURCE, ETS_I2S1_INTR_SOURCE};
 	if(useInterrupt())

@@ -51,6 +51,7 @@ class VGA : public I2S
 	static const Mode MODE720x350;
 	static const Mode MODE640x480;
 	static const Mode MODE640x400;
+	static const Mode MODE640x350;
 
 	Mode mode;
 

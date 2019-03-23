@@ -8,7 +8,7 @@
 #include <Ressources/Font6x8.h>
 
 //include the sprites converted the SpriteConverter. Check the documentation for further infos.
-#include "gfx/explosion.h"
+#include "explosion.h"
 
 //pin configuration
 const int redPins[] = {2, 4, 12, 13, 14};

@@ -8,7 +8,7 @@
 #include <Ressources/Font6x8.h>
 
 //include model
-#include "gfx/thinker.h"
+#include "thinker.h"
 Mesh<VGA14Bit> model(thinker::vertexCount, thinker::vertices, 0, 0, thinker::triangleCount, thinker::triangles, thinker::triangleNormals);
 
 //pin configuration

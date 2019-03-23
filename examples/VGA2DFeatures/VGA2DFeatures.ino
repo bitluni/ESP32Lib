@@ -8,7 +8,7 @@
 #include <Ressources/Font6x8.h>
 
 //include a sprite
-#include "gfx/rock.h"
+#include "rock.h"
 
 //pin configuration
 const int redPins[] = {2, 4, 12, 13, 14};
