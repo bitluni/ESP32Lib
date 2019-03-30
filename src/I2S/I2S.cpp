@@ -131,7 +131,7 @@ bool I2S::initParallelInputMode(const int *pinMap, long sampleRate, const int bi
 	const int deviceWordSelectIndex[] = {I2S0I_WS_IN_IDX, I2S1I_WS_IN_IDX};
 	const periph_module_t deviceModule[] = {PERIPH_I2S0_MODULE, PERIPH_I2S1_MODULE};
 	//works only since indices of the pads are sequential
-	for (int i = 0; i < 24; i++)
+	for (int i = 0; i < bitCount; i++)
 		if (pinMap[i] > -1)
 		{
 			PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[pinMap[i]], PIN_FUNC_GPIO);
@@ -219,10 +219,19 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, const int b
 		{
 			PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[pinMap[i]], PIN_FUNC_GPIO);
 			gpio_set_direction((gpio_num_t)pinMap[i], (gpio_mode_t)GPIO_MODE_DEF_OUTPUT);
-			if(bitCount == 16 && i2sIndex == 1)
-				gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + i + 8, false, false);
+			if(i2sIndex == 1)
+			{
+				if(bitCount == 16)
+					gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + i + 8, false, false);
+				else
+					gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + i, false, false);
+			}
 			else
-				gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + i, false, false);
+			{
+				//there is something odd going on here in the two different I2S
+				//the configuration seems to differ. Use i2s1 for high frequencies.
+				gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + i + 24 - bitCount, false, false);
+			}
 		}
 	if (baseClock > -1)
 		gpio_matrix_out(baseClock, deviceClockIndex[i2sIndex], false, false);

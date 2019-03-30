@@ -16,8 +16,8 @@
 class VGA3Bit : public VGA, public GraphicsR1G1B1A1X2S2Swapped
 {
   public:
-	VGA3Bit(const int i2sIndex = 1)
-		: VGA(i2sIndex)
+	VGA3Bit() //8 bit based modes only work with I2S1
+		: VGA(1)
 	{
 	}
 
