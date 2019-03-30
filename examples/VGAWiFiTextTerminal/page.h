@@ -74,7 +74,7 @@ R"(
 	<h1>bitluni's VGA text terminal</h1>
 	<table>
 		<tr>
-			<td><input id='in' type='text' tabindex=1 onchange='send()'></td>
+			<td><input id='in' type='text' tabindex=1 onchange='send()' autocomplete='off'></td>
 			<td class='min'><button id='send' onclick='send()'>send</button></td>
 		</tr>
 		<tr>

@@ -51,24 +51,17 @@ void text()
 ///initialization
 void setup()
 {
-	//start vga on the specified pins
-	vga.init(vga.MODE360x200, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
-	//make the background blue
-	vga.clear(vga.RGBA(0, 0, 255));
-	vga.backColor = vga.RGB(0, 0, 255);
-	//select the font
-	vga.setFont(Font6x8);
-
+	Serial.begin(115200);
 	//Handle the WiFi AP or STA mode and display results on the screen
 	if (AccessPointMode)
 	{
-		vga.println("Creating access point...");
+		Serial.println("Creating access point...");
 		WiFi.softAP(ssid, password, 6, 0);
 	}
 	else
 	{
-		vga.print("Connecting to SSID ");
-		vga.println(ssid);
+		Serial.print("Connecting to SSID ");
+		Serial.println(ssid);
 		WiFi.begin(ssid, password);
 		while (WiFi.status() != WL_CONNECTED)
 		{
@@ -76,6 +69,14 @@ void setup()
 			vga.print(".");
 		}
 	}
+	//start vga on the specified pins
+	vga.init(vga.MODE400x300, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
+	//make the background blue
+	vga.clear(vga.RGBA(0, 0, 255));
+	vga.backColor = vga.RGB(0, 0, 255);
+	//select the font
+	vga.setFont(Font6x8);
+
 	//send page on http://<ip>/
 	server.on("/", sendPage);
 	//receive text on http://<ip>/text
