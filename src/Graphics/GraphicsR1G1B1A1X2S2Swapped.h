@@ -12,16 +12,16 @@
 #pragma once
 #include "Graphics.h"
 
-class GraphicsR5G5B4A1X10S2Swapped: public Graphics<unsigned short>
+class GraphicsR1G1B1A1X2S2Swapped: public Graphics<unsigned char>
 {
 	public:
-	typedef unsigned short Color;
-	static const Color RGBAXMask = 0x3fff;
+	typedef unsigned char Color;
+	static const Color RGBAXMask = 0x3f;
 	Color SBits;
 	
-	GraphicsR5G5B4A1X10S2Swapped()
+	GraphicsR1G1B1A1X2S2Swapped()
 	{
-		SBits = 0xc000;
+		SBits = 0xc0;
 		frontColor = 0xf;
 	}
 
@@ -49,31 +49,31 @@ class GraphicsR5G5B4A1X10S2Swapped: public Graphics<unsigned short>
 
 	virtual void dotFast(int x, int y, Color color)
 	{
-		backBuffer[y][x^1] = (color & RGBAXMask) | SBits;
+		backBuffer[y][x^2] = (color & RGBAXMask) | SBits;
 	}
 
 	virtual void dot(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backBuffer[y][x^1] = (color & RGBAXMask) | SBits;
+			backBuffer[y][x^2] = (color & RGBAXMask) | SBits;
 	}
 
 	virtual void dotAdd(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backBuffer[y][x^1] = backBuffer[y][x^1] | (color & RGBAXMask);
+			backBuffer[y][x^2] = backBuffer[y][x^2] | (color & RGBAXMask);
 	}
 	
 	virtual void dotMix(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres && (color & 8) != 0)
-			backBuffer[y][x^1] = (color & RGBAXMask) | SBits;
+			backBuffer[y][x^2] = (color & RGBAXMask) | SBits;
 	}
 	
 	virtual Color get(int x, int y)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			return backBuffer[y][x^1] & RGBAXMask;
+			return backBuffer[y][x^2] & RGBAXMask;
 		return 0;
 	}
 
@@ -81,7 +81,7 @@ class GraphicsR5G5B4A1X10S2Swapped: public Graphics<unsigned short>
 	{
 		for (int y = 0; y < this->yres; y++)
 			for (int x = 0; x < this->xres; x++)
-				backBuffer[y][x^1] = (color & RGBAXMask) | SBits;
+				backBuffer[y][x^2] = (color & RGBAXMask) | SBits;
 	}
 
 	virtual Color** allocateFrameBuffer()

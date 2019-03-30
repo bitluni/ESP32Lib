@@ -19,12 +19,12 @@ const int hsyncPin = 32;
 const int vsyncPin = 33;
 
 //VGA Device
-VGA3BitI vga;
+VGA3Bit vga;
 
 void setup()
 {
 	//initializing vga at the specified pins
-	vga.init(vga.MODE800x600.custom(400, 600), redPin, greenPin, bluePin, hsyncPin, vsyncPin);
+	vga.init(vga.MODE640x400, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
 	//selecting the font
 	vga.setFont(Font6x8);
 	//set color

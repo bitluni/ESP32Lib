@@ -23,14 +23,32 @@ class VGA3BitI : public VGA, public GraphicsR1G1B1A1
 
 	bool init(const Mode &mode, const int RPin, const int GPin, const int BPin, const int hsyncPin, const int vsyncPin)
 	{
-		int pinMap[24] = {
-			-1, -1, -1, -1, -1, -1, -1, -1,
+		int pinMap[8] = {
 			RPin,
 			GPin,
 			BPin,
-			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-			hsyncPin, vsyncPin};
-		return VGA::init(mode, pinMap);
+			-1, -1, -1,
+			hsyncPin, vsyncPin
+		};	
+		return VGA::init(mode, pinMap, 8);
+	}
+
+	virtual void initSyncBits()
+	{
+		hsyncBitI = mode.hSyncPolarity ? 0x40 : 0;
+		vsyncBitI = mode.vSyncPolarity ? 0x80 : 0;
+		hsyncBit = hsyncBitI ^ 0x40;
+		vsyncBit = vsyncBitI ^ 0x80;
+	}
+
+	virtual long syncBits(bool hSync, bool vSync)
+	{
+		return ((hSync ? hsyncBit : hsyncBitI) | (vSync ? vsyncBit : vsyncBitI)) * 0x1010101;
+	}
+
+	virtual int bytesPerSample() const
+	{
+		return 1;
 	}
 
 	virtual float pixelAspect() const
@@ -62,13 +80,53 @@ class VGA3BitI : public VGA, public GraphicsR1G1B1A1
 		return true; 
 	};
 
+	void interrupt()
+	{
+		unsigned long *signal = (unsigned long *)dmaBufferDescriptors[dmaBufferDescriptorActive].buffer();
+		unsigned long *pixels = &((unsigned long *)dmaBufferDescriptors[dmaBufferDescriptorActive].buffer())[(mode.hSync + mode.hBack) / 4];
+		unsigned long base, baseh;
+		if (currentLine >= mode.vFront && currentLine < mode.vFront + mode.vSync)
+		{
+			baseh = syncBits(true, true);//(vsyncBit | hsyncBit) | ((vsyncBit | hsyncBit) << 16);
+			base = syncBits(false, true);//(vsyncBit | hsyncBitI) | ((vsyncBit | hsyncBitI) << 16);
+		}
+		else
+		{
+			baseh = syncBits(true, false);(vsyncBitI | hsyncBit) | ((vsyncBitI | hsyncBit) << 16);
+			base =  syncBits(false, false);(vsyncBitI | hsyncBitI) | ((vsyncBitI | hsyncBitI) << 16);
+		}
+		for (int i = 0; i < mode.hSync / 4; i++)
+			signal[i] = baseh;
+		for (int i = mode.hSync / 4; i < (mode.hSync + mode.hBack) / 4; i++)
+			signal[i] = base;
+
+		int y = (currentLine - mode.vFront - mode.vSync - mode.vBack) / mode.vDiv;
+		if (y >= 0 && y < mode.vRes)
+			interruptPixelLine(y, pixels, base);
+		else
+			for (int i = 0; i < mode.hRes / 4; i++)
+			{
+				pixels[i] = base;
+			}
+		for (int i = 0; i < mode.hFront / 4; i++)
+			signal[i + (mode.hSync + mode.hBack + mode.hRes) / 4] = base;
+		currentLine = (currentLine + 1) % totalLines;
+		dmaBufferDescriptorActive = (dmaBufferDescriptorActive + 1) % dmaBufferDescriptorCount;
+		if (currentLine == 0)
+			vSync();
+	}
+
 	void interruptPixelLine(int y, unsigned long *pixels, unsigned long syncBits)
 	{
 		unsigned char *line = frontBuffer[y];
-		for (int i = 0; i < mode.hRes / 2; i++)
+		int j = 0;
+		for (int i = 0; i < mode.hRes / 4; i++)
 		{
-			//writing two pixels improves speed drastically (avoids memory reads)
-			pixels[i] = syncBits | ((line[i] >> 4) & 7) | ((line[i] & 7) << 16);
+			int p0 = (line[j] >> 0) & 7;
+			int p1 = (line[j++] >> 4) & 7;
+			int p2 = (line[j] >> 0) & 7;
+			int p3 = (line[j++] >> 4) & 7;
+			pixels[i] = syncBits | (p2 << 0) | (p3 << 8) | (p0 << 16) | (p1 << 24);
 		}
 	}
 };

@@ -19,7 +19,7 @@ class VGA : public I2S
   public:
 	VGA(const int i2sIndex = 0);
 	void setLineBufferCount(int lineBufferCount);
-	bool init(const Mode &mode, const int *pinMap);
+	bool init(const Mode &mode, const int *pinMap, const int bitCount);
 
 	static const Mode MODE320x480;
 	static const Mode MODE320x240;
@@ -55,17 +55,21 @@ class VGA : public I2S
 
 	Mode mode;
 
-  protected:
-	static const int bytesPerSample;
+	virtual int bytesPerSample() const = 0;
 
+  protected:
+	
+	virtual void initSyncBits() = 0;
+	virtual long syncBits(bool h, bool v) = 0;
+ 
 	int lineBufferCount;
 	int vsyncPin;
 	int hsyncPin;
 	int currentLine;
-	int vsyncBit;
-	int hsyncBit;
-	int vsyncBitI;
-	int hsyncBitI;
+	long vsyncBit;
+	long hsyncBit;
+	long vsyncBitI;
+	long hsyncBitI;
 
 	int totalLines;
 	volatile bool vSyncPassed;

@@ -11,9 +11,9 @@
 */
 #pragma once
 #include "VGA.h"
-#include "../Graphics/GraphicsR1G1B1A1X10S2Swapped.h"
+#include "../Graphics/GraphicsR1G1B1A1X2S2Swapped.h"
 
-class VGA3Bit : public VGA, public GraphicsR5G5B4A1X10S2Swapped
+class VGA3Bit : public VGA, public GraphicsR1G1B1A1X2S2Swapped
 {
   public:
 	VGA3Bit(const int i2sIndex = 1)
@@ -23,21 +23,34 @@ class VGA3Bit : public VGA, public GraphicsR5G5B4A1X10S2Swapped
 
 	bool init(const Mode &mode, const int RPin, const int GPin, const int BPin, const int hsyncPin, const int vsyncPin)
 	{
-		int pinMap[24] = {
-			-1, -1, -1, -1, -1, -1, -1, -1,
+		int pinMap[8] = {
 			RPin,
 			GPin,
 			BPin,
-			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-			hsyncPin, vsyncPin};
+			-1, -1, -1,
+			hsyncPin, vsyncPin
+		};
 
-		hsyncBitI = mode.hSyncPolarity ? 0x4000 : 0;
-		vsyncBitI = mode.vSyncPolarity ? 0x8000 : 0;
-		hsyncBit = hsyncBitI ^ 0x4000;
-		vsyncBit = vsyncBitI ^ 0x8000;
+		return VGA::init(mode, pinMap, 8);
+	}
+
+	virtual void initSyncBits()
+	{
+		hsyncBitI = mode.hSyncPolarity ? 0x40 : 0;
+		vsyncBitI = mode.vSyncPolarity ? 0x80 : 0;
+		hsyncBit = hsyncBitI ^ 0x40;
+		vsyncBit = vsyncBitI ^ 0x80;
 		SBits = hsyncBitI | vsyncBitI;
+	}
+		
+	virtual long syncBits(bool hSync, bool vSync)
+	{
+		return ((hSync ? hsyncBit : hsyncBitI) | (vSync ? vsyncBit : vsyncBitI)) * 0x1010101;
+	}
 
-		return VGA::init(mode, pinMap);
+	virtual int bytesPerSample() const
+	{
+		return 1;
 	}
 
 	virtual float pixelAspect() const
@@ -57,7 +70,7 @@ class VGA3Bit : public VGA, public GraphicsR5G5B4A1X10S2Swapped
 
 	virtual Color **allocateFrameBuffer()
 	{
-		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample, true, (hsyncBitI | vsyncBitI) * 0x10001);
+		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, syncBits(false, false));
 	}
 
 	virtual void allocateLineBuffers()
@@ -76,7 +89,7 @@ class VGA3Bit : public VGA, public GraphicsR5G5B4A1X10S2Swapped
 		Graphics::show(vSync);
 		if(dmaBufferDescriptors)
 		for (int i = 0; i < yres * mode.vDiv; i++)
-			dmaBufferDescriptors[(mode.vFront + mode.vSync + mode.vBack + i) * 2 + 1].setBuffer(frontBuffer[i / mode.vDiv], mode.hRes * bytesPerSample);
+			dmaBufferDescriptors[(mode.vFront + mode.vSync + mode.vBack + i) * 2 + 1].setBuffer(frontBuffer[i / mode.vDiv], mode.hRes * bytesPerSample());
 	}
 
 	virtual void scroll(int dy, Color color)

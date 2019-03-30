@@ -58,7 +58,7 @@ class DMABufferDescriptor : protected lldesc_t
 		length = 0;
 		size = 0;
 		owner = 1;
-		sosf = 1;
+		sosf = 0;
 		buf = (uint8_t *)0;
 		offset = 0;
 		empty = 0;

@@ -44,8 +44,8 @@ class I2S
 
 	void resetDMA();
 	void resetFIFO();
-	bool initParallelOutputMode(const int *pinMap, long APLLFreq = 1000000, int baseClock = -1, int wordSelect = -1);
-	bool initParallelInputMode(const int *pinMap, long sampleRate = 1000000, int baseClock = -1, int wordSelect = -1);
+	bool initParallelOutputMode(const int *pinMap, long APLLFreq = 1000000, const int bitCount = 8, int wordSelect = -1, int baseClock = -1);
+	bool initParallelInputMode(const int *pinMap, long sampleRate = 1000000, const int bitCount = 8, int wordSelect = -1, int baseClock = -1);
 	virtual DMABufferDescriptor *firstDescriptorAddress() const;
 
 	void allocateDMABuffers(int count, int bytes);

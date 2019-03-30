@@ -27,31 +27,46 @@ class VGA14BitI : public VGA, public GraphicsR5G5B4A2
 		const int B0Pin, const int B1Pin, const int B2Pin, const int B3Pin, 
 		const int hsyncPin, const int vsyncPin)
 	{
-		int pinMap[24] = {
-			-1, -1, -1, -1, -1, -1, -1, -1,
+		int pinMap[16] = {
 			R0Pin, R1Pin, R2Pin, R3Pin, R4Pin,
 			G0Pin, G1Pin, G2Pin, G3Pin, G4Pin,
 			B0Pin, B1Pin, B2Pin, B3Pin,
 			hsyncPin, vsyncPin
 			};		
-		return VGA::init(mode, pinMap);
+		return VGA::init(mode, pinMap, 16);
 	}
 
 	bool init(const Mode &mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin)
 	{
-		int pinMap[24];
-		for (int i = 0; i < 8; i++)
-			pinMap[i] = -1;
+		int pinMap[16];
 		for (int i = 0; i < 5; i++)
 		{
-			pinMap[i + 8] = redPins[i];
-			pinMap[i + 13] = greenPins[i];
+			pinMap[i] = redPins[i];
+			pinMap[i + 5] = greenPins[i];
 			if (i < 4)
-				pinMap[i + 18] = bluePins[i];
+				pinMap[i + 10] = bluePins[i];
 		}
-		pinMap[22] = hsyncPin;
-		pinMap[23] = vsyncPin;		
-		return VGA::init(mode, pinMap);
+		pinMap[14] = hsyncPin;
+		pinMap[15] = vsyncPin;		
+		return VGA::init(mode, pinMap, 16);
+	}
+
+	virtual void initSyncBits()
+	{
+		hsyncBitI = mode.hSyncPolarity ? 0x4000 : 0;
+		vsyncBitI = mode.vSyncPolarity ? 0x8000 : 0;
+		hsyncBit = hsyncBitI ^ 0x4000;
+		vsyncBit = vsyncBitI ^ 0x8000;
+	}
+
+	virtual long syncBits(bool hSync, bool vSync)
+	{
+		return ((hSync ? hsyncBit : hsyncBitI) | (vSync ? vsyncBit : vsyncBitI)) * 0x10001;
+	}
+
+	virtual int bytesPerSample() const
+	{
+		return 2;
 	}
 
 	virtual float pixelAspect() const

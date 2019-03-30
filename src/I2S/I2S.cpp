@@ -61,15 +61,18 @@ void I2S::startTX()
 	DEBUG_PRINTLN("I2S TX");
 	esp_intr_disable(interruptHandle);
 	reset();
+    i2s.lc_conf.val    = I2S_OUT_DATA_BURST_EN | I2S_OUTDSCR_BURST_EN;
 	dmaBufferDescriptorActive = 0;
 	i2s.out_link.addr = (uint32_t)firstDescriptorAddress();
 	i2s.out_link.start = 1;
 	i2s.int_clr.val = i2s.int_raw.val;
 	i2s.int_ena.val = 0;
-	i2s.int_ena.out_eof = 1;
-	i2s.int_ena.out_dscr_err = 1;
-	//enable interrupt
-	esp_intr_enable(interruptHandle);
+	if(useInterrupt())
+	{
+		i2s.int_ena.out_eof = 1;
+		//enable interrupt
+		esp_intr_enable(interruptHandle);
+	}
 	//start transmission
 	i2s.conf.tx_start = 1;
 }
@@ -119,7 +122,7 @@ bool I2S::useInterrupt()
 	return false; 
 };
 
-bool I2S::initParallelInputMode(const int *pinMap, long sampleRate, int baseClock, int wordSelect)
+bool I2S::initParallelInputMode(const int *pinMap, long sampleRate, const int bitCount, int wordSelect, int baseClock)
 {
 	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
 	//route peripherals
@@ -201,7 +204,7 @@ bool I2S::initParallelInputMode(const int *pinMap, long sampleRate, int baseCloc
 	return true;
 }
 
-bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClock, int wordSelect)
+bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, const int bitCount, int wordSelect, int baseClock)
 {
 	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
 	//route peripherals
@@ -211,19 +214,22 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClo
 	const int deviceWordSelectIndex[] = {I2S0O_WS_OUT_IDX, I2S1O_WS_OUT_IDX};
 	const periph_module_t deviceModule[] = {PERIPH_I2S0_MODULE, PERIPH_I2S1_MODULE};
 	//works only since indices of the pads are sequential
-	for (int i = 0; i < 24; i++)
+	for (int i = 0; i < bitCount; i++)
 		if (pinMap[i] > -1)
 		{
 			PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[pinMap[i]], PIN_FUNC_GPIO);
 			gpio_set_direction((gpio_num_t)pinMap[i], (gpio_mode_t)GPIO_MODE_DEF_OUTPUT);
-			gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + i, false, false);
+			if(bitCount == 16 && i2sIndex == 1)
+				gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + i + 8, false, false);
+			else
+				gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + i, false, false);
 		}
 	if (baseClock > -1)
 		gpio_matrix_out(baseClock, deviceClockIndex[i2sIndex], false, false);
 	if (wordSelect > -1)
 		gpio_matrix_out(wordSelect, deviceWordSelectIndex[i2sIndex], false, false);
 
-	//enable I2S peripheral
+		//enable I2S peripheral
 	periph_module_enable(deviceModule[i2sIndex]);
 
 	//reset i2s
@@ -239,12 +245,11 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClo
 	i2s.conf2.val = 0;
 	i2s.conf2.lcd_en = 1;
 	//from technical datasheet figure 64
-//	i2s.conf2.lcd_tx_sdx2_en = 0;
-//	i2s.conf2.lcd_tx_wrx2_en = 1;
+	i2s.conf2.lcd_tx_wrx2_en = 1;
+	i2s.conf2.lcd_tx_sdx2_en = 0;
 
 	i2s.sample_rate_conf.val = 0;
-	i2s.sample_rate_conf.tx_bits_mod = 16; //16
-
+	i2s.sample_rate_conf.tx_bits_mod = bitCount;
 	//clock setup
 	//xtal is 40M
 	//chip revision 0
@@ -255,11 +260,10 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClo
 	//rtc_clk_apll_enable(enable, sdm0, sdm1, sdm2, odir);
 	//                           0-255 0-255  0-63  0-31
 	//sdm seems to be simply a fixpoint number with 16bits fractional part
-	//0xA7fff is the highest value I was able to use. it's just shy of 580MHz. That's a max freq of 145MHz
 	//freq = 40000000L * (4 + sdm) / (2 * (odir + 2))
 	//sdm = freq / (20000000L / (odir + 2)) - 4;
 
-	long freq = sampleRate * 4; //there are two 1/2 factors in the I2S pipeline for the frequency and another I missed
+	long freq = sampleRate * 2 * (bitCount / 8);
 	int sdm, sdmn;
 	int odir = -1;
 	do
@@ -268,12 +272,13 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClo
 		sdm = long((double(freq) / (20000000. / (odir + 2))) * 0x10000) - 0x40000;
 		sdmn = long((double(freq) / (20000000. / (odir + 2 + 1))) * 0x10000) - 0x40000;
 	}while(sdm < 0x8c0ecL && odir < 31 && sdmn < 0xA1fff); //0xA7fffL doesn't work on all mcus 
-	/*DEBUG_PRINTLN(sdm & 255);
-	DEBUG_PRINTLN((sdm >> 8) & 255);
-	DEBUG_PRINTLN(sdm >> 16);
-	DEBUG_PRINTLN(odir);*/
-//	sdm = 0x8c0ecL;
-//	odir = 3;
+	//DEBUG_PRINTLN(sdm & 255);
+	//DEBUG_PRINTLN((sdm >> 8) & 255);
+	//DEBUG_PRINTLN(sdm >> 16);
+	//DEBUG_PRINTLN(odir);
+	//sdm = 0xA1fff;
+	//odir = 0;
+	if(sdm > 0xA1fff) sdm = 0xA1fff;
 	rtc_clk_apll_enable(true, sdm & 255, (sdm >> 8) & 255, sdm >> 16, odir);
 	i2s.clkm_conf.val = 0;
 	i2s.clkm_conf.clka_en = 1;
@@ -305,7 +310,7 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, int baseClo
 	i2s.conf.tx_msb_shift = 0;
 	i2s.conf.tx_mono = 0;
 	i2s.conf.tx_short_sync = 0;
-/**/
+
 	//allocate disabled i2s interrupt
 	const int interruptSource[] = {ETS_I2S0_INTR_SOURCE, ETS_I2S1_INTR_SOURCE};
 	if(useInterrupt())

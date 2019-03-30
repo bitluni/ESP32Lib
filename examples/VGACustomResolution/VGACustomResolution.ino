@@ -23,9 +23,6 @@ void setup()
 	Serial.begin(115200);
 	//enabling double buffering
 	vga.setFrameBufferCount(2);
-	//let's calculate the max horizontal resolution we can get from a given mode
-	Serial.print("Maximum Horizontal resolution from 800x600 base would be: ");
-	Serial.println(vga.MODE800x600.maxXRes());
 	//Mode::custom(xres, yres, fixedYDivider = 1) calculates the parameters for our custom resolution.
 	//the y resolution is only scaling integer divisors (yet).
 	//if you don't like to let it scale automatically pass a fixed parameter with a fixed divider.

@@ -76,12 +76,12 @@ class Mode
 
 	Mode custom(int xres, int yres, int fixedYDivider = 0) const
 	{
-		xres = (xres + 1) & 0xfffffffe;
+		xres = (xres + 3) & 0xfffffffc;
 		float f = float(xres) / hRes;
-		int hs = int(hSync * f + 1) & 0xfffffffe;
-		int hb = int((hSync + hBack - hs / f) * f + 1) & 0xfffffffe;
+		int hs = int(hSync * f + 3) & 0xfffffffc;
+		int hb = int((hSync + hBack - hs / f) * f + 3) & 0xfffffffc;
 		int hr = xres;
-		int hf = int((pixelsPerLine() - (hs + hb + hr) / f) * f + 1) & 0xfffffffe;
+		int hf = int((pixelsPerLine() - (hs + hb + hr) / f) * f + 3) & 0xfffffffc;
 		
 		int vd = fixedYDivider ? fixedYDivider : (vRes / yres);
 		int vr = yres * vd;

@@ -11,7 +11,6 @@
 */
 #include "VGA.h"
 
-//maximum pixel clock with apll is 36249999.
 //hfront hsync hback pixels vfront vsync vback lines divy pixelclock hpolaritynegative vpolaritynegative
 const Mode VGA::MODE320x480(8, 48, 24, 320, 11, 2, 31, 480, 1, 12587500, 1, 1);
 const Mode VGA::MODE320x240(8, 48, 24, 320, 11, 2, 31, 480, 2, 12587500, 1, 1);
@@ -47,8 +46,6 @@ const Mode VGA::MODE640x480(16, 96, 48, 640, 11, 2, 31, 480, 1, 25175000, 1, 1);
 const Mode VGA::MODE640x400(16, 96, 48, 640, 12, 2, 35, 400, 1, 25175000, 1, 0);
 const Mode VGA::MODE640x350(16, 96, 48, 640, 37, 2, 60, 350, 1, 25175000, 0, 1);
 
-const int VGA::bytesPerSample = 2;
-
 VGA::VGA(const int i2sIndex)
 	: I2S(i2sIndex)
 {
@@ -56,23 +53,20 @@ VGA::VGA(const int i2sIndex)
 	dmaBufferDescriptors = 0;
 }
 
-bool VGA::init(const Mode &mode, const int *pinMap)
+bool VGA::init(const Mode &mode, const int *pinMap, const int bitCount)
 {
 	this->mode = mode;
 	int xres = mode.hRes;
 	int yres = mode.vRes / mode.vDiv;
-	hsyncBitI = mode.hSyncPolarity ? 0x4000 : 0;
-	vsyncBitI = mode.vSyncPolarity ? 0x8000 : 0;
-	hsyncBit = hsyncBitI ^ 0x4000;
-	vsyncBit = vsyncBitI ^ 0x8000;
+	initSyncBits();
 	propagateResolution(xres, yres);
 	this->vsyncPin = vsyncPin;
 	this->hsyncPin = hsyncPin;
 	totalLines = mode.linesPerField();
-	initParallelOutputMode(pinMap, mode.pixelClock);
 	allocateLineBuffers();
 	currentLine = 0;
 	vSyncPassed = false;
+	initParallelOutputMode(pinMap, mode.pixelClock, bitCount);
 	startTX();
 	return true;
 }
@@ -92,7 +86,7 @@ void VGA::allocateLineBuffers(const int lines)
 {
 	dmaBufferDescriptorCount = lines;
 	dmaBufferDescriptors = DMABufferDescriptor::allocateDescriptors(dmaBufferDescriptorCount);
-	int bytes = (mode.hFront + mode.hSync + mode.hBack + mode.hRes) * bytesPerSample;
+	int bytes = (mode.hFront + mode.hSync + mode.hBack + mode.hRes) * bytesPerSample();
 	for (int i = 0; i < dmaBufferDescriptorCount; i++)
 	{
 		dmaBufferDescriptors[i].setBuffer(DMABufferDescriptor::allocateBuffer(bytes, true), bytes); //front porch + hsync + back porch + pixels
@@ -106,28 +100,52 @@ void VGA::allocateLineBuffers(const int lines)
 void VGA::allocateLineBuffers(void **frameBuffer)
 {
 	dmaBufferDescriptorCount = totalLines * 2;
-	int inactiveSamples = (mode.hFront + mode.hSync + mode.hBack + 1) & 0xfffffffe;
-	vSyncInactiveBuffer = DMABufferDescriptor::allocateBuffer(inactiveSamples * bytesPerSample, true);
-	vSyncActiveBuffer = DMABufferDescriptor::allocateBuffer(mode.hRes * bytesPerSample, true);
-	inactiveBuffer = DMABufferDescriptor::allocateBuffer(inactiveSamples * bytesPerSample, true);
-	blankActiveBuffer = DMABufferDescriptor::allocateBuffer(mode.hRes * bytesPerSample, true);
-	for (int i = 0; i < inactiveSamples; i++)
+	int inactiveSamples = (mode.hFront + mode.hSync + mode.hBack + 3) & 0xfffffffc;
+	vSyncInactiveBuffer = DMABufferDescriptor::allocateBuffer(inactiveSamples * bytesPerSample(), true);
+	vSyncActiveBuffer = DMABufferDescriptor::allocateBuffer(mode.hRes * bytesPerSample(), true);
+	inactiveBuffer = DMABufferDescriptor::allocateBuffer(inactiveSamples * bytesPerSample(), true);
+	blankActiveBuffer = DMABufferDescriptor::allocateBuffer(mode.hRes * bytesPerSample(), true);
+	if(bytesPerSample() == 1)
 	{
-		if (i >= mode.hFront && i < mode.hFront + mode.hSync)
+		for (int i = 0; i < inactiveSamples; i++)
 		{
-			((unsigned short *)vSyncInactiveBuffer)[i ^ 1] = hsyncBit | vsyncBit;
-			((unsigned short *)inactiveBuffer)[i ^ 1] = hsyncBit | vsyncBitI;
+			if (i >= mode.hFront && i < mode.hFront + mode.hSync)
+			{
+				((unsigned char *)vSyncInactiveBuffer)[i ^ 2] = hsyncBit | vsyncBit;
+				((unsigned char *)inactiveBuffer)[i ^ 2] = hsyncBit | vsyncBitI;
+			}
+			else
+			{
+				((unsigned char *)vSyncInactiveBuffer)[i ^ 2] = hsyncBitI | vsyncBit;
+				((unsigned char *)inactiveBuffer)[i ^ 2] = hsyncBitI | vsyncBitI;
+			}
 		}
-		else
+		for (int i = 0; i < mode.hRes; i++)
 		{
-			((unsigned short *)vSyncInactiveBuffer)[i ^ 1] = hsyncBitI | vsyncBit;
-			((unsigned short *)inactiveBuffer)[i ^ 1] = hsyncBitI | vsyncBitI;
+			((unsigned char *)vSyncActiveBuffer)[i ^ 2] = hsyncBitI | vsyncBit;
+			((unsigned char *)blankActiveBuffer)[i ^ 2] = hsyncBitI | vsyncBitI;
 		}
 	}
-	for (int i = 0; i < mode.hRes; i++)
+	else if(bytesPerSample() == 2)
 	{
-		((unsigned short *)vSyncActiveBuffer)[i ^ 1] = hsyncBitI | vsyncBit;
-		((unsigned short *)blankActiveBuffer)[i ^ 1] = hsyncBitI | vsyncBitI;
+		for (int i = 0; i < inactiveSamples; i++)
+		{
+			if (i >= mode.hFront && i < mode.hFront + mode.hSync)
+			{
+				((unsigned short *)vSyncInactiveBuffer)[i ^ 1] = hsyncBit | vsyncBit;
+				((unsigned short *)inactiveBuffer)[i ^ 1] = hsyncBit | vsyncBitI;
+			}
+			else
+			{
+				((unsigned short *)vSyncInactiveBuffer)[i ^ 1] = hsyncBitI | vsyncBit;
+				((unsigned short *)inactiveBuffer)[i ^ 1] = hsyncBitI | vsyncBitI;
+			}
+		}
+		for (int i = 0; i < mode.hRes; i++)
+		{
+			((unsigned short *)vSyncActiveBuffer)[i ^ 1] = hsyncBitI | vsyncBit;
+			((unsigned short *)blankActiveBuffer)[i ^ 1] = hsyncBitI | vsyncBitI;
+		}
 	}
 
 	dmaBufferDescriptors = DMABufferDescriptor::allocateDescriptors(dmaBufferDescriptorCount);
@@ -136,23 +154,23 @@ void VGA::allocateLineBuffers(void **frameBuffer)
 	int d = 0;
 	for (int i = 0; i < mode.vFront; i++)
 	{
-		dmaBufferDescriptors[d++].setBuffer(inactiveBuffer, inactiveSamples * bytesPerSample);
-		dmaBufferDescriptors[d++].setBuffer(blankActiveBuffer, mode.hRes * bytesPerSample);
+		dmaBufferDescriptors[d++].setBuffer(inactiveBuffer, inactiveSamples * bytesPerSample());
+		dmaBufferDescriptors[d++].setBuffer(blankActiveBuffer, mode.hRes * bytesPerSample());
 	}
 	for (int i = 0; i < mode.vSync; i++)
 	{
-		dmaBufferDescriptors[d++].setBuffer(vSyncInactiveBuffer, inactiveSamples * bytesPerSample);
-		dmaBufferDescriptors[d++].setBuffer(vSyncActiveBuffer, mode.hRes * bytesPerSample);
+		dmaBufferDescriptors[d++].setBuffer(vSyncInactiveBuffer, inactiveSamples * bytesPerSample());
+		dmaBufferDescriptors[d++].setBuffer(vSyncActiveBuffer, mode.hRes * bytesPerSample());
 	}
 	for (int i = 0; i < mode.vBack; i++)
 	{
-		dmaBufferDescriptors[d++].setBuffer(inactiveBuffer, inactiveSamples * bytesPerSample);
-		dmaBufferDescriptors[d++].setBuffer(blankActiveBuffer, mode.hRes * bytesPerSample);
+		dmaBufferDescriptors[d++].setBuffer(inactiveBuffer, inactiveSamples * bytesPerSample());
+		dmaBufferDescriptors[d++].setBuffer(blankActiveBuffer, mode.hRes * bytesPerSample());
 	}
 	for (int i = 0; i < mode.vRes; i++)
 	{
-		dmaBufferDescriptors[d++].setBuffer(inactiveBuffer, inactiveSamples * bytesPerSample);
-		dmaBufferDescriptors[d++].setBuffer(frameBuffer[i / mode.vDiv], mode.hRes * bytesPerSample);
+		dmaBufferDescriptors[d++].setBuffer(inactiveBuffer, inactiveSamples * bytesPerSample());
+		dmaBufferDescriptors[d++].setBuffer(frameBuffer[i / mode.vDiv], mode.hRes * bytesPerSample());
 	}
 }
 
