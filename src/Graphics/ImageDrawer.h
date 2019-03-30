@@ -25,6 +25,8 @@ class ImageDrawer
 			case Image::R5G5B4A2:
 				imageR5G5B4A2(image, x, y, srcX, srcY, srcXres, srcYres);
 			break;
+			default:
+			break;
 		}
 	}
 
@@ -34,6 +36,8 @@ class ImageDrawer
 		{
 			case Image::R5G5B4A2:
 				imageAddR5G5B4A2(image, x, y, srcX, srcY, srcXres, srcYres);
+			break;
+			default:
 			break;
 		}
 	}
@@ -45,6 +49,8 @@ class ImageDrawer
 			case Image::R5G5B4A2:
 				imageMixR5G5B4A2(image, x, y, srcX, srcY, srcXres, srcYres);
 			break;
+			default:
+			break;
 		}
 	}
 
@@ -54,6 +60,8 @@ class ImageDrawer
 		{
 			case Image::R5G5B4A2:
 				imageR5G5B4A2(image, x, y, 0, 0, image.xres, image.yres);
+			break;
+			default:
 			break;
 		}
 	}
@@ -65,6 +73,8 @@ class ImageDrawer
 			case Image::R5G5B4A2:
 				imageAddR5G5B4A2(image, x, y, 0, 0, image.xres, image.yres);
 			break;
+			default:
+			break;
 		}
 	}
 
@@ -74,6 +84,8 @@ class ImageDrawer
 		{
 			case Image::R5G5B4A2:
 				imageMixR5G5B4A2(image, x, y, 0, 0, image.xres, image.yres);
+			break;
+			default:
 			break;
 		}
 	}

@@ -87,13 +87,13 @@ class VGA3BitI : public VGA, public GraphicsR1G1B1A1
 		unsigned long base, baseh;
 		if (currentLine >= mode.vFront && currentLine < mode.vFront + mode.vSync)
 		{
-			baseh = syncBits(true, true);//(vsyncBit | hsyncBit) | ((vsyncBit | hsyncBit) << 16);
-			base = syncBits(false, true);//(vsyncBit | hsyncBitI) | ((vsyncBit | hsyncBitI) << 16);
+			baseh = syncBits(true, true);
+			base = syncBits(false, true);
 		}
 		else
 		{
-			baseh = syncBits(true, false);(vsyncBitI | hsyncBit) | ((vsyncBitI | hsyncBit) << 16);
-			base =  syncBits(false, false);(vsyncBitI | hsyncBitI) | ((vsyncBitI | hsyncBitI) << 16);
+			baseh = syncBits(true, false);
+			base =  syncBits(false, false);
 		}
 		for (int i = 0; i < mode.hSync / 4; i++)
 			signal[i] = baseh;

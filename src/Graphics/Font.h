@@ -16,9 +16,9 @@ class Font
   public:
 	const int firstChar;
 	const int charCount;
+	const unsigned char *pixels;
 	const int charWidth;
 	const int charHeight;
-	const unsigned char *pixels;
 	Font(int charWidth, int charHeight, const unsigned char *pixels, int firstChar = 32, int charCount = 96)
 		:firstChar(firstChar),
 		charCount(charCount),

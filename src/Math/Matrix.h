@@ -36,7 +36,7 @@ class Vector
 		return *this;
 	}
 
-	const float operator[](int i)
+	float operator[](int i) const
 	{
 		return v[i];
 	}

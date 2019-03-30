@@ -63,7 +63,7 @@ class Sprites
 		this->count = count;
 		this->sprites = new Sprite[count];
 		for (int i = 0; i < count; i++)
-			this->sprites[i].init(resolutions[i][0], resolutions[i][1], pixels + offsets[i], pointOffsets[i + 1] - pointOffsets[i], &points[pointOffsets[i]], pixelFormat);
+			this->sprites[i].init(resolutions[i][0], resolutions[i][1], (unsigned char*)pixels + offsets[i], pointOffsets[i + 1] - pointOffsets[i], &points[pointOffsets[i]], pixelFormat);
 	}
 
 	void draw(ImageDrawer &g, int sprite, int x, int y)

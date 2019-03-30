@@ -86,6 +86,6 @@ class GraphicsR1G1B1A1X2S2Swapped: public Graphics<unsigned char>
 
 	virtual Color** allocateFrameBuffer()
 	{
-		Graphics<Color>::allocateFrameBuffer(xres, yres, (Color)SBits);
+		return Graphics<Color>::allocateFrameBuffer(xres, yres, (Color)SBits);
 	}
 };

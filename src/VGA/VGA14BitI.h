@@ -101,7 +101,6 @@ protected:
 	void interruptPixelLine(int y, unsigned long *pixels, unsigned long syncBits)
 	{
 		unsigned short *line = frontBuffer[y];
-		static int c = 0;
 		for (int i = 0; i < mode.hRes / 2; i++)
 		{
 			//writing two pixels improves speed drastically (avoids memory reads)

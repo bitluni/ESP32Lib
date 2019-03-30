@@ -20,23 +20,23 @@ class Mesh
   public:
 	typedef typename Graphics::Color Color;
 	int vertexCount;
-	int triangleCount;
 	int edgeCount;
+	int triangleCount;
 	const float (*vertices)[3];
+	const unsigned short (*edges)[2];
+	const unsigned short (*triangles)[3];
 	const float (*triangleNormals)[3];
 	short (*tvertices)[3];
 	signed char (*tTriNormals)[3];
-	const unsigned short (*triangles)[3];
-	const unsigned short (*edges)[2];
 
 	typedef Color (*triangleShader)(int trinangleNo, short *v0, short *v1, short *v2, const signed char *normal, Color color);
 
 	Mesh(int vertCount, const float verts[][3], int edgeCount_ = 0, const unsigned short edges_[][2] = 0, int triCount = 0, const unsigned short tris[][3] = 0, const float triNorms[][3] = 0)
 		: vertexCount(vertCount),
-		  vertices(verts),
 		  edgeCount(edgeCount_),
-		  edges(edges_),
 		  triangleCount(triCount),
+		  vertices(verts),
+		  edges(edges_),
 		  triangles(tris),
 		  triangleNormals(triNorms)
 	{

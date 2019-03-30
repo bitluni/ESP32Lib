@@ -22,12 +22,12 @@ class Mode
 	int vSync;
 	int vBack;
 	int vRes;
-	int activeLineCount;
 	int vDiv;
 	unsigned long pixelClock;
 	int hSyncPolarity;
 	int vSyncPolarity;
 	float aspect;
+	int activeLineCount;
 	Mode(
 		const int hFront = 0,
 		const int hSync = 0,

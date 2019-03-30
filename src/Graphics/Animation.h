@@ -30,6 +30,10 @@ class Animation : public Entity
 		time = 0;
 		this->drawMode = drawMode;
 	}
+
+	virtual ~Animation()
+	{
+	}
 	
 	bool act(int dt)
 	{

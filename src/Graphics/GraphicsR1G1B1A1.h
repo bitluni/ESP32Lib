@@ -54,19 +54,23 @@ class GraphicsR1G1B1A1: public Graphics<unsigned char>
 	virtual void dot(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
+		{
 			if(x & 1)
 				backBuffer[y][x >> 1] = (backBuffer[y][x >> 1] & 0xf) | (color << 4);
 			else
 				backBuffer[y][x >> 1] = (backBuffer[y][x >> 1] & 0xf0) | (color & 0xf);
+		}
 	}
 
 	virtual void dotAdd(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
+		{
 			if(x & 1)
 				backBuffer[y][x >> 1] = backBuffer[y][x >> 1] | (color << 4);
 			else
 				backBuffer[y][x >> 1] = backBuffer[y][x >> 1] | (color & 0xf);
+		}
 	}
 	
 	virtual void dotMix(int x, int y, Color color)
@@ -74,19 +78,21 @@ class GraphicsR1G1B1A1: public Graphics<unsigned char>
 		if ((unsigned int)x < xres && (unsigned int)y < yres && (color & 8) != 0)
 		{
 			if(x & 1)
-				backBuffer[y][x >> 1] = (backBuffer[y][x >> 1] & 0xf) | color << 4;
+				backBuffer[y][x >> 1] = (backBuffer[y][x >> 1] & 0xf) | (color << 4);
 			else
-				backBuffer[y][x >> 1] =  (backBuffer[y][x >> 1] & 0xf0) | color & 0xf;
+				backBuffer[y][x >> 1] =  (backBuffer[y][x >> 1] & 0xf0) | (color & 0xf);
 		}	
 	}
 	
 	virtual Color get(int x, int y)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
+		{
 			if(x & 1)
 				return backBuffer[y][x >> 1] = backBuffer[y][x >> 1] >> 4;
 			else
 				return backBuffer[y][x >> 1] = backBuffer[y][x >> 1] & 0xf;
+		}
 		return 0;
 	}
 
