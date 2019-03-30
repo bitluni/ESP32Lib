@@ -9,6 +9,7 @@ Paypal https://paypal.me/bitluni
 
 # Acknowledgements
 Thanks to Ivan Grokhotkov & Jeroen Domburg (aka Sprite_tm) for their great work on I2S revealing some nitty-gritty details and quirks of the ESP32.
+Special thanks to Fabrizio Di Vittorio for the inpiration to look deeper into 8Bit modes enabling higher resolutions. He developed the FabGL library simultaneously.
 
 # License
 bitluni 2019
@@ -35,9 +36,13 @@ To be able to use the library featues the main header needs to included in the s
 ## VGA Features
 
 ESP32Lib implements VGA output over I²S.  
-The highest possible resolution with this library is 460x480.
+The highest possible resolution with this library is 800x600.
 Many common resolutions like 320x240 are preconfigured und can be used without any effort.
-Two color depths are available. 14Bit R5G5B4 and 3Bit(8 color) R1G1B1 for convenience.
+Two color depths are available. 14Bit R5G5B4 and 3Bit(8 color) R1G1B1 for convenience and memory savings.
+
+To simplify things you can find boards specially designed to work with this library in my shop:
+https://www.tindie.com/stores/bitluni/
+Any purchase supports the further development. Thanks!
 
 ### Pin configuration
 
@@ -73,11 +78,11 @@ Here is an overview for your convenience:
 
 There are 4 diffent VGA Drivers **VGA3Bit**, **VGA3BitI**, **VGA14Bit** and **VGA14BitI**.
 VGA3Bit, VGA14Bit are the high performance drivers that don't need any CPU time to
-serve the VGA. However the VGA3Bit driver is very memory hungry compared to VGA3BitI.
+serve the VGA. However the VGA3Bit driver takes twice the memory compared to VGA3BitI.
 The high performace drivers work the best with the WiFi features. The other driver might
 cause errors. WiFi should connect first before VGA3BitI and VGA14BitI is initialized.
 The *I* drivers are using an interrupt to feed the pixels to the I²S. This feature can be used for realtime outputs (Check the **VGANoFramebuffer** example).
-An instance of the driver has to be created. The optional parameter is the I²S bus to be used. If no parameter is given 1 is used by default to keep I²S0 free for audio output.
+An instance of the driver has to be created. The optional parameter (only for 14 bit versions) is the I²S bus to be used. If no parameter is given 1 is used by default to keep I²S0 free for audio output.
 ```cpp
 VGA14Bit vga(1);
 ```
@@ -112,16 +117,16 @@ The following modes are predefined:
 - MODE200x150
 - MODE500x480
 - MODE500x240
+- MODE800x600
+- MODE720x400
+- MODE720x350
+- MODE640x480
 
 These native modes require a too high pixel clock but can be used as a base to create a custom resolution. Please check out the **VGACustomResolution** example:
 - MODE1280x1024
 - MODE1280x960
 - MODE1280x800
 - MODE1024x768
-- MODE800x600
-- MODE720x400
-- MODE720x350
-- MODE640x480
 
 ### 2D features
 The vga instance implements several drawing methods that can be seen in the **VGA2DFeatures** example.
