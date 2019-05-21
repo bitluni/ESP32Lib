@@ -19,7 +19,7 @@ class VGA : public I2S
   public:
 	VGA(const int i2sIndex = 0);
 	void setLineBufferCount(int lineBufferCount);
-	bool init(const Mode &mode, const int *pinMap, const int bitCount);
+	bool init(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin = -1);
 
 	static const Mode MODE320x480;
 	static const Mode MODE320x240;

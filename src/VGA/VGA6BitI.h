@@ -11,25 +11,43 @@
 */
 #pragma once
 #include "VGA.h"
-#include "../Graphics/GraphicsR1G1B1A1.h"
+#include "../Graphics/GraphicsR2G2B2A2.h"
 
-class VGA3BitI : public VGA, public GraphicsR1G1B1A1
+class VGA6BitI : public VGA, public GraphicsR2G2B2A2
 {
   public:
-	VGA3BitI()	//8 bit based modes only work with I2S1
+	VGA6BitI()	//8 bit based modes only work with I2S1
 		: VGA(1)
 	{
 	}
 
-	bool init(const Mode &mode, const int RPin, const int GPin, const int BPin, const int hsyncPin, const int vsyncPin, const int clockPin = -1)
+	bool init(Mode &mode,
+			  const int R0Pin, const int R1Pin,
+			  const int G0Pin, const int G1Pin,
+			  const int B0Pin, const int B1Pin,
+			  const int hsyncPin, const int vsyncPin, const int clockPin = -1)
 	{
 		int pinMap[8] = {
-			RPin,
-			GPin,
-			BPin,
-			-1, -1, -1,
+			R0Pin, R1Pin,
+			G0Pin, G1Pin,
+			B0Pin, B1Pin,
 			hsyncPin, vsyncPin
-		};	
+		};
+
+		return VGA::init(mode, pinMap, 8, clockPin);
+	}
+
+	bool init(const Mode &mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin, const int clockPin = -1)
+	{
+		int pinMap[8];
+		for (int i = 0; i < 2; i++)
+		{
+			pinMap[i] = redPins[i];
+			pinMap[i + 2] = greenPins[i];
+			pinMap[i + 4] = bluePins[i];
+		}
+		pinMap[6] = hsyncPin;
+		pinMap[7] = vsyncPin;			
 		return VGA::init(mode, pinMap, 8, clockPin);
 	}
 

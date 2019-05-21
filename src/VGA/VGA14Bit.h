@@ -25,19 +25,19 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 			  const int R0Pin, const int R1Pin, const int R2Pin, const int R3Pin, const int R4Pin,
 			  const int G0Pin, const int G1Pin, const int G2Pin, const int G3Pin, const int G4Pin,
 			  const int B0Pin, const int B1Pin, const int B2Pin, const int B3Pin,
-			  const int hsyncPin, const int vsyncPin)
+			  const int hsyncPin, const int vsyncPin, const int clockPin = -1)
 	{
-		int pinMap[24] = {
+		int pinMap[16] = {
 			R0Pin, R1Pin, R2Pin, R3Pin, R4Pin,
 			G0Pin, G1Pin, G2Pin, G3Pin, G4Pin,
 			B0Pin, B1Pin, B2Pin, B3Pin,
 			hsyncPin, vsyncPin
 		};
 
-		return VGA::init(mode, pinMap, 16);
+		return VGA::init(mode, pinMap, 16, clockPin);
 	}
 
-	bool init(const Mode &mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin)
+	bool init(const Mode &mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin, const int clockPin = -1)
 	{
 		int pinMap[16];
 		for (int i = 0; i < 5; i++)
@@ -49,7 +49,7 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 		}
 		pinMap[14] = hsyncPin;
 		pinMap[15] = vsyncPin;			
-		return VGA::init(mode, pinMap, 16);
+		return VGA::init(mode, pinMap, 16, clockPin);
 	}
 
 	virtual void initSyncBits()

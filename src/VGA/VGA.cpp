@@ -53,7 +53,7 @@ VGA::VGA(const int i2sIndex)
 	dmaBufferDescriptors = 0;
 }
 
-bool VGA::init(const Mode &mode, const int *pinMap, const int bitCount)
+bool VGA::init(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin)
 {
 	this->mode = mode;
 	int xres = mode.hRes;
@@ -66,7 +66,7 @@ bool VGA::init(const Mode &mode, const int *pinMap, const int bitCount)
 	allocateLineBuffers();
 	currentLine = 0;
 	vSyncPassed = false;
-	initParallelOutputMode(pinMap, mode.pixelClock, bitCount);
+	initParallelOutputMode(pinMap, mode.pixelClock, bitCount, clockPin);
 	startTX();
 	return true;
 }
