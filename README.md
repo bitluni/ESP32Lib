@@ -44,6 +44,12 @@ To simplify things you can find boards specially designed to work with this libr
 https://www.tindie.com/stores/bitluni/
 Any purchase supports the further development. Thanks!
 
+### Predefined Pin Configurations
+A simplified way to configure the pins for shields from my tindie store is using the default predefined configurations VGAv01, VGABlackEdition, VGAWhiteEdition, PicoVGA like this:
+```cpp
+vga.init(vga.MODE320x200, vga.VGABlackEdition); 
+```
+
 ### Pin configuration
 
 An VGA cable can be used to connect to the ESP32
@@ -98,6 +104,7 @@ before the init method is called (not calling it will result in a single buffer 
 ```cpp
 vga.init(vga.MODE320x200, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
 ```
+
 The R, G and B pins are passed as arrays for the 14Bit driver and as single integers for the 3Bit version. Please try the examples
 The following modes are predefined:
 - MODE320x480
@@ -121,6 +128,8 @@ The following modes are predefined:
 - MODE720x400
 - MODE720x350
 - MODE640x480
+- MODE640x400
+- MODE800x600
 
 These native modes require a too high pixel clock but can be used as a base to create a custom resolution. Please check out the **VGACustomResolution** example:
 - MODE1280x1024

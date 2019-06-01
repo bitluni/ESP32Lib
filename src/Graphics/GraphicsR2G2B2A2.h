@@ -105,6 +105,36 @@ class GraphicsR2G2B2A2: public Graphics<unsigned char>
 				backBuffer[y][x] = (color & RGBAXMask) | SBits;
 	}
 
+	virtual void imageR2G2B2A2(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dot(px + x, py + y, ((unsigned char*)image.pixels)[i++]);
+		}		
+	}
+
+	virtual void imageAddR2G2B2A2(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dotAdd(px + x, py + y, ((unsigned char*)image.pixels)[i++]);
+		}
+	}
+
+	virtual void imageMixR2G2B2A2(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dotMix(px + x, py + y, ((unsigned char*)image.pixels)[i++]);
+		}
+	}	
+
 	virtual Color** allocateFrameBuffer()
 	{
 		return Graphics<Color>::allocateFrameBuffer(xres, yres, (Color)SBits);

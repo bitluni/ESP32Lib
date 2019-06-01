@@ -51,6 +51,13 @@ class VGA6BitI : public VGA, public GraphicsR2G2B2A2
 		return VGA::init(mode, pinMap, 8, clockPin);
 	}
 
+	bool init(const Mode &mode, const PinConfig &pinConfig)
+	{
+		int pins[8];
+		pinConfig.fill6Bit(pins);
+		return VGA::init(mode, pins, 8, pinConfig.clock);
+	}
+
 	virtual void initSyncBits()
 	{
 		hsyncBitI = mode.hSyncPolarity ? 0x40 : 0;

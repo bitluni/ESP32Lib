@@ -36,6 +36,13 @@ class VGA14BitI : public VGA, public GraphicsR5G5B4A2
 		return VGA::init(mode, pinMap, 16, clockPin);
 	}
 
+	bool init(const Mode &mode, const PinConfig &pinConfig)
+	{
+		int pins[16];
+		pinConfig.fill14Bit(pins);
+		return VGA::init(mode, pins, 16, pinConfig.clock);
+	}
+
 	bool init(const Mode &mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin, const int clockPin = -1)
 	{
 		int pinMap[16];

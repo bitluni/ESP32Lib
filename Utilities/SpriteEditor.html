@@ -194,6 +194,17 @@ function spritesToHeader(pixelformat)
 	var rf, rshift, gf, gshift, bf, bshift, af, ashift, type, bytesPerPixel;
 	switch(pixelformat)
 	{
+		case "R2G2B2A2":
+		{
+			rf = gf = bf = af = 3.;
+			rshift = 0;
+			gshift = 2;
+			bshift = 4;
+			ashift = 6;
+			type = "unsigned char";
+			bytesPerPixel = 1;
+			break;
+		}
 		case "R4G4B4A4":
 		{
 			rf = gf = bf = af = 15.;
@@ -237,7 +248,7 @@ function spritesToHeader(pixelformat)
 		text += pointOffsets[i] + ", ";
 	text += "};\r\n";
 	
-	text += "const " + type + " " + name + "Res[][2] = {"
+	text += "const unsigned short " + name + "Res[][2] = {"
 	for(var i = 0; i < sprites.length; i++)
 	{
 		text += "{" + sprites[i].xres + ", " + sprites[i].yres + "}, ";
@@ -251,7 +262,7 @@ function spritesToHeader(pixelformat)
 	text += "};\r\n";
 	
 	var k = 0;
-	text += "const unsigned short " + name + "Pixels[] = {"
+	text += "const " + type + " " + name + "Pixels[] = {"
 	for(var i = 0; i < sprites.length; i++)
 	{
 		if((i & 63) == 0) text += "\r\n";
@@ -590,6 +601,7 @@ function update()
 			<input id="addimages" type="file" onchange="addFiles(event)" accept="image/*" multiple hidden>
             <button title="Export sprite header" onclick="saveHeader();" style="font-size: 15px; font-weight:bold">.h</button>
             <select id="pixelformat" title="Export pixel format">
+				<option vlaue="R2G2B2A2">R2G2B2A2</option>
 				<option vlaue="R5G5B4A2">R5G5B4A2</option>
 				<option vlaue="R4G4B4A4">R4G4B4A4</option>
 			</select>

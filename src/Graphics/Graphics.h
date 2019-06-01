@@ -627,6 +627,15 @@ class Graphics: public ImageDrawer
 		return RGBA(r, g, b, a);
 	}
 
+	virtual Color R2G2B2A2ToColor(unsigned char c)
+	{
+		int r = ((int(c) & 3) * 255 + 1) / 3;
+		int g = (((int(c) >> 2) & 3) * 255 + 1) / 3;
+		int b = (((int(c) >> 4) & 3) * 255 + 1) / 3;
+		int a = (((int(c) >> 6) & 3) * 255 + 1) / 3;
+		return RGBA(r, g, b, a);
+	}
+
 	virtual void imageR5G5B4A2(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
 	{
 		for (int py = 0; py < srcYres; py++)
@@ -654,6 +663,36 @@ class Graphics: public ImageDrawer
 			int i = srcX + (py + srcY) * image.xres;
 			for (int px = 0; px < srcXres; px++)
 				dotMix(px + x, py + y, R5G5B4A2ToColor(((unsigned short*)image.pixels)[i++]));
+		}
+	}	
+
+	virtual void imageR2G2B2A2(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dot(px + x, py + y, R2G2B2A2ToColor(((unsigned char*)image.pixels)[i++]));
+		}		
+	}
+
+	virtual void imageAddR2G2B2A2(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dotAdd(px + x, py + y, R2G2B2A2ToColor(((unsigned char*)image.pixels)[i++]));
+		}
+	}
+
+	virtual void imageMixR2G2B2A2(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dotMix(px + x, py + y, R2G2B2A2ToColor(((unsigned char*)image.pixels)[i++]));
 		}
 	}	
 };

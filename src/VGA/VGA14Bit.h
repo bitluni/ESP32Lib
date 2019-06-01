@@ -52,6 +52,13 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 		return VGA::init(mode, pinMap, 16, clockPin);
 	}
 
+	bool init(const Mode &mode, const PinConfig &pinConfig)
+	{
+		int pins[16];
+		pinConfig.fill14Bit(pins);
+		return VGA::init(mode, pins, 16, pinConfig.clock);
+	}
+
 	virtual void initSyncBits()
 	{
 		hsyncBitI = mode.hSyncPolarity ? 0x4000 : 0;

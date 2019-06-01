@@ -46,6 +46,11 @@ const Mode VGA::MODE640x480(16, 96, 48, 640, 11, 2, 31, 480, 1, 25175000, 1, 1);
 const Mode VGA::MODE640x400(16, 96, 48, 640, 12, 2, 35, 400, 1, 25175000, 1, 0);
 const Mode VGA::MODE640x350(16, 96, 48, 640, 37, 2, 60, 350, 1, 25175000, 0, 1);
 
+const PinConfig VGA::VGAv01(2, 4, 12, 13, 14,  15, 16, 17, 18, 19,  21, 22, 23, 27,  32, 33,  -1);
+const PinConfig VGA::VGABlackEdition(2, 4, 12, 13, 14,  15, 16, 17, 18, 19,  21, 22, 23, 27,  32, 33,  -1);
+const PinConfig VGA::VGAWhiteEdition(5, 14, 13, 15, 2,  19, 18, 17, 4, 16,  27, 22, 12, 21,  32, 33, -1);
+const PinConfig VGA::PicoVGA(-1, -1, -1, 18, 5,  -1, -1, -1, 14, 4,  -1, -1, 27, 15,  32, 33,  -1);
+
 VGA::VGA(const int i2sIndex)
 	: I2S(i2sIndex)
 {

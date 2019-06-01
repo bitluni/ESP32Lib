@@ -18,6 +18,7 @@ class Image
 	{
 		R8G8B8A8 = 1,
 		R1G1B1A1 = 2,
+		R2G2B2A2 = 3,
 		R4G4B4A4 = 4,
 		R5G5B5A1 = 5,
 		R5G5B4A2 = 6

@@ -13,6 +13,7 @@
 
 #include "../I2S/I2S.h"
 #include "Mode.h"
+#include "PinConfig.h"
 
 class VGA : public I2S
 {
@@ -20,6 +21,7 @@ class VGA : public I2S
 	VGA(const int i2sIndex = 0);
 	void setLineBufferCount(int lineBufferCount);
 	bool init(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin = -1);
+	virtual bool init(const Mode &mode, const PinConfig &pinConfig) = 0;
 
 	static const Mode MODE320x480;
 	static const Mode MODE320x240;
@@ -52,6 +54,12 @@ class VGA : public I2S
 	static const Mode MODE640x480;
 	static const Mode MODE640x400;
 	static const Mode MODE640x350;
+
+	static const PinConfig VGAv01;
+	static const PinConfig VGABlackEdition;
+	static const PinConfig VGAWhiteEdition;
+	static const PinConfig PicoVGA;
+
 
 	Mode mode;
 
