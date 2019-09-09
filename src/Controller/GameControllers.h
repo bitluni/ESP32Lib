@@ -11,7 +11,7 @@
 */
 
 #pragma once
-const int MAX_CONTROLLERS = 4;
+const int MAX_CONTROLLERS = 10;
   
 class GameControllers
 {
@@ -64,11 +64,22 @@ class GameControllers
   }
 
   ///This sets the controller type and initializes its individual data pin
-  void setController(int controller, Type type, int dataPin)
+  void setController(int controller, Type type, int pin)
   {
     types[controller] = type;
-    dataPins[controller] = dataPin;
+    dataPins[controller] = pin;
     pinMode(dataPins[controller], INPUT_PULLUP);
+  }
+  
+  ///This sets the controller type and initializes its individual data pins
+  void setControllers(Type type, int count, const int *pins)
+  {
+	for(int i = 0; i < count; i++)
+	{
+		types[i] = type;
+		dataPins[i] = pins[i];
+		pinMode(dataPins[i], INPUT_PULLUP);
+	}
   }
   
   void poll()
