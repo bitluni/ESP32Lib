@@ -45,6 +45,7 @@ class I2S
 	void resetDMA();
 	void resetFIFO();
 	bool initParallelOutputMode(const int *pinMap, long APLLFreq = 1000000, const int bitCount = 8, int wordSelect = -1, int baseClock = -1);
+	bool initSerialOutputMode(int dataPin, const int bitCount = 8, int wordSelect = -1, int baseClock = -1);
 	bool initParallelInputMode(const int *pinMap, long sampleRate = 1000000, const int bitCount = 8, int wordSelect = -1, int baseClock = -1);
 	virtual DMABufferDescriptor *firstDescriptorAddress() const;
 
@@ -54,6 +55,8 @@ class I2S
   protected:
 	virtual void interrupt() = 0;
 	virtual bool useInterrupt();
+	void setAPLLClock(long sampleRate, int bitCount);
+	void setClock(long sampleRate, int bitCount, bool useAPLL = true);
 	
   private:
 	static void IRAM_ATTR interruptStatic(void *arg);

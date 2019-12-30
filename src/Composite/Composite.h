@@ -19,11 +19,12 @@ class Composite : public I2S
 {
   public:
 	Composite(const int i2sIndex = 0);
-	void setLineBufferCount(int lineBufferCount);
 	bool init(const ModeComposite &mode, const int *pinMap, const int bitCount);
 	virtual bool init(const ModeComposite &mode, const PinConfigComposite &pinConfig) = 0;
 
 	static const ModeComposite MODE400x300;
+	static const ModeComposite MODEPAL312P;
+
 
 	static const PinConfigComposite GameWing;
 	static const PinConfigComposite XPlayer;
@@ -37,14 +38,18 @@ class Composite : public I2S
 	int currentLine;
 	int totalLines;	
 	volatile bool vSyncPassed;
+	int syncLevel;
+	int blankLevel;
+	int burstAmp;
 
 	void *shortSyncBuffer;
 	void *longSyncBuffer;
-	void *lineSyncBuffer;
+	void *lineSyncBuffer[2];
 	void *lineBlankBuffer;
+	void *lineBackBlankBuffer;
 
 	void allocateLineBuffers(const int lines);
-	virtual void allocateLineBuffers();
+	virtual void allocateLineBuffers() = 0;
 	virtual void allocateLineBuffers(void **frameBuffer);
 	virtual void propagateResolution(const int xres, const int yres) = 0;
 
@@ -52,4 +57,5 @@ class Composite : public I2S
 	virtual void interrupt();
 	virtual void vSync();
 	virtual void interruptPixelLine(int y, unsigned long *pixels);
+	virtual int burst(int sampleNumber, bool even = true);
 };

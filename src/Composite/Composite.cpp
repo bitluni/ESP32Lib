@@ -11,7 +11,20 @@
 */
 #include "Composite.h"
 
-const ModeComposite Composite::MODE400x300(0, 32, 76, 388, 8, 24, 278, 2, 1, 16, 8000000);
+const ModeComposite Composite::MODE400x300(32, 76, 380, 8, 8, 24, 278, 2, 1, 16, 8000000);
+
+//1136 per line 
+//920 visible
+//84 sync
+//132 front
+//312 total lines
+
+//856
+const ModeComposite Composite::MODEPAL312P(64, 96, 640, 56, 8, 23, 272, 9, 1, 32, 13333333, 70, 38, 4433619);
+//const ModeComposite Composite::MODEPAL312P(84, 152, 840, 60, 8, 23, 272, 9, 1, 42, 17734475, 99, 40, 4433619);
+//const ModeComposite   Composite::MODEPAL312P(44, 76, 420, 28, 8, 23, 272, 9, 1, 20, 8867238, 50, 20, 4433619);
+//const ModeComposite Composite::MODENTSC312P(64, 96, 640, 56, 8, 23, 272, 9, 1, 32, 13333333, 70, 38, 4433619);
+
 //4.43361875 * 4
 const PinConfigComposite Composite::GameWing(22, 14, 32, 15, 33, 27, 12, 13);
 const PinConfigComposite Composite::XPlayer(32, 27, 14, 12, 13, 4, 21, 22);
@@ -19,7 +32,6 @@ const PinConfigComposite Composite::XPlayer(32, 27, 14, 12, 13, 4, 21, 22);
 Composite::Composite(const int i2sIndex)
 	: I2S(i2sIndex)
 {
-	lineBufferCount = 8;
 	dmaBufferDescriptors = 0;
 }
 
@@ -28,6 +40,9 @@ bool Composite::init(const ModeComposite &mode, const int *pinMap, const int bit
 	this->mode = mode;
 	int xres = mode.hRes;
 	int yres = mode.vRes / mode.vDiv;
+	blankLevel = 72;
+	burstAmp = 32;
+	syncLevel = 0;
 	propagateResolution(xres, yres);
 	totalLines = mode.linesPerField();
 	allocateLineBuffers();
@@ -38,57 +53,51 @@ bool Composite::init(const ModeComposite &mode, const int *pinMap, const int bit
 	return true;
 }
 
-void Composite::setLineBufferCount(int lineBufferCount)
+int Composite::burst(int sampleNumber, bool even)
 {
-	this->lineBufferCount = lineBufferCount;
-}
-
-void Composite::allocateLineBuffers()
-{
-	allocateLineBuffers(lineBufferCount);
-}
-
-/// simple ringbuffer of blocks of size bytes each
-void Composite::allocateLineBuffers(const int lines)
-{
-	dmaBufferDescriptorCount = lines;
-	dmaBufferDescriptors = DMABufferDescriptor::allocateDescriptors(dmaBufferDescriptorCount);
-	int bytes = (mode.hFront + mode.hSync + mode.hBack + mode.hRes) * bytesPerSample();
-	for (int i = 0; i < dmaBufferDescriptorCount; i++)
-	{
-		dmaBufferDescriptors[i].setBuffer(DMABufferDescriptor::allocateBuffer(bytes, true), bytes); //front porch + hsync + back porch + pixels
-		if (i)
-			dmaBufferDescriptors[i - 1].next(dmaBufferDescriptors[i]);
-	}
-	dmaBufferDescriptors[dmaBufferDescriptorCount - 1].next(dmaBufferDescriptors[0]);
+	return blankLevel;
 }
 
 ///complete ringbuffer from frame
 void Composite::allocateLineBuffers(void **frameBuffer)
 {
-	dmaBufferDescriptorCount = totalLines * 2;
-	int inactiveSamples = mode.hFront + mode.hSync + mode.hBack;
+	//simple buffers
+	dmaBufferDescriptorCount = totalLines;
+	dmaBufferDescriptors = DMABufferDescriptor::allocateDescriptors(dmaBufferDescriptorCount);
+	for (int i = 0; i < dmaBufferDescriptorCount; i++)
+		dmaBufferDescriptors[i].next(dmaBufferDescriptors[(i + 1) % dmaBufferDescriptorCount]);
+	for (int i = 0; i < totalLines; i++)
+	{
+		dmaBufferDescriptors[i].setBuffer(frameBuffer[i], 856);
+	}
+		return;
+
+	dmaBufferDescriptorCount = totalLines * 2 + mode.vRes;
+	int inactiveSamples = mode.hFront + mode.hSync;
 	int activeSamples = mode.hRes;
 	int syncSamples = mode.pixelsPerLine() / 2;
-	Serial.println(syncSamples);
-	const int blankLevel = 75;
-	const int syncLevel = 0;
 	
 	shortSyncBuffer = DMABufferDescriptor::allocateBuffer(syncSamples * bytesPerSample(), true);
 	longSyncBuffer = DMABufferDescriptor::allocateBuffer(syncSamples * bytesPerSample(), true);
-	lineSyncBuffer = DMABufferDescriptor::allocateBuffer(inactiveSamples * bytesPerSample(), true);
-	lineBlankBuffer = DMABufferDescriptor::allocateBuffer(mode.hRes * bytesPerSample(), true, blankLevel);
+	lineSyncBuffer[0] = DMABufferDescriptor::allocateBuffer(inactiveSamples * bytesPerSample(), true);
+	lineSyncBuffer[1] = DMABufferDescriptor::allocateBuffer(inactiveSamples * bytesPerSample(), true);
+	lineBlankBuffer = DMABufferDescriptor::allocateBuffer(mode.hRes * bytesPerSample() + mode.hBack, true, blankLevel * 0x1010101);
+	lineBackBlankBuffer = DMABufferDescriptor::allocateBuffer(mode.hBack * bytesPerSample(), true, blankLevel * 0x1010101);
 
 	if(bytesPerSample() == 1)
 	{
 		int i = 0;
-		for (int j = 0; j < mode.hBack; j++)
-			((unsigned char *)lineSyncBuffer)[i++ ^ 2] = blankLevel;
 		for (int j = 0; j < mode.hSync; j++)
-			((unsigned char *)lineSyncBuffer)[i++ ^ 2] = syncLevel;
+		{
+			((unsigned char *)(lineSyncBuffer[0]))[i ^ 2] = syncLevel;
+			((unsigned char *)(lineSyncBuffer[1]))[i++ ^ 2] = syncLevel;
+		}
 		for (int j = 0; j < mode.hFront; j++)
-			((unsigned char *)lineSyncBuffer)[i++ ^ 2] = blankLevel;
-		
+		{
+			((unsigned char *)(lineSyncBuffer[0]))[i ^ 2] = burst(j + mode.hSync, true);
+			((unsigned char *)(lineSyncBuffer[1]))[i++ ^ 2] = burst(j + mode.hSync, false);
+		}
+
 		for (int i = 0; i < syncSamples; i++)
 		{
 			if(i < mode.shortSync)
@@ -100,36 +109,14 @@ void Composite::allocateLineBuffers(void **frameBuffer)
 			else
 				((unsigned char *)longSyncBuffer)[i ^ 2] = syncLevel;
 		}
-		for (int i = 0; i < mode.hRes; i++)
+		for (int i = 0; i < mode.hRes + mode.hBack; i++)
 			((unsigned char *)lineBlankBuffer)[i ^ 2] = blankLevel;
 	}
-	else if(bytesPerSample() == 2)
-	{
-		int i = 0;
-		for (int j = 0; j < mode.hBack; j++)
-			((unsigned short *)lineSyncBuffer)[i++ ^ 1] = blankLevel;
-		for (int j = 0; j < mode.hSync; j++)
-			((unsigned short *)lineSyncBuffer)[i++ ^ 1] = syncLevel;
-		for (int j = 0; j < mode.hFront; j++)
-			((unsigned short *)lineSyncBuffer)[i++ ^ 1] = blankLevel;
-		
-		for (int i = 0; i < syncSamples; i++)
-		{
-			if(i < mode.shortSync)
-				((unsigned short *)shortSyncBuffer)[i++ ^ 1] = blankLevel;
-			else
-				((unsigned short *)shortSyncBuffer)[i++ ^ 1] = syncLevel;
-			if(i < syncSamples - mode.shortSync)
-				((unsigned short *)longSyncBuffer)[i++ ^ 1] = blankLevel;
-			else
-				((unsigned short *)longSyncBuffer)[i++ ^ 1] = syncLevel;
-		}
-		for (int i = 0; i < mode.hRes; i++)
-			((unsigned short *)lineBlankBuffer)[i ^ 1] = blankLevel;
-	}
+
+	//bytesPerSample() == 2 is not implemented
 
 	dmaBufferDescriptors = DMABufferDescriptor::allocateDescriptors(dmaBufferDescriptorCount);
-//dmaBufferDescriptorCount = 2;
+
 	for (int i = 0; i < dmaBufferDescriptorCount; i++)
 		dmaBufferDescriptors[i].next(dmaBufferDescriptors[(i + 1) % dmaBufferDescriptorCount]);
 	int d = 0;
@@ -139,20 +126,23 @@ void Composite::allocateLineBuffers(void **frameBuffer)
 		dmaBufferDescriptors[d++].setBuffer(longSyncBuffer, syncSamples * bytesPerSample());
 	for(int i = 0; i < 5; i++)
 		dmaBufferDescriptors[d++].setBuffer(shortSyncBuffer, syncSamples * bytesPerSample());
+
 	for (int i = 0; i < mode.vFront; i++)
 	{
-		dmaBufferDescriptors[d++].setBuffer(lineSyncBuffer, inactiveSamples * bytesPerSample());
-		dmaBufferDescriptors[d++].setBuffer(lineBlankBuffer, mode.hRes * bytesPerSample());
+		dmaBufferDescriptors[d++].setBuffer(lineSyncBuffer[i & 1], inactiveSamples * bytesPerSample());
+		dmaBufferDescriptors[d++].setBuffer(lineBlankBuffer, (mode.hRes + mode.hBack) * bytesPerSample());
 	}
+
 	for (int i = 0; i < mode.vRes; i++)
 	{
-		dmaBufferDescriptors[d++].setBuffer(lineSyncBuffer, inactiveSamples * bytesPerSample());
+		dmaBufferDescriptors[d++].setBuffer(lineSyncBuffer[(i + mode.vFront) & 1], inactiveSamples * bytesPerSample());
 		dmaBufferDescriptors[d++].setBuffer(frameBuffer[i / mode.vDiv], mode.hRes * bytesPerSample());
+		dmaBufferDescriptors[d++].setBuffer(lineBackBlankBuffer, mode.hBack * bytesPerSample());
 	}
 	for (int i = 0; i < mode.vBack; i++)
 	{
-		dmaBufferDescriptors[d++].setBuffer(lineSyncBuffer, inactiveSamples * bytesPerSample());
-		dmaBufferDescriptors[d++].setBuffer(lineBlankBuffer, mode.hRes * bytesPerSample());
+		dmaBufferDescriptors[d++].setBuffer(lineSyncBuffer[(i + mode.vFront + mode.vBack) & 1], inactiveSamples * bytesPerSample());
+		dmaBufferDescriptors[d++].setBuffer(lineBlankBuffer, (mode.hRes + mode.hBack) * bytesPerSample());
 	}
 }
 

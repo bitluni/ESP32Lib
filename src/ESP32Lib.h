@@ -7,6 +7,10 @@
 #include <VGA/VGA3BitI.h>
 #include <VGA/VGA3Bit.h>
 #include <Composite/CompositeL8.h>
+#include <Composite/CompositePAL8.h>
+
+#include <LED/SerialLED.h>
+
 #include <Graphics/Sprites.h>
 #include <Graphics/Mesh.h>
 #include <Graphics/Sprites.h>
