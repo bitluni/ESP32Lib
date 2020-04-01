@@ -19,6 +19,7 @@ class VGA14BitI : public VGA, public GraphicsR5G5B4A2
 	VGA14BitI(const int i2sIndex = 1)
 		: VGA(i2sIndex)
 	{
+		lineBufferCount = 3;
 		interruptStaticChild = &VGA14BitI::interrupt;
 	}
 
@@ -87,6 +88,83 @@ class VGA14BitI : public VGA, public GraphicsR5G5B4A2
 		setResolution(xres, yres);
 	}
 
+	void *vBlankLineBuffer;
+	void *vSyncLineBuffer;
+	void **vActiveLineBuffer;
+
+	//complete ring of buffer descriptors for one frame
+	//actual linebuffers only for some lines rendered ahead
+	virtual void allocateLineBuffers()
+	{
+		//lenght of each line
+		int samples = mode.hFront + mode.hSync + mode.hBack + mode.hRes;
+		int bytes = samples * bytesPerSample();
+
+		//create and fill the buffers with their default values
+
+		//create the buffers
+		//1 blank prototype line for vFront and vBack
+		vBlankLineBuffer = DMABufferDescriptor::allocateBuffer(bytes, true);
+		//1 sync prototype line for vSync
+		vSyncLineBuffer = DMABufferDescriptor::allocateBuffer(bytes, true);
+		//n lines as buffer for active lines
+		int ActiveLinesBufferCount = lineBufferCount;
+		vActiveLineBuffer = (void **)malloc(ActiveLinesBufferCount * sizeof(void *));
+		if(!vActiveLineBuffer)
+			ERROR("Not enough memory for ActiveLineBuffer buffer");
+		for (int i = 0; i < ActiveLinesBufferCount; i++)
+		{
+			vActiveLineBuffer[i] = DMABufferDescriptor::allocateBuffer(bytes, true);
+		}
+
+		//fill the buffers with their default values
+		//(bytesPerSample() == 2)
+		for (int i = 0; i < samples; i++)
+		{
+			if (i < mode.hSync)
+			{
+				((unsigned short *)vSyncLineBuffer)[i ^ 1] = hsyncBit | vsyncBit;
+				((unsigned short *)vBlankLineBuffer)[i ^ 1] = hsyncBit | vsyncBitI;
+			}
+			else
+			{
+				((unsigned short *)vSyncLineBuffer)[i ^ 1] = hsyncBitI | vsyncBit;
+				((unsigned short *)vBlankLineBuffer)[i ^ 1] = hsyncBitI | vsyncBitI;
+			}
+		}
+		for (int i = 0; i < ActiveLinesBufferCount; i++)
+		{
+			memcpy(vActiveLineBuffer[i], vBlankLineBuffer, bytes);
+		}
+
+		//allocate DMA buffer descriptors for the whole frame
+		dmaBufferDescriptorCount = totalLines;
+		dmaBufferDescriptors = DMABufferDescriptor::allocateDescriptors(dmaBufferDescriptorCount);
+		//link all buffer descriptors in a ring
+		for (int i = 0; i < dmaBufferDescriptorCount; i++)
+			dmaBufferDescriptors[i].next(dmaBufferDescriptors[(i + 1) % dmaBufferDescriptorCount]);
+
+		//assign the buffers accross the DMA buffer descriptors
+		//CONVENTION: the frame starts after the last active line of previous frame
+		int d = 0;
+		for (int i = 0; i < mode.vFront; i++)
+		{
+			dmaBufferDescriptors[d++].setBuffer(vBlankLineBuffer, bytes);
+		}
+		for (int i = 0; i < mode.vSync; i++)
+		{
+			dmaBufferDescriptors[d++].setBuffer(vSyncLineBuffer, bytes);
+		}
+		for (int i = 0; i < mode.vBack; i++)
+		{
+			dmaBufferDescriptors[d++].setBuffer(vBlankLineBuffer, bytes);
+		}
+		for (int i = 0; i < mode.vRes; i++)
+		{
+			dmaBufferDescriptors[d++].setBuffer(vActiveLineBuffer[i % ActiveLinesBufferCount], bytes);
+		}
+	}
+
 	virtual void show(bool vSync = false)
 	{
 		if (!frameBufferCount)
@@ -115,39 +193,34 @@ class VGA14BitI : public VGA, public GraphicsR5G5B4A2
 void IRAM_ATTR VGA14BitI::interrupt(void *arg)
 {
 	VGA14BitI * staticthis = (VGA14BitI *)arg;
-	
-	unsigned long *signal = (unsigned long *)staticthis->dmaBufferDescriptors[staticthis->dmaBufferDescriptorActive].buffer();
-	unsigned long *pixels = &((unsigned long *)staticthis->dmaBufferDescriptors[staticthis->dmaBufferDescriptorActive].buffer())[(staticthis->mode.hSync + staticthis->mode.hBack) / 2];
-	unsigned long base, baseh;
-	if (staticthis->currentLine >= staticthis->mode.vFront && staticthis->currentLine < staticthis->mode.vFront + staticthis->mode.vSync)
-	{
-		baseh = (staticthis->hsyncBit | staticthis->vsyncBit) * 0x10001;
-		base = (staticthis->hsyncBitI | staticthis->vsyncBit) * 0x10001;
-	}
-	else
-	{
-		baseh = (staticthis->hsyncBit | staticthis->vsyncBitI) * 0x10001;
-		base = (staticthis->hsyncBitI | staticthis->vsyncBitI) * 0x10001;
-	}
-	for (int i = 0; i < staticthis->mode.hSync / 2; i++)
-		signal[i] = baseh;
-	for (int i = staticthis->mode.hSync / 2; i < (staticthis->mode.hSync + staticthis->mode.hBack) / 2; i++)
-		signal[i] = base;
 
-	int y = (staticthis->currentLine - staticthis->mode.vFront - staticthis->mode.vSync - staticthis->mode.vBack) / staticthis->mode.vDiv;
-	if (y >= 0 && y < staticthis->mode.vRes)
-		staticthis->interruptPixelLine(y, pixels, base, arg);
-	else
-		for (int i = 0; i < staticthis->mode.hRes / 2; i++)
-		{
-			pixels[i] = base | (base << 16);
-		}
-	for (int i = 0; i < staticthis->mode.hFront / 2; i++)
-		signal[i + (staticthis->mode.hSync + staticthis->mode.hBack + staticthis->mode.hRes) / 2] = base;
-	staticthis->currentLine = (staticthis->currentLine + 1) % staticthis->totalLines;
-	staticthis->dmaBufferDescriptorActive = (staticthis->dmaBufferDescriptorActive + 1) % staticthis->dmaBufferDescriptorCount;
-	if (staticthis->currentLine == 0)
+	//fix for skipped lines due to skipped interupts during wifi activity
+	DMABufferDescriptor *currentDmaBufferDescriptor = (DMABufferDescriptor *)REG_READ(I2S_OUT_EOF_DES_ADDR_REG(staticthis->i2sIndex));
+	staticthis->dmaBufferDescriptorActive = ((uint32_t)currentDmaBufferDescriptor - (uint32_t)staticthis->dmaBufferDescriptors)/sizeof(DMABufferDescriptor);
+	staticthis->currentLine = staticthis->dmaBufferDescriptorActive; //equivalent in this configuration
+	
+	int vInactiveLinesCount = staticthis->mode.vFront + staticthis->mode.vSync + staticthis->mode.vBack;
+	
+	//render ahead (the lenght of buffered lines)
+	int renderLine = (staticthis->currentLine + staticthis->lineBufferCount) % staticthis->totalLines;
+	
+	if (renderLine >= vInactiveLinesCount)
+	{
+		int renderActiveLine = renderLine - vInactiveLinesCount;
+		unsigned long *pixels = &((unsigned long *)staticthis->vActiveLineBuffer[renderActiveLine % staticthis->lineBufferCount])[(staticthis->mode.hSync + staticthis->mode.hBack) / 2];
+		unsigned long base = (staticthis->hsyncBitI | staticthis->vsyncBitI) * 0x10001;
+
+		int y = renderActiveLine / staticthis->mode.vDiv;
+		if (y >= 0 && y < staticthis->mode.vRes)
+			staticthis->interruptPixelLine(y, pixels, base, arg);
+	}
+
+	if (renderLine == 0)
 		staticthis->vSyncPassed = true;
+
+	//update to provide currently outed buffer descriptor and line (increased by 1)
+	//staticthis->currentLine = (staticthis->currentLine + 1) % staticthis->totalLines;
+	//staticthis->dmaBufferDescriptorActive = (staticthis->dmaBufferDescriptorActive + 1) % staticthis->dmaBufferDescriptorCount;
 }
 
 void IRAM_ATTR VGA14BitI::interruptPixelLine(int y, unsigned long *pixels, unsigned long syncBits, void *arg)
