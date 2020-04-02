@@ -6,6 +6,7 @@
 #include <VGA/VGA6Bit.h>
 #include <VGA/VGA3BitI.h>
 #include <VGA/VGA3Bit.h>
+#include <VGA/VGA1BitI.h>
 #include <Composite/CompositeL8.h>
 #include <Composite/CompositePAL8.h>
 
