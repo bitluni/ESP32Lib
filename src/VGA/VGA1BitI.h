@@ -213,19 +213,10 @@ void IRAM_ATTR VGA1BitI::interruptPixelLine(int y, unsigned long *pixels, unsign
 	for (int i = 0; i < staticthis->mode.hRes / 4; i++)
 	{
 		j = i >> 1;
-		int p0, p1, p2, p3;
-		if(i & 1)
-		{
-			p0 = ((line[j] >> 3) & 1)?(staticthis->frontGlobalColor & 7):(staticthis->backGlobalColor & 7);
-			p1 = ((line[j] >> 2) & 1)?(staticthis->frontGlobalColor & 7):(staticthis->backGlobalColor & 7);
-			p2 = ((line[j] >> 1) & 1)?(staticthis->frontGlobalColor & 7):(staticthis->backGlobalColor & 7);
-			p3 = ((line[j]) & 1)?(staticthis->frontGlobalColor & 7):(staticthis->backGlobalColor & 7);
-		} else {
-			p0 = ((line[j] >> 7) & 1)?(staticthis->frontGlobalColor & 7):(staticthis->backGlobalColor & 7);
-			p1 = ((line[j] >> 6) & 1)?(staticthis->frontGlobalColor & 7):(staticthis->backGlobalColor & 7);
-			p2 = ((line[j] >> 5) & 1)?(staticthis->frontGlobalColor & 7):(staticthis->backGlobalColor & 7);
-			p3 = ((line[j] >> 4) & 1)?(staticthis->frontGlobalColor & 7):(staticthis->backGlobalColor & 7);
-		}
-		pixels[i] = syncBits | (p2 << 0) | (p3 << 8) | (p0 << 16) | (p1 << 24);
+		uint32_t pixel = (line[j]>>(4*(1-(i & 1))));//&0xf;
+		pixel = (pixel&(1<<3))<<13 | (pixel&(1<<2))<<22 | (pixel&(1<<1))>>1 | (pixel&(1<<0))<<8;
+		pixels[i] = syncBits
+		 | (pixel * staticthis->frontGlobalColor)
+		 | ((pixel^0x01010101) * staticthis->backGlobalColor);
 	}
 }
