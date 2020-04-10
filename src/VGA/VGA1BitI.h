@@ -208,13 +208,12 @@ void IRAM_ATTR VGA1BitI::interrupt(void *arg)
 void IRAM_ATTR VGA1BitI::interruptPixelLine(int y, unsigned long *pixels, unsigned long syncBits, void *arg)
 {
 	VGA1BitI * staticthis = (VGA1BitI *)arg;
-	unsigned char *line = staticthis->frontBuffer[y];
-	int j = 0;
+	unsigned long *line = (unsigned long *)staticthis->frontBuffer[y >> 3];
+	int lineBitShiftSelector = 0x7 - (y & 0x7);
 	for (int i = 0; i < staticthis->mode.hRes / 4; i++)
 	{
-		j = i >> 1;
-		uint32_t pixel = (line[j]>>(4*(1-(i & 1))));//&0xf;
-		pixel = (pixel&(1<<3))<<13 | (pixel&(1<<2))<<22 | (pixel&(1<<1))>>1 | (pixel&(1<<0))<<8;
+		uint32_t pixel = (line[i] >> lineBitShiftSelector) & 0x1010101;
+		pixel = (pixel&(1<<0 | 1<<8))<<16 | (pixel&(1<<16 | 1<<24))>>16;
 		pixels[i] = syncBits
 		 | (pixel * staticthis->frontGlobalColor)
 		 | ((pixel^0x01010101) * staticthis->backGlobalColor);

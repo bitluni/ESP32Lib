@@ -60,43 +60,43 @@ class GraphicsW1: public Graphics<unsigned char>
 
 	virtual void dotFast(int x, int y, Color color)
 	{
-		backBuffer[y][x >> 3] = (backBuffer[y][x >> 3] & (0xff ^ (0x80 >> (x & 0x7)))) | ((0x80 >> (x & 0x7))*(color & 1));
+		backBuffer[y >> 3][x] = (backBuffer[y >> 3][x] & (0xff ^ (0x80 >> (y & 0x7)))) | ((0x80 >> (y & 0x7))*(color & 1));
 	}
 
 	virtual void dot(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backBuffer[y][x >> 3] = (backBuffer[y][x >> 3] & (0xff ^ (0x80 >> (x & 0x7)))) | ((0x80 >> (x & 0x7))*(color & 1));
+			backBuffer[y >> 3][x] = (backBuffer[y >> 3][x] & (0xff ^ (0x80 >> (y & 0x7)))) | ((0x80 >> (y & 0x7))*(color & 1));
 	}
 
 	virtual void dotAdd(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backBuffer[y][x >> 3] = backBuffer[y][x >> 3] | ((0x80 >> (x & 0x7))*(color & 1));
+			backBuffer[y >> 3][x] = backBuffer[y >> 3][x] | ((0x80 >> (y & 0x7))*(color & 1));
 	}
 	
 	virtual void dotMix(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres && (color & 1) != 0)
-			backBuffer[y][x >> 3] = (backBuffer[y][x >> 3] & (0xff ^ (0x80 >> (x & 0x7)))) | ((0x80 >> (x & 0x7))*(color & 1));
+			backBuffer[y >> 3][x] = (backBuffer[y >> 3][x] & (0xff ^ (0x80 >> (y & 0x7)))) | ((0x80 >> (y & 0x7))*(color & 1));
 	}
 	
 	virtual Color get(int x, int y)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			return (backBuffer[y][x >> 3] >> (0x7 - (x & 0x7))) & 0x1;
+			return (backBuffer[y >> 3][x] >> (0x7 - (y & 0x7))) & 0x1;
 		return 0;
 	}
 
 	virtual void clear(Color color = 0)
 	{
-		for (int y = 0; y < this->yres; y++)
-			for (int x = 0; x < this->xres / 8; x++)
+		for (int y = 0; y < this->yres / 8; y++)
+			for (int x = 0; x < this->xres; x++)
 				this->backBuffer[y][x] = (color & 1) * 255;
 	}
 
 	virtual Color** allocateFrameBuffer()
 	{
-		return Graphics<Color>::allocateFrameBuffer(xres / 8, yres, (Color)0);
+		return Graphics<Color>::allocateFrameBuffer(4*((xres + 3) / 4), (yres + 7) / 8, (Color)0);
 	}
 };
