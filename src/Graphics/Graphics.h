@@ -19,7 +19,7 @@ template<typename Color>
 class Graphics: public ImageDrawer
 {
   public:
-	int cursorX, cursorY, cursorBaseX;
+	int cursorX, cursorY, cursorBaseX, cursorXIncrement, cursorYIncrement;
 	long frontColor, backColor;
 	Font *font;
 	int frameBufferCount;
@@ -91,6 +91,7 @@ class Graphics: public ImageDrawer
 		this->yres = yres;
 		font = 0;
 		cursorX = cursorY = cursorBaseX = 0;
+		cursorXIncrement = cursorYIncrement = 1;
 		frontColor = -1;
 		backColor = 0;
 		frameBufferCount = 1;
@@ -130,9 +131,11 @@ class Graphics: public ImageDrawer
 		backColor = back;
 	}
 
-	void setFont(Font &font)
+	virtual void setFont(Font &font)
 	{
 		this->font = &font;
+		cursorXIncrement = this->font->charWidth;
+		cursorYIncrement = this->font->charHeight;
 	}
 
 	void setCursor(int x, int y)
@@ -164,13 +167,13 @@ class Graphics: public ImageDrawer
 			drawChar(cursorX, cursorY, ch);
 		else
 			drawChar(cursorX, cursorY, ' ');		
-		cursorX += font->charWidth;
-		if (cursorX + font->charWidth > xres)
+		cursorX += cursorXIncrement;
+		if (cursorX + cursorXIncrement > xres)
 		{
 			cursorX = cursorBaseX;
-			cursorY += font->charHeight;
-			if(autoScroll && cursorY + font->charHeight > yres)
-				scroll(cursorY + font->charHeight - yres, backColor);
+			cursorY += cursorYIncrement;
+			if(autoScroll && cursorY + cursorYIncrement > yres)
+				scroll(cursorY + cursorYIncrement - yres, backColor);
 		}
 	}
 
@@ -189,7 +192,7 @@ class Graphics: public ImageDrawer
 			if(*str == '\n')
 			{
 				cursorX = cursorBaseX;
-				cursorY += font->charHeight;
+				cursorY += cursorYIncrement;
 			}
 			else
 				print(*str);
