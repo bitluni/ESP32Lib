@@ -1,5 +1,5 @@
 /*
-	Author: bitluni 2019
+	Author: bitluni 2019 and Martin-Laclaustra 2020
 	License: 
 	Creative Commons Attribution ShareAlike 4.0
 	https://creativecommons.org/licenses/by-sa/4.0/
@@ -14,61 +14,106 @@
 class ModeComposite
 {
   public:
-	int hSync;
 	int hFront;
-	int hRes;
+	int hSync;
 	int hBack;
-	int vSync;
-	int vFront;
-	int vRes;
+	int hRes;
+	int vFront;    // All below: vertical lines per field (frame lines are double)
+	int vPreEqHL;  // Pre-Equalizing Half Lines
+	int vSyncHL;   // Sync Half Lines
+	int vPostEqHL; // Post-Equalizing Half Lines
 	int vBack;
+	int vActive;
+	int vOPreRegHL;  // for interlacing: Odd PreRegular HalfLines (BeforeEqPulses) NTSC 0  PAL 1 (first half of a regular line)
+	int vOPostRegHL; // for interlacing: Odd PostRegular HalfLines (AfterEqPulses)      0      2 (first+second half of a regular line)
+	int vEPreRegHL;  // for interlacing: Even PreRegular HalfLines (BeforeEqPulses)     1      0 (first half of a regular line)
+	int vEPostRegHL; // for interlacing: Even PostRegular HalfLines (AfterEqPulses)     1      1 (second half of a regular line)
 	int vDiv;
-	int shortSync;
 	unsigned long pixelClock;
 	int burstStart;
 	int burstLength;
 	unsigned long colorClock;
+	int phaseAlternating; // 0 for NTSC, 1 for PAL
 	float aspect;
-	int activeLineCount;
+	int vRes; // calculated: total active lines per frame
+	int activeLineCount; // calculated: actual information for lines displayed
+	int vOddFieldOffset; // calculated: start of the odd field non-vsync lines
+	int vEvenFieldOffset; // calculated: start of the even field non-vsync lines
+	bool interlaced; // calculated: convenience boolean
+	int linesPerFrame; // calculated: 
+	//int linesPerField; // calculated: 
+	int vSync; // calculated: (back compatibility)
+	int shortSync; // calculated: (back compatibility)
+	
 	ModeComposite(
-		const int hSync = 0,
 		const int hFront = 0,
-		const int hRes = 0,
+		const int hSync = 0,
 		const int hBack = 0,
-		const int vSync = 0,
+		const int hRes = 0,
 		const int vFront = 0,
-		const int vRes = 0,
+		const int vPreEqHL = 0,
+		const int vSyncHL = 0,
+		const int vPostEqHL = 0,
 		const int vBack = 0,
+		const int vActive = 0,
+		const int vOPreRegHL = 0,
+		const int vOPostRegHL = 0,
+		const int vEPreRegHL = 0,
+		const int vEPostRegHL = 0,
 		const int vDiv = 1,
-		const int shortSync = 0,
 		const unsigned long pixelClock = 0,
 		const int burstStart = 0,
 		const int burstLength = 0,
 		const unsigned long colorClock = 0,
-		const float aspect = 1.f)
+		const int phaseAlternating = 0,
+		const float aspect = 1.f
+		)
 		:
-		  hSync(hSync),
 		  hFront(hFront),
-		  hRes(hRes),
+		  hSync(hSync),
 		  hBack(hBack),
-		  vSync(vSync),
+		  hRes(hRes),
 		  vFront(vFront),
-		  vRes(vRes),
+		  vPreEqHL(vPreEqHL),
+		  vSyncHL(vSyncHL),
+		  vPostEqHL(vPostEqHL),
 		  vBack(vBack),
+		  vActive(vActive),
+		  vOPreRegHL(vOPreRegHL),
+		  vOPostRegHL(vOPostRegHL),
+		  vEPreRegHL(vEPreRegHL),
+		  vEPostRegHL(vEPostRegHL),
 		  vDiv(vDiv),
-		  shortSync(shortSync),
 		  pixelClock(pixelClock),
 		  burstStart(burstStart),
 		  burstLength(burstLength),
 		  colorClock(colorClock),
+		  phaseAlternating(phaseAlternating),
 		  aspect(aspect),
-		  activeLineCount(vRes / vDiv)
+		  vRes(vActive*(((vOPreRegHL + vOPostRegHL + vEPreRegHL + vEPostRegHL) > 0)?2:1)),
+		  activeLineCount( (vActive*(((vOPreRegHL + vOPostRegHL + vEPreRegHL + vEPostRegHL) > 0)?2:1)) / vDiv),
+		  vOddFieldOffset((vPreEqHL + vSyncHL + vPostEqHL + vOPreRegHL + vOPostRegHL) / 2),
+		  vEvenFieldOffset(((vPreEqHL + vSyncHL + vPostEqHL + vOPreRegHL + vOPostRegHL) / 2) + vFront + vBack + vActive + (vPreEqHL + vSyncHL + vPostEqHL + vEPreRegHL + vEPostRegHL) / 2),
+		  interlaced((vOPreRegHL + vOPostRegHL + vEPreRegHL + vEPostRegHL) > 0),
+		  linesPerFrame(
+		  
+		  (
+			(((vOPreRegHL + vOPostRegHL + vEPreRegHL + vEPostRegHL) > 0)?2:1) // fields per frame
+			*
+			(vFront + ((vPreEqHL + vSyncHL + vPostEqHL) / 2) + vBack + vActive) // lines in every field
+			+
+			(vOPreRegHL + vOPostRegHL + vEPreRegHL + vEPostRegHL) / 2
+		  )
+		  
+		  ),
+		  vSync((vPreEqHL + vSyncHL + vPostEqHL) / 2),
+		  shortSync(hSync/2)
 	{
 	}
 
-	int linesPerField() const
+	int linesPerField() const // left for compatibility; this is a fractional number in interlaced modes
 	{
-		return vSync + vFront + vBack + vRes;
+		return linesPerFrame;
 	}
 
 	int pixelsPerLine() const
@@ -97,33 +142,23 @@ class ModeComposite
 	template<class Output>
 	void print(Output &output) const
 	{
-		output.print("hSync: ");
- 		output.println(hSync);
-		output.print("hFront: ");
-		output.println(hFront);
-		output.print("hRes: ");
-		output.println(hRes);
-		output.print("hBack: ");
-		output.println(hBack);
-		output.print("vSync: ");
-		output.println(vSync);
-		output.print("vFront: ");
-		output.println(vFront);
-		output.print("vBack: ");
-		output.println(vBack);
 		output.print("vRes: ");
 		output.println(vRes);
-		output.print("vDiv: ");
-		output.println(vDiv);
-		output.print("shortSync: ");
-		output.println(shortSync);
-		output.print("pixelClock: ");
-		output.println(pixelClock);
-		output.print("burstStart: ");
-		output.println(burstStart);
-		output.print("burstLength: ");
-		output.println(burstLength);
-		output.print("colorClock: ");
-		output.println(colorClock);
+		output.print("activeLineCount: ");
+		output.println(activeLineCount);
+		output.print("vOddFieldOffset: ");
+		output.println(vOddFieldOffset);
+		output.print("vEvenFieldOffset: ");
+		output.println(vEvenFieldOffset);
+		output.print("interlaced: ");
+		output.println(interlaced);
+		output.print("linesPerFrame: ");
+		output.println(linesPerFrame);
+		output.print("linesPerField: ");
+		output.println(linesPerField);
+		output.print("hfreq: ");
+		output.println((double)pixelClock/(double)pixelsPerLine());
+		output.print("vfreq: ");
+		output.println((double)pixelClock/((double)pixelsPerLine()*(double)linesPerFrame));
 	}
 };
