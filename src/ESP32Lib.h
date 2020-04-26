@@ -11,6 +11,8 @@
 #include <VGA/VGA8BitDAC.h>
 #include <Composite/CompositeL8.h>
 #include <Composite/CompositePAL8.h>
+#include <Composite/CompositeGrayDAC.h>
+#include <Composite/CompositeGrayLadder.h>
 
 #include <LED/SerialLED.h>
 
