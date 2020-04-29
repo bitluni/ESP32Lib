@@ -42,7 +42,7 @@ const ModeComposite CompMode::MODEPAL288P(12, 38, 62, 400,  1,  6, 5, 5,  15, 28
 //312 lines/field-progressiveframe, 19.968 ms/field, 50.080 Hz vSync
 
 
-const ModeComposite CompMode::MODEPAL576I(12, 38, 62, 400,  1,  5, 5, 5,  15, 288, 1, 2, 0, 1, 1, 8000000);
+const ModeComposite CompMode::MODEPAL576I(12, 38, 62, 400,  1,  5, 5, 5,  15, 288, 1, 0, 2, 1, 1, 8000000);
 //625 line / 25 frame
 //576 active lines
 
@@ -71,7 +71,7 @@ const ModeComposite CompMode::MODEPAL288Pmin(2, 5, 5, 52,  1,  6, 5, 5,  15, 288
 //312 lines/field-progressiveframe, 19.968 ms/field, 50.080 Hz vSync
 
 
-const ModeComposite CompMode::MODEPAL576Imin(2, 5, 5, 52,  1,  5, 5, 5,  15, 288, 1, 2, 0, 1, 1, 1000000);
+const ModeComposite CompMode::MODEPAL576Imin(2, 5, 5, 52,  1,  5, 5, 5,  15, 288, 1, 0, 2, 1, 1, 1000000);
 //625 line / 25 frame
 //576 active lines
 
@@ -80,7 +80,7 @@ const ModeComposite CompMode::MODEPAL576Imin(2, 5, 5, 52,  1,  5, 5, 5,  15, 288
 //312.5 lines/field, 20 ms/field, 50 Hz vSync
 
 
-const ModeComposite CompMode::MODEPAL576Idiv3(12, 38, 62, 400,  1,  5, 5, 5,  15, 288, 1, 2, 0, 1, 3, 8000000);
+const ModeComposite CompMode::MODEPAL576Idiv3(12, 38, 62, 400,  1,  5, 5, 5,  15, 288, 1, 0, 2, 1, 3, 8000000);
 //625 line / 25 frame
 //576 active lines
 
