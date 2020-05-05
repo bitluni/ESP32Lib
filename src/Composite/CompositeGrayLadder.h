@@ -129,14 +129,14 @@ class CompositeGrayLadder : public Composite, public GraphicsW8RangedSwapped
 
 		//create the buffers
 		//1 blank prototype line for vFront and vBack
-		vBlankLineBuffer = DMABufferDescriptor::allocateBuffer(bytes, true, 0x01000100*colorMinValue);
+		vBlankLineBuffer = DMABufferDescriptor::allocateBuffer(bytes, true, 0x01010101*colorMinValue);
 		//1 prototype for each HL type in vSync
-		equalizingLineBuffer = DMABufferDescriptor::allocateBuffer(bytesHL, true, 0x01000100*colorMinValue);
-		vSyncLineBuffer = DMABufferDescriptor::allocateBuffer(bytesHL, true, 0x01000100*colorMinValue);
+		equalizingLineBuffer = DMABufferDescriptor::allocateBuffer(bytesHL, true, 0x01010101*colorMinValue);
+		vSyncLineBuffer = DMABufferDescriptor::allocateBuffer(bytesHL, true, 0x01010101*colorMinValue);
 		normalFrontLineBuffer = vBlankLineBuffer;
 		normalBackLineBuffer = (void*)&(((uint8_t*)vBlankLineBuffer)[bytesHL]);
 		//1 prototype for hSync
-		hSyncLineBuffer = DMABufferDescriptor::allocateBuffer(bytesHSync, true, 0x01000100*colorMinValue);
+		hSyncLineBuffer = DMABufferDescriptor::allocateBuffer(bytesHSync, true, 0x01010101*colorMinValue);
 		//n lines as buffer for active lines
 		//already allocated in allocateFrameBuffer
 
@@ -147,19 +147,19 @@ class CompositeGrayLadder : public Composite, public GraphicsW8RangedSwapped
 			if (i >= mode.hFront && i < (mode.hFront + mode.hSync))
 			{
 				//blank line
-				((unsigned char *)vBlankLineBuffer)[i ^ 1] = syncLevel << 8;
+				((unsigned char *)vBlankLineBuffer)[i ^ 2] = syncLevel;
 				//hsync
-				((unsigned char *)hSyncLineBuffer)[i ^ 1] = syncLevel << 8;
+				((unsigned char *)hSyncLineBuffer)[i ^ 2] = syncLevel;
 			}
 			if (i >= mode.hFront && i < (mode.hFront + mode.hSync/2))
 			{
 				//equalizing
-				((unsigned char *)equalizingLineBuffer)[i ^ 1] = syncLevel << 8;
+				((unsigned char *)equalizingLineBuffer)[i ^ 2] = syncLevel;
 			}
 			if (i >= mode.hFront && i < (mode.hFront + (samplesHL - mode.hSync)))
 			{
 				//vsync // hFront should never be bigger than hSync or this overflows
-				((unsigned char *)vSyncLineBuffer)[i ^ 1] = syncLevel << 8;
+				((unsigned char *)vSyncLineBuffer)[i ^ 2] = syncLevel;
 			}
 		}
 
