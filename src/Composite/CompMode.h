@@ -18,9 +18,11 @@ class CompMode
 
 	static const ModeComposite MODEPAL288P;
 	static const ModeComposite MODEPAL576I;
+	static const ModeComposite MODEPALColor288P;
 
 	static const ModeComposite MODENTSC240P;
 	static const ModeComposite MODENTSC480I;
+	static const ModeComposite MODENTSCColor240P;
 
 	static const ModeComposite MODEPAL288Pmax;
 

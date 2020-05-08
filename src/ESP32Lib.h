@@ -10,6 +10,8 @@
 #include <Composite/CompositePAL8.h>
 #include <Composite/CompositeGrayDAC.h>
 #include <Composite/CompositeGrayLadder.h>
+#include <Composite/CompositeColorDAC.h>
+#include <Composite/CompositeColorLadder.h>
 
 #include <LED/SerialLED.h>
 

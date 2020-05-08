@@ -121,3 +121,10 @@ const ModeComposite CompMode::MODENTSC240Pmax(20, 64, 76, 688,  1,  6, 6, 6,  12
 //75 ns/pix
 //848 pix/line, 63.6 us/line, 15.72327 kHz hSync, 4.8 us hSync
 //262 lines/field-progressiveframe, 16.6632 ms/field, 60.0125 Hz vSync
+
+
+//===========
+//COLOR MODES
+//===========
+const ModeComposite CompMode::MODEPALColor288P(18, 56, 94, 604,  1+78,  6, 5, 5,  15+10, 288-88, 0, 0, 0, 0, 1, 12051950,10,25,4433619,true);
+const ModeComposite CompMode::MODENTSCColor240P(20, 56, 72, 652,  1+36,  6, 6, 6,  12+4, 240-40, 0, 0, 0, 0, 1, 12560000,13,32,3579545,false);
