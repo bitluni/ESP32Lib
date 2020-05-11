@@ -1,5 +1,5 @@
 /*
-	Author: bitluni 2019
+	Author: bitluni 2019, refactoring by Martin-Laclaustra 2020
 	License: 
 	Creative Commons Attribution ShareAlike 4.0
 	https://creativecommons.org/licenses/by-sa/4.0/
@@ -9,43 +9,84 @@
 		https://github.com/bitluni
 		http://bitluni.net
 */
+
+/*
+Pure virtual functions that must be implemented in all child classes:
+void dotFast(int x, int y, Color color)
+Color getFast(int x, int y)
+Color** allocateFrameBuffer()
+These other functions make use of static methods inherited from InterfaceColor
+typedef TYPE Color
+Color RGBA(int r, int g, int b, int a = 255) const
+int R(Color c) const
+int G(Color c) const
+int B(Color c) const
+int A(Color c) const
+*/
+
 #pragma once
 #include <stdlib.h>
 #include <math.h>
 #include "Font.h"
 #include "ImageDrawer.h"
+#include "InterfaceColors.h"
 
-template<typename Color>
-class Graphics: public ImageDrawer
+// Color defines the interface color, all interactions should use this
+// InternalColor defines how the color is actually stored in memory
+template<class InterfaceColor, typename InternalColor>
+class Graphics: public ImageDrawer, InterfaceColor
 {
   public:
+	typedef typename InterfaceColor::Color Color;
 	int cursorX, cursorY, cursorBaseX, cursorXIncrement, cursorYIncrement;
-	long frontColor, backColor;
+	Color frontColor, backColor;
 	Font *font;
 	int frameBufferCount;
 	int currentFrameBuffer;
-	Color **frameBuffers[3];
-	Color **frontBuffer;
-	Color **backBuffer;
+	InternalColor **frameBuffers[3];
+	InternalColor **frontBuffer;
+	InternalColor **backBuffer;
 	bool autoScroll;
+	size_t sizeOfInternalColor = sizeof(InternalColor);
+	int storageCoefficient = 1; //number of pixels in an InternalColor variable
 
 	int xres;
 	int yres;
 
 	virtual void dotFast(int x, int y, Color color) = 0;
-	virtual void dot(int x, int y, Color color) = 0;
-	virtual void dotAdd(int x, int y, Color color) = 0;
-	virtual void dotMix(int x, int y, Color color) = 0;
-	virtual Color get(int x, int y) = 0;
-	virtual Color** allocateFrameBuffer() = 0;
-	virtual Color** allocateFrameBuffer(int xres, int yres, Color value)
+	virtual void dot(int x, int y, Color color)
 	{
-		Color** frame = (Color **)malloc(yres * sizeof(Color *));
+		if ((unsigned int)x < xres && (unsigned int)y < yres)
+			dotFast(x, y, color);
+	}
+	virtual void dotAdd(int x, int y, Color color)
+	{
+		Color oldColor = get(x, y);
+		Color newColor = colorAdd(oldColor, color);
+		dot(x, y, newColor);
+	}
+	virtual void dotMix(int x, int y, Color color)
+	{
+		Color oldColor = get(x, y);
+		Color newColor = colorMix(oldColor, color);
+		dot(x, y, newColor);
+	}
+	virtual Color getFast(int x, int y) = 0;
+	virtual Color get(int x, int y)
+	{
+		if ((unsigned int)x < xres && (unsigned int)y < yres)
+			return getFast(x, y);
+		return 0;
+	}
+	virtual InternalColor** allocateFrameBuffer() = 0;
+	virtual InternalColor** allocateFrameBuffer(int xres, int yres, InternalColor value)
+	{
+		InternalColor** frame = (InternalColor **)malloc(yres * sizeof(InternalColor *));
 		if(!frame)
-			ERROR("Not enough memory for frame buffer");				
+			ERROR("Not enough memory for frame buffer");
 		for (int y = 0; y < yres; y++)
 		{
-			frame[y] = (Color *)malloc(xres * sizeof(Color));
+			frame[y] = (InternalColor *)malloc(xres * sizeof(InternalColor));
 			if(!frame[y])
 				ERROR("Not enough memory for frame buffer");
 			for (int x = 0; x < xres; x++)
@@ -53,11 +94,62 @@ class Graphics: public ImageDrawer
 		}
 		return frame;
 	}
-	virtual Color RGBA(int r, int g, int b, int a = 255) const = 0;
-	virtual int R(Color c) const = 0;
-	virtual int G(Color c) const = 0;
-	virtual int B(Color c) const = 0;
-	virtual int A(Color c) const = 0;
+	virtual Color colorAdd(Color colorOld, Color colorNew)
+	{
+		return InterfaceColor::static_colorAdd(colorOld, colorNew);
+	}
+	// Generic function currently not in use
+	//virtual Color colorAdd(Color colorOld, Color colorNew)
+	//{
+		//int newR = R(colorOld)+R(colorNew);
+		//newR = (newR > 255) ? 255 : newR;
+		//int newG = G(colorOld)+G(colorNew);
+		//newG = (newG > 255) ? 255 : newG;
+		//int newB = B(colorOld)+B(colorNew);
+		//newB = (newB > 255) ? 255 : newB;
+		//int newA = A(colorOld)+A(colorNew);
+		//newA = (newA > 255) ? 255 : newA;
+		//return RGBA(newR, newG, newB, newA);
+	//}
+	virtual Color colorMix(Color colorOld, Color colorNew)
+	{
+		return InterfaceColor::static_colorMix(colorOld, colorNew);
+	}
+	// Generic function currently not in use
+	//virtual Color colorMix(Color colorOld, Color colorNew)
+	//{
+		//int colorNewA = A(colorNew);
+		//if (colorNewA != 0)
+		//{
+			//colorNewA = colorNewA + 1;
+			//int newR = (R(colorOld)*(256-colorNewA)+R(colorNew)*colorNewA)>>8;
+			//int newG = (G(colorOld)*(256-colorNewA)+G(colorNew)*colorNewA)>>8;
+			//int newB = (B(colorOld)*(256-colorNewA)+B(colorNew)*colorNewA)>>8;
+			//return RGBA(newR, newG, newB);
+		//} else {
+			//return colorOld;
+		//}
+	//}
+	virtual Color RGBA(int r, int g, int b, int a = 255) const
+	{
+		return InterfaceColor::static_RGBA(r, g, b, a);
+	}
+	virtual int R(Color c) const
+	{
+		return InterfaceColor::static_R(c);
+	}
+	virtual int G(Color c) const
+	{
+		return InterfaceColor::static_G(c);
+	}
+	virtual int B(Color c) const
+	{
+		return InterfaceColor::static_B(c);
+	}
+	virtual int A(Color c) const
+	{
+		return InterfaceColor::static_A(c);
+	}
 	Color RGB(unsigned long rgb) const 
 	{
 		return RGBA(rgb & 255, (rgb >> 8) & 255, (rgb >> 16) & 255);
@@ -596,7 +688,7 @@ class Graphics: public ImageDrawer
 		{
 			for(int d = 0; d < dy; d++)
 			{
-				Color *l = backBuffer[0];
+				InternalColor *l = backBuffer[0];
 				for(int i = 0; i < yres - 1; i++)
 				{
 					backBuffer[i] = backBuffer[i + 1];
@@ -609,7 +701,7 @@ class Graphics: public ImageDrawer
 		{
 			for(int d = 0; d < -dy; d++)
 			{
-				Color *l = backBuffer[yres - 1];
+				InternalColor *l = backBuffer[yres - 1];
 				for(int i = 1; i < yres; i++)
 				{
 					backBuffer[i] = backBuffer[i - 1];
