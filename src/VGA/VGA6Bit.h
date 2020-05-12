@@ -93,9 +93,9 @@ class VGA6Bit : public VGA, public GraphicsR2G2B2S2Swapped
 	void *inactiveBuffer;
 	void *blankActiveBuffer;
 
-	virtual Color **allocateFrameBuffer()
+	virtual InternalColor **allocateFrameBuffer()
 	{
-		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, syncBits(false, false));
+		return (InternalColor **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, syncBits(false, false));
 	}
 
 	virtual void allocateLineBuffers()

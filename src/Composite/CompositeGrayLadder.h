@@ -92,9 +92,9 @@ class CompositeGrayLadder : public Composite, public GraphicsW8RangedSwapped
 		setResolution(xres, yres);
 	}
 
-	virtual Color **allocateFrameBuffer()
+	virtual InternalColor **allocateFrameBuffer()
 	{
-		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, 0x01010101*colorMinValue);
+		return (InternalColor **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, 0x01010101*colorMinValue);
 	}
 
 	virtual void allocateLineBuffers()

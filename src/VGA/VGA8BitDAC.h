@@ -30,7 +30,7 @@
 */
 #pragma once
 #include "VGA.h"
-#include "../Graphics/GraphicsX6S2W8Swapped.h"
+#include "../Graphics/GraphicsX6S2W8RangedSwapped.h"
 
 #include "driver/dac.h"
 
@@ -39,7 +39,7 @@
 
 
 
-class VGA8BitDAC : public VGA, public GraphicsX6S2W8Swapped
+class VGA8BitDAC : public VGA, public GraphicsX6S2W8RangedSwapped
 {
   public:
 	VGA8BitDAC() //DAC based modes only work with I2S0
@@ -144,9 +144,9 @@ class VGA8BitDAC : public VGA, public GraphicsX6S2W8Swapped
 	int outputPin = 25;
 	bool voltageDivider = false;
 
-	virtual Color **allocateFrameBuffer()
+	virtual InternalColor** allocateFrameBuffer()
 	{
-		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, syncBits(false, false));
+		return (InternalColor**)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, syncBits(false, false));
 	}
 
 	virtual void allocateLineBuffers()

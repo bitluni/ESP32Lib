@@ -28,14 +28,14 @@
 */
 #pragma once
 #include "Composite.h"
-#include "../Graphics/GraphicsX6S2W8Swapped.h"
+#include "../Graphics/GraphicsX6S2W8RangedSwapped.h"
 
 #include "driver/dac.h"
 
 #include <soc/rtc.h>
 #include <driver/rtc_io.h>
 
-class CompositeGrayDAC : public Composite, public GraphicsX6S2W8Swapped
+class CompositeGrayDAC : public Composite, public GraphicsX6S2W8RangedSwapped
 {
   public:
 	CompositeGrayDAC() //DAC based modes only work with I2S0
@@ -123,9 +123,9 @@ class CompositeGrayDAC : public Composite, public GraphicsX6S2W8Swapped
 	int outputPin = 25;
 	bool voltageDivider = false;
 
-	virtual Color **allocateFrameBuffer()
+	virtual InternalColor **allocateFrameBuffer()
 	{
-		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, 0x01000100*colorMinValue);
+		return (InternalColor **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, 0x01000100*colorMinValue);
 	}
 
 	virtual void allocateLineBuffers()

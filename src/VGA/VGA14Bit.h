@@ -88,9 +88,9 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 		setResolution(xres, yres);
 	}
 
-	virtual Color **allocateFrameBuffer()
+	virtual InternalColor **allocateFrameBuffer()
 	{
-		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, syncBits(false, false));
+		return (InternalColor **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, syncBits(false, false));
 	}
 
 	virtual void allocateLineBuffers()

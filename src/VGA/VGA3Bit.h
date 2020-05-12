@@ -11,9 +11,9 @@
 */
 #pragma once
 #include "VGA.h"
-#include "../Graphics/GraphicsR1G1B1A1X2S2Swapped.h"
+#include "../Graphics/GraphicsR1G1B1X3S2Swapped.h"
 
-class VGA3Bit : public VGA, public GraphicsR1G1B1A1X2S2Swapped
+class VGA3Bit : public VGA, public GraphicsR1G1B1X3S2Swapped
 {
   public:
 	VGA3Bit() //8 bit based modes only work with I2S1
@@ -76,9 +76,9 @@ class VGA3Bit : public VGA, public GraphicsR1G1B1A1X2S2Swapped
 	void *inactiveBuffer;
 	void *blankActiveBuffer;
 
-	virtual Color **allocateFrameBuffer()
+	virtual InternalColor **allocateFrameBuffer()
 	{
-		return (Color **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, syncBits(false, false));
+		return (InternalColor **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, syncBits(false, false));
 	}
 
 	virtual void allocateLineBuffers()
