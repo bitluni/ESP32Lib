@@ -12,27 +12,65 @@
 #pragma once
 #include "Graphics.h"
 
-class GraphicsTextBuffer: public Graphics<unsigned char>
+class GraphicsTextBuffer: public Graphics<ColorW8, unsigned char>
 {
 	public:
-	typedef unsigned char Color; //Color are ASCII codes in this buffer
+	typedef unsigned char InternalColor; //Color are ASCII codes in this buffer
+	// FUTURE PLANS: OUTPUTCOLOR COULD BE TEMPLATED
 	//These are interpreted as 3-bit color:
-	Color frontGlobalColor, backGlobalColor;
+	ColorR1G1B1A1X4::Color frontGlobalColor, backGlobalColor;
+
+	GraphicsTextBuffer()
+	{
+		frontColor = 0x30;
+		frontGlobalColor = 0xf;
+		backGlobalColor = 0x0;
+	}
+
+	virtual void dotFast(int x, int y, Color color)
+	{
+		backBuffer[y][x] = color;
+	}
+
+	virtual Color getFast(int x, int y)
+	{
+		return backBuffer[y][x];
+	}
+
+	virtual InternalColor** allocateFrameBuffer()
+	{
+		return Graphics::allocateFrameBuffer(xres, yres, (InternalColor)32);
+	}
+
+	virtual void clear(Color color = 32)
+	{
+		Graphics::clear(color);
+	}
+
+	virtual void dotAdd(int x, int y, Color color)
+	{
+		dot(x, y, color);
+	}
+	
+	virtual void dotMix(int x, int y, Color color)
+	{
+		dot(x, y, color);
+	}
 
 	void setFrontGlobalColor(int r, int g, int b, int a = 255)
 	{
-		frontGlobalColor = ((r >> 7) & 1) | ((g >> 6) & 2) | ((b >> 5) & 4) | ((a >> 4) & 8);
+		frontGlobalColor = ColorR1G1B1A1X4::static_RGBA(r, g, b, a);
 	}
 
 	void setBackGlobalColor(int r, int g, int b, int a = 255)
 	{
-		backGlobalColor = ((r >> 7) & 1) | ((g >> 6) & 2) | ((b >> 5) & 4) | ((a >> 4) & 8);
+		backGlobalColor = ColorR1G1B1A1X4::static_RGBA(r, g, b, a);
 	}
 
-	void setTextColor(long front, long back = 0)
+	void setTextColor(ColorR1G1B1A1X4::Color front, ColorR1G1B1A1X4::Color back = 0)
 	{
-		frontGlobalColor = frontColor = front;
-		backGlobalColor = backColor = back;
+		frontGlobalColor = front;
+		backGlobalColor = back;
 	}
 
 	virtual void setFont(Font &font)
@@ -50,74 +88,5 @@ class GraphicsTextBuffer: public Graphics<unsigned char>
 		if (!font->valid(ch))
 			return;
 		dot(x, y, ch);
-	}
-
-	GraphicsTextBuffer()
-	{
-		frontColor = 0xf;
-		frontGlobalColor = 0xf;
-		backGlobalColor = 0;
-	}
-
-	virtual int R(Color c) const
-	{
-		return (c & 1) ? 255 : 0;
-	}
-	virtual int G(Color c) const
-	{
-		return (c & 1) ? 255 : 0;
-	}
-	virtual int B(Color c) const
-	{
-		return (c & 1) ? 255 : 0;
-	}
-	virtual int A(Color c) const
-	{
-		return (c & 1) ? 255 : 0;
-	}
-
-	virtual Color RGBA(int r, int g, int b, int a = 255) const
-	{
-		return ((r > 0) | (g > 0) | (b > 0)) & (a > 0);
-	}
-
-	virtual void dotFast(int x, int y, Color color)
-	{
-		backBuffer[y][x] = color;
-	}
-
-	virtual void dot(int x, int y, Color color)
-	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backBuffer[y][x] = color;
-	}
-
-	virtual void dotAdd(int x, int y, Color color)
-	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			backBuffer[y][x] = color;
-	}
-	
-	virtual void dotMix(int x, int y, Color color)
-	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres && (color & 1) != 0)
-			backBuffer[y][x] = color;
-	}
-	
-	virtual Color get(int x, int y)
-	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			return backBuffer[y][x];
-		return 0;
-	}
-
-	virtual void clear(Color color = 32)
-	{
-		Graphics::clear(color);
-	}
-
-	virtual Color** allocateFrameBuffer()
-	{
-		return Graphics<Color>::allocateFrameBuffer(xres, yres, (Color)32);
 	}
 };

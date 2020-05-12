@@ -12,31 +12,28 @@
 #pragma once
 #include "Graphics.h"
 
-class GraphicsR5G5B4S2Swapped: public Graphics<ColorR5G5B4A2, unsigned short>
+class GraphicsW8: public Graphics<ColorW8, unsigned char>
 {
 	public:
-	typedef unsigned short InternalColor;
-	static const InternalColor RGBMask = 0x3fff;
-	InternalColor SBits;
+	typedef unsigned char InternalColor;
 
-	GraphicsR5G5B4S2Swapped()
+	GraphicsW8()
 	{
-		SBits = 0xc000;
-		frontColor = 0xffff;
+		frontColor = 0xff;
 	}
 
 	virtual void dotFast(int x, int y, Color color)
 	{
-		backBuffer[y][x^1] = (color & RGBMask) | SBits;
+		backBuffer[y][x] = color;
 	}
 
 	virtual Color getFast(int x, int y)
 	{
-		return backBuffer[y][x^1] & RGBMask;
+		return backBuffer[y][x];
 	}
 
 	virtual InternalColor** allocateFrameBuffer()
 	{
-		return Graphics::allocateFrameBuffer(xres, yres, (InternalColor)SBits);
+		return Graphics::allocateFrameBuffer(xres, yres, (InternalColor)0);
 	}
 };

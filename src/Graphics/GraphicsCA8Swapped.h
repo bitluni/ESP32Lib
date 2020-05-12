@@ -12,10 +12,11 @@
 #pragma once
 #include "Graphics.h"
 
-class GraphicsCA8Swapped: public Graphics<unsigned char>
+class GraphicsCA8Swapped: public Graphics<ColorR5G5B4A2, unsigned char>
 {
 	public:
-	typedef unsigned char Color;
+	typedef unsigned char InternalColor;
+	// FUTURE PLANS: OUTPUTCOLOR COULD BE TEMPLATED
 
 	int levelHighClipping = 255;
 	int levelWhite = 207;
@@ -33,29 +34,7 @@ class GraphicsCA8Swapped: public Graphics<unsigned char>
 
 	GraphicsCA8Swapped()
 	{
-		frontColor = 0xff;
-	}
-
-	virtual int R(Color c) const
-	{
-		return (((int)c & 3) * 255 + 1) / 3;
-	}
-	virtual int G(Color c) const
-	{
-		return (((int)(c >> 2) & 3) * 255 + 1) / 3;
-	}
-	virtual int B(Color c) const
-	{
-		return (((int)(c >> 4) & 3) * 255 + 1) / 3;
-	}
-	virtual int A(Color c) const
-	{
-		return (((int)(c >> 6) & 3) * 255 + 1) / 3;
-	}
-
-	virtual Color RGBA(int r, int g, int b, int a = 255) const
-	{
-		return ((r >> 6) & 0b11) | ((g >> 4) & 0b1100) | ((b >> 2) & 0b110000) | (a & 0b11000000);
+		frontColor = 0xffff;
 	}
 
 	virtual void dotFast(int x, int y, Color color)
@@ -85,40 +64,23 @@ class GraphicsCA8Swapped: public Graphics<unsigned char>
 		backBuffer[y][x^2] = ((uint8_t)signal);
 	}
 
-	virtual void dot(int x, int y, Color color)
+	virtual Color getFast(int x, int y)
 	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			dotFast(x, y, color);
+		return 0; // Not possible to retrieve color from this buffer
+	}
+
+	virtual InternalColor** allocateFrameBuffer()
+	{
+		return Graphics::allocateFrameBuffer(xres, yres, (InternalColor)levelBlack);
 	}
 
 	virtual void dotAdd(int x, int y, Color color)
 	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			dotFast(x, y, color);
+		dot(x, y, color);
 	}
 	
 	virtual void dotMix(int x, int y, Color color)
 	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			dotFast(x, y, color);
-	}
-	
-	virtual Color get(int x, int y)
-	{
-		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			return backBuffer[y][x^2];
-		return 0;
-	}
-
-	virtual void clear(Color color = 0)
-	{
-		for (int y = 0; y < this->yres; y++)
-			for (int x = 0; x < this->xres; x++)
-				dotFast(x, y, color);
-	}
-
-	virtual Color** allocateFrameBuffer()
-	{
-		return Graphics<Color>::allocateFrameBuffer(xres, yres, 0);
+		dot(x, y, color);
 	}
 };
