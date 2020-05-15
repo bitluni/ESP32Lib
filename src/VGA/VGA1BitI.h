@@ -176,9 +176,6 @@ void IRAM_ATTR VGA1BitI::interrupt(void *arg)
 {
 	VGA1BitI * staticthis = (VGA1BitI *)arg;
 
-	//fix for skipped lines due to skipped interupts during wifi activity
-	DMABufferDescriptor *currentDmaBufferDescriptor = (DMABufferDescriptor *)REG_READ(I2S_OUT_EOF_DES_ADDR_REG(staticthis->i2sIndex));
-	staticthis->dmaBufferDescriptorActive = ((uint32_t)currentDmaBufferDescriptor - (uint32_t)staticthis->dmaBufferDescriptors)/sizeof(DMABufferDescriptor);
 	staticthis->currentLine = staticthis->dmaBufferDescriptorActive; //equivalent in this configuration
 	
 	int vInactiveLinesCount = staticthis->mode.vFront + staticthis->mode.vSync + staticthis->mode.vBack;
@@ -199,10 +196,6 @@ void IRAM_ATTR VGA1BitI::interrupt(void *arg)
 
 	if (renderLine == 0)
 		staticthis->vSyncPassed = true;
-
-	//update to provide currently outed buffer descriptor and line (increased by 1)
-	//staticthis->currentLine = (staticthis->currentLine + 1) % staticthis->totalLines;
-	//staticthis->dmaBufferDescriptorActive = (staticthis->dmaBufferDescriptorActive + 1) % staticthis->dmaBufferDescriptorCount;
 }
 
 void IRAM_ATTR VGA1BitI::interruptPixelLine(int y, unsigned long *pixels, unsigned long syncBits, void *arg)

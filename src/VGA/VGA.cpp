@@ -215,7 +215,6 @@ void VGA::interrupt()
 	for (int i = 0; i < mode.hFront / 2; i++)
 		signal[i + (mode.hSync + mode.hBack + mode.hRes) / 2] = base;
 	currentLine = (currentLine + 1) % totalLines;
-	dmaBufferDescriptorActive = (dmaBufferDescriptorActive + 1) % dmaBufferDescriptorCount;
 	if (currentLine == 0)
 		vSync();
 }

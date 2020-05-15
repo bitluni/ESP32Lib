@@ -32,19 +32,26 @@ I2S::I2S(const int i2sIndex)
 void IRAM_ATTR I2S::interruptStatic(void *arg)
 {
 	volatile i2s_dev_t &i2s = *i2sDevices[((I2S *)arg)->i2sIndex];
+
+	//CLEAR THE INTERRUPT FLAG
 	//i2s object not safely accesed in DRAM or IRAM
 	//i2s.int_clr.val = i2s.int_raw.val;
 	//using REG_WRITE to clear the interrupt instead
 	//note: there are still other alternatives, see i2s driver .c file
 	//inside the i2s_intr_handler_default() function
 	REG_WRITE(I2S_INT_CLR_REG(((I2S *)arg)->i2sIndex), (REG_READ(I2S_INT_RAW_REG(((I2S *)arg)->i2sIndex)) & 0xffffffc0) | 0x3f);
+
+	//UPDATE dmaBufferDescriptorActive
+	((I2S *)arg)->dmaBufferDescriptorActive = (REG_READ(I2S_OUT_EOF_DES_ADDR_REG(((I2S *)arg)->i2sIndex)) - (uint32_t)((I2S *)arg)->dmaBufferDescriptors)/sizeof(DMABufferDescriptor);
+	//Actually, it is not the active one, but the one just finished: index of the buffer that just triggered EOF
+
+	//CALL FUNCTION THAT MUST BE EXECUTED DURING INTERRUPT
 	//the call to the overloaded (or any) non-static member function definitely breaks the IRAM rule
 	// causing an exception when concurrently accessing the flash (or flash-filesystem) or wifi
 	//the reason is unknown but probably related with the compiler instantiation mechanism
 	//(note: defining the code of the [member] interrupt function outside the class declaration,
 	// and with IRAM flag does not avoid the crash)
 	//((I2S *)arg)->interrupt();
-	
 	if(((I2S *)arg)->interruptStaticChild)
 		((I2S *)arg)->interruptStaticChild(arg);
 }
