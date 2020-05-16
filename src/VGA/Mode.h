@@ -27,7 +27,7 @@ class Mode
 	int hSyncPolarity;
 	int vSyncPolarity;
 	float aspect;
-	int activeLineCount;
+	int activeLineCount; // calculated: actual information for lines displayed
 	Mode(
 		const int hFront = 0,
 		const int hSync = 0,
@@ -118,5 +118,9 @@ class Mode
 		output.println(hSyncPolarity);
 		output.print("vSyncPolarity: ");
 		output.println(vSyncPolarity);
+		output.print("hfreq: ");
+		output.println((double)pixelClock/(double)pixelsPerLine());
+		output.print("vfreq: ");
+		output.println((double)pixelClock/((double)pixelsPerLine()*(double)linesPerField()));
 	}
 };
