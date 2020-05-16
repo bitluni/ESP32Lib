@@ -51,7 +51,7 @@ void setup()
 	//initializing i2s vga
   //Pin presets are avaialable for: VGAv01, VGABlackEdition, VGAWhiteEdition, PicoVGA
   //But you can also use custom pins. Check the other examples  
-	vga.init(vga.MODE320x200, vga.VGABlackEdition);
+	vga.init(VGAMode::MODE320x200, vga.VGABlackEdition);
 	//setting the font
 	vga.setFont(Font6x8);
   light.normalize();

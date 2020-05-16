@@ -70,7 +70,7 @@ void setup()
 		}
 	}
 	//start vga on the specified pins
-	vga.init(vga.MODE400x300, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
+	vga.init(VGAMode::MODE400x300, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
 	//make the background blue
 	vga.clear(vga.RGBA(0, 0, 255));
 	vga.backColor = vga.RGB(0, 0, 255);

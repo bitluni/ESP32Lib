@@ -26,7 +26,7 @@ void setup()
 	//need double buffering
 	vga.setFrameBufferCount(2);
 	//initializing i2s vga
-	vga.init(vga.MODE200x150, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
+	vga.init(VGAMode::MODE200x150, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
 	//setting the font
 	vga.setFont(Font6x8);
 }

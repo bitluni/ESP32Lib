@@ -21,7 +21,7 @@ VGA14Bit vga;
 void setup()
 {
 	//initializing i2s vga (with only one framebuffer)
-	vga.init(vga.MODE200x150, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
+	vga.init(VGAMode::MODE200x150, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
 	//setting the font
 	vga.setFont(Font6x8);
 }

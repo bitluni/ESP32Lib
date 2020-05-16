@@ -66,7 +66,7 @@ void renderTask(void *param)
 void setup()
 {
 	//initializing i2s vga (with only one framebuffer)
-	vga.init(vga.MODE320x200, pinConfig);
+	vga.init(VGAMode::MODE320x200, pinConfig);
   TaskHandle_t xHandle = NULL;
   xTaskCreatePinnedToCore(renderTask, "Render1", 2000, taskData[0],  ( 2 | portPRIVILEGE_BIT ), &xHandle, 0);
   xTaskCreatePinnedToCore(renderTask, "Render2", 2000, taskData[1],  ( 2 | portPRIVILEGE_BIT ), &xHandle, 1);

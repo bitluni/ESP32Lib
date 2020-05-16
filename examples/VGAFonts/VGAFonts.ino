@@ -24,7 +24,7 @@ VGA3Bit vga;
 void setup()
 {
 	//initializing vga at the specified pins
-	vga.init(vga.MODE640x400, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
+	vga.init(VGAMode::MODE640x400, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
 	//selecting the font
 	vga.setFont(Font6x8);
 	//set color

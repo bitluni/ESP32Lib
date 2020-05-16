@@ -26,7 +26,7 @@ void setup()
 	//we need double buffering for smooth animations
 	vga.setFrameBufferCount(2);
 	//initializing i2s vga (with only one framebuffer)
-	vga.init(vga.MODE320x200, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
+	vga.init(VGAMode::MODE320x200, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
 	//setting the font
 	vga.setFont(Font6x8);
 }

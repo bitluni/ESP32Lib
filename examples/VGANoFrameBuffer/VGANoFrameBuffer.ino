@@ -113,7 +113,7 @@ void setup()
 		rainbow[i] |= rainbow[(i - 1) & 255] << 16;
 
 	//initializing the vga with a high mode where a frambuffer would never fit into the memory
-	vga.init(vga.MODE500x480, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
+	vga.init(VGAMode::MODE500x480, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
 }
 
 //idle, everything is happening in the interrupt

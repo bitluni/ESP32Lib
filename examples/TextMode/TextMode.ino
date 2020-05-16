@@ -26,7 +26,7 @@ void setup()
 	//           and font can not be changed after init
 	vga.setFont(Font6x8);
 	//initializing vga at the specified pins
-	vga.init(vga.MODE320x240, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
+	vga.init(VGAMode::MODE320x240, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
 	vga.setCursor(vga.xres/2-6,vga.yres/2-1);
 	//displaying the text
 	//default coloring

@@ -22,7 +22,7 @@ const uint8_t backColors[] = {0x0,0x7,0x0,0x6,0x7,0x0,0x4};
 void setup()
 {
 	//initializing vga at the specified pins
-	vga.init(vga.MODE320x240, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
+	vga.init(VGAMode::MODE320x240, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
 	//selecting the font
 	vga.setFont(Font6x8);
   vga.setCursor(120,115);

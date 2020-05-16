@@ -26,7 +26,7 @@ void setup()
 	//Mode::custom(xres, yres, fixedYDivider = 1) calculates the parameters for our custom resolution.
 	//the y resolution is only scaling integer divisors (yet).
 	//if you don't like to let it scale automatically pass a fixed parameter with a fixed divider.
-	Mode myMode = vga.MODE640x480.custom(80, 60);
+	Mode myMode = VGAMode::MODE640x480.custom(80, 60);
 	//print the parameters
 	myMode.print<HardwareSerial>(Serial);
 	//use the mode

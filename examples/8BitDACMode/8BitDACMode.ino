@@ -36,7 +36,7 @@ void setup()
 {
 	//initializing vga at the specified pins
   //output pin and boolean for voltage divider can be omitted
-  vga.init(vga.MODE320x240, hsyncPin, vsyncPin, outputPin, false);
+  vga.init(VGAMode::MODE320x240, hsyncPin, vsyncPin, outputPin, false);
 	//selecting the font
 	vga.setFont(Font6x8);
 	//displaying the test pattern
