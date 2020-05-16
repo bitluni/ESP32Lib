@@ -38,7 +38,6 @@
 
 #include <ESP32Lib.h>
 #include <Ressources/Font6x8.h>
-#include <Composite/CompMode.h>
 
 //pin configuration for DAC
 const int outputPin = 25;
