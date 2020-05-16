@@ -1,5 +1,7 @@
 #pragma once
 
+#include <VGA/VGAMode.h>
+
 #include <VGA/VGA14BitI.h>
 #include <VGA/VGA14Bit.h>
 #include <VGA/VGA6BitI.h>
@@ -9,6 +11,9 @@
 #include <VGA/VGA1BitI.h>
 #include <VGA/VGATextI.h>
 #include <VGA/VGA8BitDAC.h>
+
+#include <Composite/CompMode.h>
+
 //#include <Composite/CompositeL8.h>
 //#include <Composite/CompositePAL8.h>
 #include <Composite/CompositeGrayDAC.h>
