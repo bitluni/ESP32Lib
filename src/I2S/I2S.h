@@ -52,8 +52,9 @@ class I2S
 	void allocateDMABuffers(int count, int bytes);
 	void deleteDMABuffers();
 
+	void (*interruptStaticChild)(void *arg) = 0;
+
   protected:
-	virtual void interrupt() = 0;
 	virtual bool useInterrupt();
 	void setAPLLClock(long sampleRate, int bitCount);
 	void setClock(long sampleRate, int bitCount, bool useAPLL = true);
