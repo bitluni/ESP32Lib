@@ -1,8 +1,0 @@
-{
-	"files.associations": {
-		"random": "cpp",
-		"algorithm": "cpp",
-		"ios": "cpp",
-		"*.tcc": "cpp"
-	}
-}

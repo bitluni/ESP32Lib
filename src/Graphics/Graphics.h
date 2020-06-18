@@ -636,6 +636,80 @@ class Graphics: public ImageDrawer
 		return RGBA(r, g, b, a);
 	}
 
+	virtual Color R4G4B4A4ToColor(unsigned short c)
+	{
+		int r = (((c << 1) & 0x1e) * 255 + 1) / 0x1e;
+		int g = (((c >> 3) & 0x1e) * 255 + 1) / 0x1e;
+		int b = (((c >> 7) & 0x1e) * 255 + 1) / 0x1e;
+		int a = (((c >> 11) & 0x1e) * 255 + 1) / 0x1e;
+		return RGBA(r, g, b, a);
+	}
+
+	virtual Color R8G8B8A8ToColor(unsigned long c)
+	{
+		return RGBA(c & 255, (c >> 8) & 255, (c >> 16) & 255, (c >> 24) & 255);
+	}
+
+	virtual void imageR8G8B8A8(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dot(px + x, py + y, R8G8B8A8ToColor(((unsigned long*)image.pixels)[i++]));
+		}		
+	}
+
+	virtual void imageAddR8G8B8A8(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dotAdd(px + x, py + y, R8G8B8A8ToColor(((unsigned long*)image.pixels)[i++]));
+		}
+	}
+
+	virtual void imageMixR8G8B8A8(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dotMix(px + x, py + y, R8G8B8A8ToColor(((unsigned long*)image.pixels)[i++]));
+		}
+	}	
+
+	virtual void imageR4G4B4A4(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dot(px + x, py + y, R4G4B4A4ToColor(((unsigned short*)image.pixels)[i++]));
+		}		
+	}
+
+	virtual void imageAddR4G4B4A4(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dotAdd(px + x, py + y, R4G4B4A4ToColor(((unsigned short*)image.pixels)[i++]));
+		}
+	}
+
+	virtual void imageMixR4G4B4A4(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
+	{
+		for (int py = 0; py < srcYres; py++)
+		{
+			int i = srcX + (py + srcY) * image.xres;
+			for (int px = 0; px < srcXres; px++)
+				dotMix(px + x, py + y, R4G4B4A4ToColor(((unsigned short*)image.pixels)[i++]));
+		}
+	}	
+
 	virtual void imageR5G5B4A2(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
 	{
 		for (int py = 0; py < srcYres; py++)

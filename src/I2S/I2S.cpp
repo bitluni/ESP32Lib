@@ -126,6 +126,21 @@ bool I2S::useInterrupt()
 	return false; 
 };
 
+void I2S::getClockSetting(long *sampleRate, int *n, int *a, int *b, int *div)
+{
+	if(sampleRate)
+		*sampleRate = 2000000;
+	if(n)
+		*n = 2;
+	if(a)
+		*a = 1;
+	if(b)
+		*b = 0;
+	if(div)
+		*div = 1;
+}
+
+
 bool I2S::initParallelInputMode(const int *pinMap, long sampleRate, const int bitCount, int wordSelect, int baseClock)
 {
 	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
@@ -223,7 +238,7 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, const int b
 		{
 			PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[pinMap[i]], PIN_FUNC_GPIO);
 			gpio_set_direction((gpio_num_t)pinMap[i], (gpio_mode_t)GPIO_MODE_DEF_OUTPUT);
-			rtc_gpio_set_drive_capability((gpio_num_t)pinMap[i], (gpio_drive_cap_t)GPIO_DRIVE_CAP_3 );
+			//rtc_gpio_set_drive_capability((gpio_num_t)pinMap[i], (gpio_drive_cap_t)GPIO_DRIVE_CAP_3 );
 			if(i2sIndex == 1)
 			{
 				if(bitCount == 16)
@@ -265,7 +280,9 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, const int b
 	i2s.sample_rate_conf.val = 0;
 	i2s.sample_rate_conf.tx_bits_mod = bitCount;
 	//clock setup
-
+	int clockN = 2, clockA = 1, clockB = 0, clockDiv = 1;
+	if(sampleRate == 0)
+		getClockSetting(&sampleRate, &clockN, &clockA, &clockB, &clockDiv);
 	if(sampleRate > 0)
 	{
 		//xtal is 40M
@@ -299,11 +316,11 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, const int b
 	}
 
 	i2s.clkm_conf.val = 0;
-	i2s.clkm_conf.clka_en = 1;
-	i2s.clkm_conf.clkm_div_num = 2; //clockN;
-	i2s.clkm_conf.clkm_div_a = 1;   //clockA;
-	i2s.clkm_conf.clkm_div_b = 0;   //clockB;
-	i2s.sample_rate_conf.tx_bck_div_num = 1;//1;
+	i2s.clkm_conf.clka_en = sampleRate > 0 ? 1 : 0;
+	i2s.clkm_conf.clkm_div_num = clockN;
+	i2s.clkm_conf.clkm_div_a = clockA;
+	i2s.clkm_conf.clkm_div_b = clockB;
+	i2s.sample_rate_conf.tx_bck_div_num = clockDiv;
 
 	i2s.fifo_conf.val = 0;
 	i2s.fifo_conf.tx_fifo_mod_force_en = 1;

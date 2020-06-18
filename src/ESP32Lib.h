@@ -10,6 +10,8 @@
 #include <Composite/CompositePAL8.h>
 
 #include <LED/SerialLED.h>
+#include <LED/ParallelLED.h>
+#include <LED/ParallelLEDGraphics.h>
 
 #include <Graphics/Sprites.h>
 #include <Graphics/Mesh.h>

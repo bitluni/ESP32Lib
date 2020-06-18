@@ -53,6 +53,20 @@ bool Composite::init(const ModeComposite &mode, const int *pinMap, const int bit
 	return true;
 }
 
+void Composite::getClockSetting(long *sampleRate, int *n, int *a, int *b, int *div)
+{
+	if(sampleRate)
+		*sampleRate = mode.pixelClock;
+	if(n)
+		*n = 2;
+	if(a)
+		*a = 1;
+	if(b)
+		*b = 0;
+	if(div)
+		*div = 6;
+}
+
 int Composite::burst(int sampleNumber, bool even)
 {
 	return blankLevel;

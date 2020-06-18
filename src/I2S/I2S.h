@@ -51,6 +51,7 @@ class I2S
 
 	void allocateDMABuffers(int count, int bytes);
 	void deleteDMABuffers();
+	virtual void getClockSetting(long *sampleRate, int *n, int *a, int *b, int *div);
 
   protected:
 	virtual void interrupt() = 0;

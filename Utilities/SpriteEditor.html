@@ -194,6 +194,17 @@ function spritesToHeader(pixelformat)
 	var rf, rshift, gf, gshift, bf, bshift, af, ashift, type, bytesPerPixel;
 	switch(pixelformat)
 	{
+		case "R8G8B8A8":
+		{
+			rf = gf = bf = af = 255.;
+			rshift = 0;
+			gshift = 8;
+			bshift = 16;
+			ashift = 24;
+			type = "unsigned long";
+			bytesPerPixel = 4;
+			break;
+		}
 		case "R2G2B2A2":
 		{
 			rf = gf = bf = af = 3.;
@@ -274,8 +285,8 @@ function spritesToHeader(pixelformat)
 			var b = s[j + 2];
 			var a = s[j + 3];
 			var c = 0;
-			c = (Math.round(r / 255. * rf) << rshift) + (Math.round(g / 255. * gf) << gshift) + (Math.round(b / 255. * bf) << bshift) + (Math.round(a / 255. * af) << ashift);
-			text += c + ", ";
+			c = ((Math.round(r / 255. * rf) << rshift) + (Math.round(g / 255. * gf) << gshift) + (Math.round(b / 255. * bf) << bshift) + (Math.round(a / 255. * af) << ashift)) >>> 0;
+			text += "0x" + c.toString(16) + ", ";
 			k++;
 			if((k & 31) == 0)
 				text += "\n";
@@ -601,6 +612,7 @@ function update()
 			<input id="addimages" type="file" onchange="addFiles(event)" accept="image/*" multiple hidden>
             <button title="Export sprite header" onclick="saveHeader();" style="font-size: 15px; font-weight:bold">.h</button>
             <select id="pixelformat" title="Export pixel format">
+				<option vlaue="R8G8B8A8">R8G8B8A8</option>
 				<option vlaue="R2G2B2A2">R2G2B2A2</option>
 				<option vlaue="R5G5B4A2">R5G5B4A2</option>
 				<option vlaue="R4G4B4A4">R4G4B4A4</option>

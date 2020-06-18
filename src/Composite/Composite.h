@@ -52,6 +52,7 @@ class Composite : public I2S
 	virtual void allocateLineBuffers() = 0;
 	virtual void allocateLineBuffers(void **frameBuffer);
 	virtual void propagateResolution(const int xres, const int yres) = 0;
+	virtual void getClockSetting(long *sampleRate, int *n, int *a, int *b, int *div);
 
   protected:
 	virtual void interrupt();
