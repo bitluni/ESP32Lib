@@ -72,7 +72,7 @@ class CompositeColorLadder : public Composite, public GraphicsCA8Swapped
 		};
 
 		firstPixelOffset = mode.hSync + mode.hBack;
-		colorClockPeriod = (double)mode.pixelClock/mode.colorClock;
+		colorClock0x1000Periods = 0x1000L*(float)mode.pixelClock/mode.colorClock; // pixels per 0x1000 color cycles
 		bufferVDiv = mode.vDiv;
 		bufferInterlaced = mode.interlaced;
 		bufferPhaseAlternating = mode.phaseAlternating;
@@ -82,7 +82,7 @@ class CompositeColorLadder : public Composite, public GraphicsCA8Swapped
 	bool init(const ModeComposite &mode, const int *compositePins)
 	{
 		firstPixelOffset = mode.hSync + mode.hBack;
-		colorClockPeriod = (double)mode.pixelClock/mode.colorClock;
+		colorClock0x1000Periods = 0x1000L*(float)mode.pixelClock/mode.colorClock; // pixels per 0x1000 color cycles
 		bufferVDiv = mode.vDiv;
 		bufferInterlaced = mode.interlaced;
 		bufferPhaseAlternating = mode.phaseAlternating;
@@ -92,7 +92,7 @@ class CompositeColorLadder : public Composite, public GraphicsCA8Swapped
 	bool init(const ModeComposite &mode, const PinConfigComposite &pinConfig)
 	{
 		firstPixelOffset = mode.hSync + mode.hBack;
-		colorClockPeriod = (double)mode.pixelClock/mode.colorClock;
+		colorClock0x1000Periods = 0x1000L*(float)mode.pixelClock/mode.colorClock; // pixels per 0x1000 color cycles
 		bufferVDiv = mode.vDiv;
 		bufferInterlaced = mode.interlaced;
 		bufferPhaseAlternating = mode.phaseAlternating;
