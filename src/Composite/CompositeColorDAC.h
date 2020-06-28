@@ -83,7 +83,7 @@ class CompositeColorDAC : public Composite, public GraphicsX8CA8Swapped
 			levelSync = 0;
 		}
 		firstPixelOffset = mode.hSync + mode.hBack;
-		colorClockPeriod = (double)mode.pixelClock/mode.colorClock;
+		colorClock0x1000Periods = 0x1000L*(float)mode.pixelClock/mode.colorClock; // pixels per 0x1000 color cycles
 		bufferVDiv = mode.vDiv;
 		bufferInterlaced = mode.interlaced;
 		bufferPhaseAlternating = mode.phaseAlternating;
@@ -99,7 +99,7 @@ class CompositeColorDAC : public Composite, public GraphicsX8CA8Swapped
 			-1, -1, -1, -1
 		};
 		firstPixelOffset = mode.hSync + mode.hBack;
-		colorClockPeriod = (double)mode.pixelClock/mode.colorClock;
+		colorClock0x1000Periods = 0x1000L*(float)mode.pixelClock/mode.colorClock; // pixels per 0x1000 color cycles
 		bufferVDiv = mode.vDiv;
 		bufferInterlaced = mode.interlaced;
 		bufferPhaseAlternating = mode.phaseAlternating;
