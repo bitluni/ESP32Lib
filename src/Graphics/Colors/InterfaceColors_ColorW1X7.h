@@ -15,6 +15,11 @@ class ColorW1X7
 	typedef unsigned char Color;
 	ColorW1X7() {}
 
+	static const int static_colormask()
+	{
+		return 0b00000001;
+	}
+
 	static int static_R(Color c)
 	{
 		return (c & 1) ? 255 : 0;

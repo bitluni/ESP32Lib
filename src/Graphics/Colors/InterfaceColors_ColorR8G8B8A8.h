@@ -15,6 +15,11 @@ class ColorR8G8B8A8
 	typedef unsigned int Color;
 	ColorR8G8B8A8() {}
 
+	static const int static_colormask()
+	{
+		return 0x00ffffff;
+	}
+
 	static int static_R(Color c)
 	{
 		return c & 0xff;

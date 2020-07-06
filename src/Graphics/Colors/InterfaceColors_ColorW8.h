@@ -15,6 +15,11 @@ class ColorW8
 	typedef unsigned char Color;
 	ColorW8() {}
 
+	static const int static_colormask()
+	{
+		return 0b11111111;
+	}
+
 	static int static_R(Color c)
 	{
 		return c;

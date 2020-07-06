@@ -15,6 +15,11 @@ class ColorR5G5B4A2
 	typedef unsigned short Color;
 	ColorR5G5B4A2() {}
 
+	static const int static_colormask()
+	{
+		return 0b0011111111111111;
+	}
+
 	static int static_R(Color c)
 	{
 		return (((c << 1) & 0x3e) * 255 + 1) / 0x3e;

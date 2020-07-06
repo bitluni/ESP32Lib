@@ -15,6 +15,11 @@ class ColorR2G2B2A2
 	typedef unsigned char Color;
 	ColorR2G2B2A2() {}
 
+	static const int static_colormask()
+	{
+		return 0b00111111;
+	}
+
 	static int static_R(Color c)
 	{
 		return (((int)c & 3) * 255 + 1) / 3;
