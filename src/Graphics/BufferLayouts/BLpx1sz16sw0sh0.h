@@ -9,16 +9,20 @@
 */
 #pragma once
 
-// BLpx1sz16sw0sh0
-// pixels per unit 1
-// size 16 bits
-// swap x unswapped
-// shift unshifted
+// px pixels per unit
+// sz unit size in bits
+// sw nor swap of x
+// sh shift bits within unit
 class BLpx1sz16sw0sh0
 {
 	public:
 	typedef unsigned short BufferUnit;
 	BLpx1sz16sw0sh0() {}
+
+	static const int static_pixperunit()
+	{
+		return 1;
+	}
 
 	static const int static_bufferdatamask()
 	{
