@@ -11,7 +11,7 @@
 
 // px pixels per unit
 // sz unit size in bits
-// sw nor swap of x
+// sw nor swap or shift of x or y
 // sh shift bits within unit
 class BLpx2sz8swxshx
 {
@@ -41,6 +41,10 @@ class BLpx2sz8swxshx
 	static int static_swx(int x)
 	{
 		return x>>1;
+	}
+	static int static_swy(int y)
+	{
+		return y;
 	}
 	static int static_shval(BufferUnit val, int x, int /*y*/)
 	{
