@@ -11,65 +11,43 @@
 */
 #pragma once
 #include "Graphics.h"
+#include "BufferLayouts/BLpx1sz8sw2sh0.h"
+#include "ColorToBuffer/CTBIdentity.h"
 
-class GraphicsR2G2B2S2Swapped: public Graphics<ColorR2G2B2A2, unsigned char>
+class GraphicsR2G2B2S2Swapped: public Graphics<ColorR2G2B2A2, unsigned char>, public BLpx1sz8sw2sh0, public CTBIdentity
 {
 	public:
-	typedef unsigned char InternalColor;
-	static const InternalColor RGBAXMask = 0x3f;
+	//TODO:this must be abstracted to inherited class after moving most generic code into Graphics class
+	typedef typename BLpx1sz8sw2sh0::BufferUnit InternalColor;
+	//TODO:this must disappear and be tackled in the VGA class
 	InternalColor SBits;
 
 	GraphicsR2G2B2S2Swapped()
 	{
+		//TODO:decide where to move these.
 		SBits = 0xc0;
 		frontColor = 0xff;
 	}
 
+	//TODO:eventually (when it is equal for all subclasses) move into a non-virtual function in Graphics class wrapped in a virtual one
 	virtual void dotFast(int x, int y, Color color)
 	{
-		backBuffer[y][x^2] = (color & RGBAXMask) | SBits;
+		//decide x position[sw] -> shift depending (or not) on x[shval] -> mask[bufferdatamask] -> erase bits
+		backBuffer[y][static_sw(x)] &= static_shval(~static_bufferdatamask(), x, y); // delete bits
+		//mask[colormask] -> convert to buffer[coltobuf] -> shift depending (or not) on x[shval] -> decide x position[sw] -> store data
+		backBuffer[y][static_sw(x)] |= static_shval(coltobuf(color & static_colormask(), x, y), x, y); // write new bits
 	}
 
+	//TODO:eventually (when it is equal for all subclasses) move into a non-virtual function in Graphics class wrapped in a virtual one
 	virtual Color getFast(int x, int y)
 	{
-		return backBuffer[y][x^2] & RGBAXMask;
+		//decide x position[sw] -> retrieve data -> shift depending (or not) on x[shbuf] -> mask[bufferdatamask] -> convert to color[buftocol]
+		return buftocol(static_shbuf(backBuffer[y][static_sw(x)], x, y) & static_bufferdatamask());
 	}
 
+	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
 	virtual InternalColor** allocateFrameBuffer()
 	{
 		return Graphics::allocateFrameBuffer(xres, yres, (InternalColor)SBits);
 	}
-
-	//re-evaluation of this method pending
-	virtual void imageR2G2B2A2(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
-	{
-		for (int py = 0; py < srcYres; py++)
-		{
-			int i = srcX + (py + srcY) * image.xres;
-			for (int px = 0; px < srcXres; px++)
-				dot(px + x, py + y, ((unsigned char*)image.pixels)[i++]);
-		}		
-	}
-
-	//re-evaluation of this method pending
-	virtual void imageAddR2G2B2A2(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
-	{
-		for (int py = 0; py < srcYres; py++)
-		{
-			int i = srcX + (py + srcY) * image.xres;
-			for (int px = 0; px < srcXres; px++)
-				dotAdd(px + x, py + y, ((unsigned char*)image.pixels)[i++]);
-		}
-	}
-
-	//re-evaluation of this method pending
-	virtual void imageMixR2G2B2A2(Image &image, int x, int y, int srcX, int srcY, int srcXres, int srcYres)
-	{
-		for (int py = 0; py < srcYres; py++)
-		{
-			int i = srcX + (py + srcY) * image.xres;
-			for (int px = 0; px < srcXres; px++)
-				dotMix(px + x, py + y, ((unsigned char*)image.pixels)[i++]);
-		}
-	}	
 };
