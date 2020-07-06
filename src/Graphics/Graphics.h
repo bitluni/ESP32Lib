@@ -34,7 +34,7 @@ int A(Color c) const
 // Color defines the interface color, all interactions should use this
 // InternalColor defines how the color is actually stored in memory
 template<class InterfaceColor, typename InternalColor>
-class Graphics: public ImageDrawer, InterfaceColor
+class Graphics: public ImageDrawer, public InterfaceColor
 {
   public:
 	typedef typename InterfaceColor::Color Color;
