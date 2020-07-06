@@ -11,44 +11,48 @@
 */
 #pragma once
 #include "Graphics.h"
+#include "BufferLayouts/BLpx2sz8swxshx.h"
+#include "ColorToBuffer/CTBIdentity.h"
 
-class GraphicsR1G1B1A1: public Graphics<ColorR1G1B1A1X4, unsigned char>
+class GraphicsR1G1B1A1: public Graphics<ColorR1G1B1A1X4, unsigned char>, public BLpx2sz8swxshx, public CTBIdentity
 {
 	public:
-	typedef unsigned char InternalColor;
+	//TODO:this must be abstracted to inherited class after moving most generic code into Graphics class
+	typedef typename BLpx2sz8swxshx::BufferUnit InternalColor;
 
 	GraphicsR1G1B1A1()
 	{
+		//TODO:decide where to move this.
 		frontColor = 0xf;
-		storageCoefficient = 2;
 	}
 
+	//TODO:eventually (when it is equal for all subclasses) move into a non-virtual function in Graphics class wrapped in a virtual one
 	virtual void dotFast(int x, int y, Color color)
 	{
-		if(x & 1)
-			backBuffer[y][x >> 1] =  (backBuffer[y][x >> 1] & 0xf) | (color << 4);
-		else
-			backBuffer[y][x >> 1] = (backBuffer[y][x >> 1] & 0xf0) | (color & 0xf); // masked high-nibble for robustness
+		//decide x position[sw] -> shift depending (or not) on x[shval] -> mask[bufferdatamask] -> erase bits
+		backBuffer[y][static_sw(x)] &= ~static_shval(static_bufferdatamask(), x, y); // delete bits
+		//mask[colormask] -> convert to buffer[coltobuf] -> shift depending (or not) on x[shval] -> decide x position[sw] -> store data
+		backBuffer[y][static_sw(x)] |= static_shval(coltobuf(color & static_colormask(), x, y), x, y); // write new bits
 	}
 
+	//TODO:eventually (when it is equal for all subclasses) move into a non-virtual function in Graphics class wrapped in a virtual one
 	virtual Color getFast(int x, int y)
 	{
-		if(x & 1)
-			return backBuffer[y][x >> 1] >> 4;
-		else
-			return backBuffer[y][x >> 1] & 0xf;
+		//decide x position[sw] -> retrieve data -> shift depending (or not) on x[shbuf] -> mask[bufferdatamask] -> convert to color[buftocol]
+		return buftocol(static_shbuf(backBuffer[y][static_sw(x)], x, y) & static_bufferdatamask());
 	}
 
+	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
 	virtual InternalColor** allocateFrameBuffer()
 	{
-		return Graphics::allocateFrameBuffer((xres + storageCoefficient - 1) / storageCoefficient, yres, (InternalColor)0);
+		return Graphics::allocateFrameBuffer((xres + static_pixperunit() - 1) / static_pixperunit(), yres, (InternalColor)0);
 	}
 
 	virtual void clear(Color color = 0)
 	{
 		unsigned char storeWord = (color & 0xf) * 0b00010001; // masked high-nibble for robustness
 		for (int y = 0; y < yres; y++)
-			for (int x = 0; x < (xres + storageCoefficient - 1) / storageCoefficient; x++)
+			for (int x = 0; x < (xres + static_pixperunit() - 1) / static_pixperunit(); x++)
 				backBuffer[y][x] = storeWord;
 	}
 };
