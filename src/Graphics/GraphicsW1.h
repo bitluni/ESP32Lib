@@ -11,43 +11,52 @@
 */
 #pragma once
 #include "Graphics.h"
+#include "BufferLayouts/BLpx8sz8swyshy.h"
+#include "ColorToBuffer/CTBIdentity.h"
 
-class GraphicsW1: public Graphics<ColorW1X7, unsigned char>
+class GraphicsW1: public Graphics<ColorW1X7, unsigned char>, public BLpx8sz8swyshy, public CTBIdentity
 {
 	public:
-	typedef unsigned char InternalColor;
+	//TODO:this must be abstracted to inherited class after moving most generic code into Graphics class
+	typedef typename BLpx8sz8swyshy::BufferUnit InternalColor;
 	// FUTURE PLANS: OUTPUTCOLOR COULD BE TEMPLATED
 	//These are interpreted as 3-bit color:
 	ColorR1G1B1A1X4::Color frontGlobalColor, backGlobalColor;
 
 	GraphicsW1()
 	{
+		//TODO:decide where to move this.
 		frontColor = 0xf;
-		storageCoefficient = 8;
 		frontGlobalColor = 0xf;
 		backGlobalColor = 0x0;
 	}
 
+	//TODO:eventually (when it is equal for all subclasses) move into a non-virtual function in Graphics class wrapped in a virtual one
 	virtual void dotFast(int x, int y, Color color)
 	{
-		InternalColor bitmask = 0x80 >> (y & 0x7);
-		backBuffer[y >> 3][x] = (backBuffer[y >> 3][x] & (0xff ^ bitmask)) | (bitmask * (color & 0x1)); // masked for robustness
+		//decide x position[sw] -> shift depending (or not) on x[shval] -> mask[bufferdatamask] -> erase bits
+		backBuffer[static_swy(y)][static_swx(x)] &= ~static_shval(static_bufferdatamask(), x, y); // delete bits
+		//mask[colormask] -> convert to buffer[coltobuf] -> shift depending (or not) on x[shval] -> decide x position[sw] -> store data
+		backBuffer[static_swy(y)][static_swx(x)] |= static_shval(coltobuf(color & static_colormask(), x, y), x, y); // write new bits
 	}
 
+	//TODO:eventually (when it is equal for all subclasses) move into a non-virtual function in Graphics class wrapped in a virtual one
 	virtual Color getFast(int x, int y)
 	{
-		return (backBuffer[y >> 3][x] >> (0x7 - (y & 0x7))) & 0x1;
+		//decide x position[sw] -> retrieve data -> shift depending (or not) on x[shbuf] -> mask[bufferdatamask] -> convert to color[buftocol]
+		return buftocol(static_shbuf(backBuffer[static_swy(y)][static_swx(x)], x, y) & static_bufferdatamask());
 	}
 
+	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
 	virtual InternalColor** allocateFrameBuffer()
 	{
-		return Graphics::allocateFrameBuffer(4*((xres + 3) / 4), (yres + storageCoefficient - 1) / storageCoefficient, (InternalColor)0);
+		return Graphics::allocateFrameBuffer(4*((xres + 3) / 4), (yres + static_pixperunit() - 1) / static_pixperunit(), (InternalColor)0);
 	}
 
 	virtual void clear(Color color = 0)
 	{
 		InternalColor storeWord = (color & 0x1) * 0b11111111; // masked for robustness
-		for (int y = 0; y < (yres + storageCoefficient - 1) / storageCoefficient; y++)
+		for (int y = 0; y < (yres + static_pixperunit() - 1) / static_pixperunit(); y++)
 			for (int x = 0; x < xres; x++)
 				backBuffer[y][x] = storeWord;
 	}
