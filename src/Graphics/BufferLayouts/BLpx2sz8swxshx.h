@@ -38,7 +38,7 @@ class BLpx2sz8swxshx
 		return 0x01010101;
 	}
 
-	static int static_sw(int x)
+	static int static_swx(int x)
 	{
 		return x>>1;
 	}
