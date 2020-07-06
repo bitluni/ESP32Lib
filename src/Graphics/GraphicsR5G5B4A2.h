@@ -30,7 +30,7 @@ class GraphicsR5G5B4A2: public Graphics<ColorR5G5B4A2, unsigned short>, public B
 	virtual void dotFast(int x, int y, Color color)
 	{
 		//decide x position[sw] -> shift depending (or not) on x[shval] -> mask[bufferdatamask] -> erase bits
-		backBuffer[y][static_sw(x)] &= static_shval(~static_bufferdatamask(), x, y); // delete bits
+		backBuffer[y][static_sw(x)] &= ~static_shval(static_bufferdatamask(), x, y); // delete bits
 		//mask[colormask] -> convert to buffer[coltobuf] -> shift depending (or not) on x[shval] -> decide x position[sw] -> store data
 		backBuffer[y][static_sw(x)] |= static_shval(coltobuf(color & static_colormask(), x, y), x, y); // write new bits
 	}

@@ -33,7 +33,7 @@ class GraphicsR2G2B2S2Swapped: public Graphics<ColorR2G2B2A2, unsigned char>, pu
 	virtual void dotFast(int x, int y, Color color)
 	{
 		//decide x position[sw] -> shift depending (or not) on x[shval] -> mask[bufferdatamask] -> erase bits
-		backBuffer[y][static_sw(x)] &= static_shval(~static_bufferdatamask(), x, y); // delete bits
+		backBuffer[y][static_sw(x)] &= ~static_shval(static_bufferdatamask(), x, y); // delete bits
 		//mask[colormask] -> convert to buffer[coltobuf] -> shift depending (or not) on x[shval] -> decide x position[sw] -> store data
 		backBuffer[y][static_sw(x)] |= static_shval(coltobuf(color & static_colormask(), x, y), x, y); // write new bits
 	}
