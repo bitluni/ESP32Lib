@@ -50,13 +50,13 @@ class GraphicsW1: public Graphics<ColorW1X7, unsigned char>, public BLpx8sz8swys
 	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
 	virtual InternalColor** allocateFrameBuffer()
 	{
-		return Graphics::allocateFrameBuffer(4*((xres + 3) / 4), (yres + static_pixperunit() - 1) / static_pixperunit(), (InternalColor)0);
+		return Graphics::allocateFrameBuffer(4*((xres + 3) / 4), (yres + static_ypixperunit() - 1) / static_ypixperunit(), (InternalColor)0);
 	}
 
 	virtual void clear(Color color = 0)
 	{
 		InternalColor storeWord = (color & 0x1) * 0b11111111; // masked for robustness
-		for (int y = 0; y < (yres + static_pixperunit() - 1) / static_pixperunit(); y++)
+		for (int y = 0; y < (yres + static_ypixperunit() - 1) / static_ypixperunit(); y++)
 			for (int x = 0; x < xres; x++)
 				backBuffer[y][x] = storeWord;
 	}

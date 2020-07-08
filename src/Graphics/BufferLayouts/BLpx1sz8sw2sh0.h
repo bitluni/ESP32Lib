@@ -19,7 +19,12 @@ class BLpx1sz8sw2sh0
 	typedef unsigned char BufferUnit;
 	BLpx1sz8sw2sh0() {}
 
-	static const int static_pixperunit()
+	static const int static_xpixperunit()
+	{
+		return 1;
+	}
+
+	static const int static_ypixperunit()
 	{
 		return 1;
 	}
