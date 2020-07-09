@@ -11,34 +11,41 @@
 */
 #pragma once
 #include "Graphics.h"
+#include "BufferLayouts/BLpx1sz16sw1sh8.h"
+#include "ColorToBuffer/CTBRange.h"
 
-class GraphicsX6S2W8RangedSwapped: public Graphics<ColorW8, unsigned short>
+class GraphicsX6S2W8RangedSwapped: public Graphics<ColorW8, unsigned short>, public BLpx1sz16sw1sh8, public CTBRange
 {
 	public:
-	typedef unsigned short InternalColor;
-	static const InternalColor RGBAXMask = 0xff3f;
+	//TODO:this must be abstracted to inherited class after moving most generic code into Graphics class
+	typedef typename BLpx1sz16sw1sh8::BufferUnit InternalColor;
+	//TODO:this must disappear and be tackled in the VGA class
 	InternalColor SBits;
-	int colorDepthConversionFactor = 256;
-	int colorMinValue = 0;
-	int colorMaxValue = 255;
-
 
 	GraphicsX6S2W8RangedSwapped()
 	{
+		//TODO:decide where to move these.
 		SBits = 0x00c0;
 		frontColor = 0xff;
 	}
 
+	//TODO:eventually (when it is equal for all subclasses) move into a non-virtual function in Graphics class wrapped in a virtual one
 	virtual void dotFast(int x, int y, Color color)
 	{
-		backBuffer[y][x^1] = (InternalColor)((((colorMinValue<<8) + colorDepthConversionFactor*(int)color) & 0xff00) & RGBAXMask) | SBits;
+		//decide x position[sw] -> shift depending (or not) on x[shval] -> mask[bufferdatamask] -> erase bits
+		backBuffer[static_swy(y)][static_swx(x)] &= ~static_shval(static_colormask(), x, y); // delete bits
+		//mask[colormask] -> convert to buffer[coltobuf] -> shift depending (or not) on x[shval] -> decide x position[sw] -> store data
+		backBuffer[static_swy(y)][static_swx(x)] |= static_shval(coltobuf(color & static_colormask(), x, y), x, y); // write new bits
 	}
 
+	//TODO:eventually (when it is equal for all subclasses) move into a non-virtual function in Graphics class wrapped in a virtual one
 	virtual Color getFast(int x, int y)
 	{
-		return (Color)((((backBuffer[y][x^1] & RGBAXMask) & 0xff00) - (colorMinValue<<8)) / colorDepthConversionFactor);
+		//decide x position[sw] -> retrieve data -> shift depending (or not) on x[shbuf] -> mask[bufferdatamask] -> convert to color[buftocol]
+		return buftocol(static_shbuf(backBuffer[static_swy(y)][static_swx(x)], x, y) & static_colormask());
 	}
 
+	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
 	virtual InternalColor** allocateFrameBuffer()
 	{
 		return Graphics::allocateFrameBuffer(xres, yres, (InternalColor)(colorMinValue<<8)|SBits);
@@ -46,7 +53,7 @@ class GraphicsX6S2W8RangedSwapped: public Graphics<ColorW8, unsigned short>
 
 	virtual void clear(Color color = 0)
 	{
-		InternalColor newColor = (InternalColor)((((colorMinValue<<8) + colorDepthConversionFactor*(int)color) & 0xff00) & RGBAXMask) | SBits;
+		InternalColor newColor = (InternalColor)static_shval(coltobuf(color & static_colormask(), 0, 0), 0, 0) | SBits;
 		for (int y = 0; y < this->yres; y++)
 			for (int x = 0; x < this->xres; x++)
 				backBuffer[y][x] = newColor;
