@@ -11,17 +11,40 @@
 */
 
 /*
-Pure virtual functions that must be implemented in all child classes:
-void dotFast(int x, int y, Color color)
-Color getFast(int x, int y)
+Virtual function still needed in child classes
 Color** allocateFrameBuffer()
-These other functions make use of static methods inherited from InterfaceColor
+Most virtual functions have been moved to templated static inheritance:
+
+Inherited from InterfaceColor
 typedef TYPE Color
+colormask()
 Color RGBA(int r, int g, int b, int a = 255) const
 int R(Color c) const
 int G(Color c) const
 int B(Color c) const
 int A(Color c) const
+
+These functions are wrapped in virtual methods
+void _dotFast(int x, int y, Color color)
+Color _getFast(int x, int y)
+
+They are composed of smaller components:
+
+Inherited from BufferLayout
+typedef TYPE BufferUnit
+xpixperunit
+ypixperunit
+bufferdatamask
+replicate (unused)
+replicate32
+swx
+swy
+shval
+shbuf
+
+Inherited from ColorToBuffer
+coltobuf
+buftocol
 */
 
 #pragma once
@@ -29,15 +52,19 @@ int A(Color c) const
 #include <math.h>
 #include "Font.h"
 #include "ImageDrawer.h"
+
 #include "InterfaceColors.h"
+#include "BufferLayouts.h"
+#include "ColorToBuffer.h"
 
 // Color defines the interface color, all interactions should use this
 // BufferUnit defines how the color is actually stored in memory
-template<class InterfaceColor, typename BufferUnit>
-class Graphics: public ImageDrawer, public InterfaceColor
+template<class InterfaceColor, class BufferLayout, class ColorToBuffer>
+class Graphics: public ImageDrawer, public InterfaceColor, public BufferLayout, public ColorToBuffer
 {
   public:
 	typedef typename InterfaceColor::Color Color;
+	typedef typename BufferLayout::BufferUnit BufferUnit;
 	int cursorX, cursorY, cursorBaseX, cursorXIncrement, cursorYIncrement;
 	Color frontColor, backColor;
 	Font *font;
@@ -53,11 +80,23 @@ class Graphics: public ImageDrawer, public InterfaceColor
 	int xres;
 	int yres;
 
-	virtual void dotFast(int x, int y, Color color) = 0;
+	void _dotFast(int x, int y, Color color)
+	{
+		//basic concept
+		//backBuffer[y][x] = color;
+		//decide x or y position[sw] -> shift depending (or not) on x or y[shval] -> mask[colormask] -> erase bits
+		backBuffer[BufferLayout::static_swy(y)][BufferLayout::static_swx(x)] &= ~BufferLayout::static_shval(InterfaceColor::static_colormask(), x, y); // delete bits
+		//mask[colormask] -> convert to buffer[coltobuf] -> shift depending (or not) on x or y[shval] -> decide x or y position[sw] -> store data
+		backBuffer[BufferLayout::static_swy(y)][BufferLayout::static_swx(x)] |= BufferLayout::static_shval(ColorToBuffer::coltobuf(color & InterfaceColor::static_colormask(), x, y), x, y); // write new bits
+	}
+	virtual void dotFast(int x, int y, Color color)
+	{
+		_dotFast(x, y, color);
+	}
 	virtual void dot(int x, int y, Color color)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			dotFast(x, y, color);
+			_dotFast(x, y, color);
 	}
 	virtual void dotAdd(int x, int y, Color color)
 	{
@@ -71,11 +110,21 @@ class Graphics: public ImageDrawer, public InterfaceColor
 		Color newColor = colorMix(oldColor, color);
 		dot(x, y, newColor);
 	}
-	virtual Color getFast(int x, int y) = 0;
+	Color _getFast(int x, int y)
+	{
+		//basic concept
+		//return backBuffer[y][x];
+		//decide x or y position[sw] -> retrieve data -> shift depending (or not) on x or y[shbuf] -> mask[colormask] -> convert to color[buftocol]
+		return ColorToBuffer::buftocol(BufferLayout::static_shbuf(backBuffer[BufferLayout::static_swy(y)][BufferLayout::static_swx(x)], x, y) & InterfaceColor::static_colormask());
+	}
+	virtual Color getFast(int x, int y)
+	{
+		return _getFast(x, y);
+	}
 	virtual Color get(int x, int y)
 	{
 		if ((unsigned int)x < xres && (unsigned int)y < yres)
-			return getFast(x, y);
+			return _getFast(x, y);
 		return 0;
 	}
 	virtual BufferUnit** allocateFrameBuffer() = 0;
