@@ -33,7 +33,7 @@ class GraphicsR2G2B2S2Swapped: public Graphics<ColorR2G2B2A2, unsigned char>, pu
 	virtual void dotFast(int x, int y, Color color)
 	{
 		//decide x position[sw] -> shift depending (or not) on x[shval] -> mask[bufferdatamask] -> erase bits
-		backBuffer[static_swy(y)][static_swx(x)] &= ~static_shval(static_bufferdatamask(), x, y); // delete bits
+		backBuffer[static_swy(y)][static_swx(x)] &= ~static_shval(static_colormask(), x, y); // delete bits
 		//mask[colormask] -> convert to buffer[coltobuf] -> shift depending (or not) on x[shval] -> decide x position[sw] -> store data
 		backBuffer[static_swy(y)][static_swx(x)] |= static_shval(coltobuf(color & static_colormask(), x, y), x, y); // write new bits
 	}
@@ -42,7 +42,7 @@ class GraphicsR2G2B2S2Swapped: public Graphics<ColorR2G2B2A2, unsigned char>, pu
 	virtual Color getFast(int x, int y)
 	{
 		//decide x position[sw] -> retrieve data -> shift depending (or not) on x[shbuf] -> mask[bufferdatamask] -> convert to color[buftocol]
-		return buftocol(static_shbuf(backBuffer[static_swy(y)][static_swx(x)], x, y) & static_bufferdatamask());
+		return buftocol(static_shbuf(backBuffer[static_swy(y)][static_swx(x)], x, y) & static_colormask());
 	}
 
 	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
