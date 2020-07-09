@@ -32,8 +32,8 @@ int A(Color c) const
 #include "InterfaceColors.h"
 
 // Color defines the interface color, all interactions should use this
-// InternalColor defines how the color is actually stored in memory
-template<class InterfaceColor, typename InternalColor>
+// BufferUnit defines how the color is actually stored in memory
+template<class InterfaceColor, typename BufferUnit>
 class Graphics: public ImageDrawer, public InterfaceColor
 {
   public:
@@ -43,12 +43,12 @@ class Graphics: public ImageDrawer, public InterfaceColor
 	Font *font;
 	int frameBufferCount;
 	int currentFrameBuffer;
-	InternalColor **frameBuffers[3];
-	InternalColor **frontBuffer;
-	InternalColor **backBuffer;
+	BufferUnit **frameBuffers[3];
+	BufferUnit **frontBuffer;
+	BufferUnit **backBuffer;
 	bool autoScroll;
-	size_t sizeOfInternalColor = sizeof(InternalColor);
-	int storageCoefficient = 1; //number of pixels in an InternalColor variable
+	size_t sizeOfBufferUnit = sizeof(BufferUnit);
+	int storageCoefficient = 1; //number of pixels in an BufferUnit variable
 
 	int xres;
 	int yres;
@@ -78,15 +78,15 @@ class Graphics: public ImageDrawer, public InterfaceColor
 			return getFast(x, y);
 		return 0;
 	}
-	virtual InternalColor** allocateFrameBuffer() = 0;
-	virtual InternalColor** allocateFrameBuffer(int xres, int yres, InternalColor value)
+	virtual BufferUnit** allocateFrameBuffer() = 0;
+	virtual BufferUnit** allocateFrameBuffer(int xres, int yres, BufferUnit value)
 	{
-		InternalColor** frame = (InternalColor **)malloc(yres * sizeof(InternalColor *));
+		BufferUnit** frame = (BufferUnit **)malloc(yres * sizeof(BufferUnit *));
 		if(!frame)
 			ERROR("Not enough memory for frame buffer");
 		for (int y = 0; y < yres; y++)
 		{
-			frame[y] = (InternalColor *)malloc(xres * sizeof(InternalColor));
+			frame[y] = (BufferUnit *)malloc(xres * sizeof(BufferUnit));
 			if(!frame[y])
 				ERROR("Not enough memory for frame buffer");
 			for (int x = 0; x < xres; x++)
@@ -688,7 +688,7 @@ class Graphics: public ImageDrawer, public InterfaceColor
 		{
 			for(int d = 0; d < dy; d++)
 			{
-				InternalColor *l = backBuffer[0];
+				BufferUnit *l = backBuffer[0];
 				for(int i = 0; i < yres - 1; i++)
 				{
 					backBuffer[i] = backBuffer[i + 1];
@@ -701,7 +701,7 @@ class Graphics: public ImageDrawer, public InterfaceColor
 		{
 			for(int d = 0; d < -dy; d++)
 			{
-				InternalColor *l = backBuffer[yres - 1];
+				BufferUnit *l = backBuffer[yres - 1];
 				for(int i = 1; i < yres; i++)
 				{
 					backBuffer[i] = backBuffer[i - 1];

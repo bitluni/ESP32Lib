@@ -144,9 +144,9 @@ class VGA8BitDAC : public VGA, public GraphicsX6S2W8RangedSwapped
 	int outputPin = 25;
 	bool voltageDivider = false;
 
-	virtual InternalColor** allocateFrameBuffer()
+	virtual BufferUnit** allocateFrameBuffer()
 	{
-		return (InternalColor**)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, syncBits(false, false));
+		return (BufferUnit**)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, syncBits(false, false));
 	}
 
 	virtual void allocateLineBuffers()

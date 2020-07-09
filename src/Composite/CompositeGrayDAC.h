@@ -123,9 +123,9 @@ class CompositeGrayDAC : public Composite, public GraphicsX6S2W8RangedSwapped
 	int outputPin = 25;
 	bool voltageDivider = false;
 
-	virtual InternalColor **allocateFrameBuffer()
+	virtual BufferUnit **allocateFrameBuffer()
 	{
-		return (InternalColor **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, 0x01000100*colorMinValue);
+		return (BufferUnit **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, 0x01000100*colorMinValue);
 	}
 
 	virtual void allocateLineBuffers()

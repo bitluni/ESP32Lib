@@ -76,9 +76,9 @@ class VGA3Bit : public VGA, public GraphicsR1G1B1X3S2Swapped
 	void *inactiveBuffer;
 	void *blankActiveBuffer;
 
-	virtual InternalColor **allocateFrameBuffer()
+	virtual BufferUnit **allocateFrameBuffer()
 	{
-		return (InternalColor **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, syncBits(false, false));
+		return (BufferUnit **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, syncBits(false, false));
 	}
 
 	virtual void allocateLineBuffers()

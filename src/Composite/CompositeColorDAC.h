@@ -146,9 +146,9 @@ class CompositeColorDAC : public Composite, public GraphicsX8CA8Swapped
 	int outputPin = 25;
 	bool voltageDivider = false;
 
-	virtual InternalColor **allocateFrameBuffer()
+	virtual BufferUnit **allocateFrameBuffer()
 	{
-		return (InternalColor **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, 0x01000100*levelBlanking);
+		return (BufferUnit **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, 0x01000100*levelBlanking);
 	}
 
 	virtual void allocateLineBuffers()

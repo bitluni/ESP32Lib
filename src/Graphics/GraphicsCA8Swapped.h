@@ -16,7 +16,7 @@ class GraphicsCA8Swapped: public Graphics<ColorR8G8B8A8, unsigned char>, public 
 {
 	public:
 	//TODO:this must be abstracted to inherited class after moving most generic code into Graphics class
-	typedef typename BLpx1sz8sw2sh0::BufferUnit InternalColor;
+	typedef typename BLpx1sz8sw2sh0::BufferUnit BufferUnit;
 
 	GraphicsCA8Swapped()
 	{
@@ -41,9 +41,9 @@ class GraphicsCA8Swapped: public Graphics<ColorR8G8B8A8, unsigned char>, public 
 	}
 
 	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
-	virtual InternalColor** allocateFrameBuffer()
+	virtual BufferUnit** allocateFrameBuffer()
 	{
-		return Graphics::allocateFrameBuffer(xres, yres, (InternalColor)levelBlack);
+		return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)levelBlack);
 	}
 
 	virtual void dotAdd(int x, int y, Color color)

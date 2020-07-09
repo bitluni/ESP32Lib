@@ -116,9 +116,9 @@ class CompositeColorLadder : public Composite, public GraphicsCA8Swapped
 		setResolution(xres, yres);
 	}
 
-	virtual InternalColor **allocateFrameBuffer()
+	virtual BufferUnit **allocateFrameBuffer()
 	{
-		return (InternalColor **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, 0x01010101*levelBlanking);
+		return (BufferUnit **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, 0x01010101*levelBlanking);
 	}
 
 	virtual void allocateLineBuffers()

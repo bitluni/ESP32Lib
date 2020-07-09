@@ -18,7 +18,7 @@ class GraphicsW1: public Graphics<ColorW1X7, unsigned char>, public BLpx8sz8swys
 {
 	public:
 	//TODO:this must be abstracted to inherited class after moving most generic code into Graphics class
-	typedef typename BLpx8sz8swyshy::BufferUnit InternalColor;
+	typedef typename BLpx8sz8swyshy::BufferUnit BufferUnit;
 	// FUTURE PLANS: OUTPUTCOLOR COULD BE TEMPLATED
 	//These are interpreted as 3-bit color:
 	ColorR1G1B1A1X4::Color frontGlobalColor, backGlobalColor;
@@ -48,14 +48,14 @@ class GraphicsW1: public Graphics<ColorW1X7, unsigned char>, public BLpx8sz8swys
 	}
 
 	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
-	virtual InternalColor** allocateFrameBuffer()
+	virtual BufferUnit** allocateFrameBuffer()
 	{
-		return Graphics::allocateFrameBuffer(4*((xres + 3) / 4), (yres + static_ypixperunit() - 1) / static_ypixperunit(), (InternalColor)0);
+		return Graphics::allocateFrameBuffer(4*((xres + 3) / 4), (yres + static_ypixperunit() - 1) / static_ypixperunit(), (BufferUnit)0);
 	}
 
 	virtual void clear(Color color = 0)
 	{
-		InternalColor storeWord = (color & 0x1) * 0b11111111; // masked for robustness
+		BufferUnit storeWord = (color & 0x1) * 0b11111111; // masked for robustness
 		for (int y = 0; y < (yres + static_ypixperunit() - 1) / static_ypixperunit(); y++)
 			for (int x = 0; x < xres; x++)
 				backBuffer[y][x] = storeWord;

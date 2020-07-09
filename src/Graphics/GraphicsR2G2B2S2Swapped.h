@@ -18,9 +18,9 @@ class GraphicsR2G2B2S2Swapped: public Graphics<ColorR2G2B2A2, unsigned char>, pu
 {
 	public:
 	//TODO:this must be abstracted to inherited class after moving most generic code into Graphics class
-	typedef typename BLpx1sz8sw2sh0::BufferUnit InternalColor;
+	typedef typename BLpx1sz8sw2sh0::BufferUnit BufferUnit;
 	//TODO:this must disappear and be tackled in the VGA class
-	InternalColor SBits;
+	BufferUnit SBits;
 
 	GraphicsR2G2B2S2Swapped()
 	{
@@ -46,8 +46,8 @@ class GraphicsR2G2B2S2Swapped: public Graphics<ColorR2G2B2A2, unsigned char>, pu
 	}
 
 	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
-	virtual InternalColor** allocateFrameBuffer()
+	virtual BufferUnit** allocateFrameBuffer()
 	{
-		return Graphics::allocateFrameBuffer(xres, yres, (InternalColor)SBits);
+		return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)SBits);
 	}
 };

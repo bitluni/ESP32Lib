@@ -18,9 +18,9 @@ class GraphicsX6S2W8RangedSwapped: public Graphics<ColorW8, unsigned short>, pub
 {
 	public:
 	//TODO:this must be abstracted to inherited class after moving most generic code into Graphics class
-	typedef typename BLpx1sz16sw1sh8::BufferUnit InternalColor;
+	typedef typename BLpx1sz16sw1sh8::BufferUnit BufferUnit;
 	//TODO:this must disappear and be tackled in the VGA class
-	InternalColor SBits;
+	BufferUnit SBits;
 
 	GraphicsX6S2W8RangedSwapped()
 	{
@@ -46,14 +46,14 @@ class GraphicsX6S2W8RangedSwapped: public Graphics<ColorW8, unsigned short>, pub
 	}
 
 	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
-	virtual InternalColor** allocateFrameBuffer()
+	virtual BufferUnit** allocateFrameBuffer()
 	{
-		return Graphics::allocateFrameBuffer(xres, yres, (InternalColor)(colorMinValue<<8)|SBits);
+		return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)(colorMinValue<<8)|SBits);
 	}
 
 	virtual void clear(Color color = 0)
 	{
-		InternalColor newColor = (InternalColor)static_shval(coltobuf(color & static_colormask(), 0, 0), 0, 0) | SBits;
+		BufferUnit newColor = (BufferUnit)static_shval(coltobuf(color & static_colormask(), 0, 0), 0, 0) | SBits;
 		for (int y = 0; y < this->yres; y++)
 			for (int x = 0; x < this->xres; x++)
 				backBuffer[y][x] = newColor;
