@@ -11,14 +11,10 @@
 */
 #pragma once
 #include "Graphics.h"
-#include "BufferLayouts/BLpx8sz8swyshy.h"
-#include "ColorToBuffer/CTBIdentity.h"
 
-class GraphicsW1: public Graphics<ColorW1X7, unsigned char>, public BLpx8sz8swyshy, public CTBIdentity
+class GraphicsW1: public Graphics<ColorW1X7, BLpx8sz8swyshy, CTBIdentity>
 {
 	public:
-	//TODO:this must be abstracted to inherited class after moving most generic code into Graphics class
-	typedef typename BLpx8sz8swyshy::BufferUnit BufferUnit;
 	// FUTURE PLANS: OUTPUTCOLOR COULD BE TEMPLATED
 	//These are interpreted as 3-bit color:
 	ColorR1G1B1A1X4::Color frontGlobalColor, backGlobalColor;
@@ -29,22 +25,6 @@ class GraphicsW1: public Graphics<ColorW1X7, unsigned char>, public BLpx8sz8swys
 		frontColor = 0xf;
 		frontGlobalColor = 0xf;
 		backGlobalColor = 0x0;
-	}
-
-	//TODO:eventually (when it is equal for all subclasses) move into a non-virtual function in Graphics class wrapped in a virtual one
-	virtual void dotFast(int x, int y, Color color)
-	{
-		//decide x position[sw] -> shift depending (or not) on x[shval] -> mask[bufferdatamask] -> erase bits
-		backBuffer[static_swy(y)][static_swx(x)] &= ~static_shval(static_colormask(), x, y); // delete bits
-		//mask[colormask] -> convert to buffer[coltobuf] -> shift depending (or not) on x[shval] -> decide x position[sw] -> store data
-		backBuffer[static_swy(y)][static_swx(x)] |= static_shval(coltobuf(color & static_colormask(), x, y), x, y); // write new bits
-	}
-
-	//TODO:eventually (when it is equal for all subclasses) move into a non-virtual function in Graphics class wrapped in a virtual one
-	virtual Color getFast(int x, int y)
-	{
-		//decide x position[sw] -> retrieve data -> shift depending (or not) on x[shbuf] -> mask[bufferdatamask] -> convert to color[buftocol]
-		return buftocol(static_shbuf(backBuffer[static_swy(y)][static_swx(x)], x, y) & static_colormask());
 	}
 
 	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer

@@ -11,15 +11,10 @@
 */
 #pragma once
 #include "Graphics.h"
-//#include "BufferLayouts/BLpx1sz16sw1sh0.h"
-//#include "ColorToBuffer/CTBIdentity.h"
 
 class GraphicsR5G5B4S2Swapped: public Graphics<ColorR5G5B4A2, BLpx1sz16sw1sh0, CTBIdentity>
 {
 	public:
-	//TODO:this must be abstracted to inherited class after moving most generic code into Graphics class
-//	typedef typename BLpx1sz16sw1sh0::BufferUnit BufferUnit;
-	//TODO:this must disappear and be tackled in the VGA class
 	BufferUnit SBits;
 
 	GraphicsR5G5B4S2Swapped()
@@ -28,22 +23,6 @@ class GraphicsR5G5B4S2Swapped: public Graphics<ColorR5G5B4A2, BLpx1sz16sw1sh0, C
 		SBits = 0xc000;
 		frontColor = 0xffff;
 	}
-
-	////TODO:eventually (when it is equal for all subclasses) move into a non-virtual function in Graphics class wrapped in a virtual one
-	//virtual void dotFast(int x, int y, Color color)
-	//{
-		////decide x position[sw] -> shift depending (or not) on x[shval] -> mask[bufferdatamask] -> erase bits
-		//backBuffer[static_swy(y)][static_swx(x)] &= ~static_shval(static_colormask(), x, y); // delete bits
-		////mask[colormask] -> convert to buffer[coltobuf] -> shift depending (or not) on x[shval] -> decide x position[sw] -> store data
-		//backBuffer[static_swy(y)][static_swx(x)] |= static_shval(coltobuf(color & static_colormask(), x, y), x, y); // write new bits
-	//}
-
-	////TODO:eventually (when it is equal for all subclasses) move into a non-virtual function in Graphics class wrapped in a virtual one
-	//virtual Color getFast(int x, int y)
-	//{
-		////decide x position[sw] -> retrieve data -> shift depending (or not) on x[shbuf] -> mask[bufferdatamask] -> convert to color[buftocol]
-		//return buftocol(static_shbuf(backBuffer[static_swy(y)][static_swx(x)], x, y) & static_colormask());
-	//}
 
 	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
 	virtual BufferUnit** allocateFrameBuffer()
