@@ -31,7 +31,7 @@ class BLpx1sz16sw1sh0
 
 	static const int static_bufferdatamask()
 	{
-		return 0b0011111111111111;
+		return 0b1111111111111111;
 	}
 
 	static const int static_replicate()
