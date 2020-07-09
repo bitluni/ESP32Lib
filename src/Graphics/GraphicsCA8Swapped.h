@@ -9,96 +9,38 @@
 */
 #pragma once
 #include "Graphics.h"
-#include "integertrigonometry.h"
+#include "BufferLayouts/BLpx1sz8sw2sh0.h"
+#include "ColorToBuffer/CTBComposite.h"
 
-class GraphicsCA8Swapped: public Graphics<ColorR8G8B8A8, unsigned char>
+class GraphicsCA8Swapped: public Graphics<ColorR8G8B8A8, unsigned char>, public BLpx1sz8sw2sh0, public CTBComposite
 {
 	public:
-	typedef unsigned char InternalColor;
-	// FUTURE PLANS: OUTPUTCOLOR COULD BE TEMPLATED
-
-	int levelHighClipping = 255;
-	int levelWhite = 207;
-	int amplitudeBurst = 31;
-	int levelBlack = 62;
-	int levelBlanking = 62;
-	int levelLowClipping = 14;
-	int levelSync = 0;
-
-	int firstPixelOffset = 0; // falling edge of hSync
-	uint32_t colorClock0x1000Periods = 1; // pixels per 0x1000 color cycles
-	int bufferVDiv = 1;
-	bool bufferInterlaced = false;
-	bool bufferPhaseAlternating = false;
+	//TODO:this must be abstracted to inherited class after moving most generic code into Graphics class
+	typedef typename BLpx1sz8sw2sh0::BufferUnit InternalColor;
 
 	GraphicsCA8Swapped()
 	{
+		//TODO:decide where to move these.
 		frontColor = 0xffffffff;
 	}
 
+	//TODO:eventually (when it is equal for all subclasses) move into a non-virtual function in Graphics class wrapped in a virtual one
 	virtual void dotFast(int x, int y, Color color)
 	{
-		
-		// ranges 0,255
-		uint8_t r = R(color);
-		uint8_t g = G(color);
-		uint8_t b = B(color);
-		
-		// Y = 0.299*r + 0.587*g + 0.114*b; // range 0,255
-		// Y = ( 0x00010000*0.299*r + 0x00010000*0.587*g + 0x00010000*0.114*b + 0x8000L) / 0x00010000
-		uint8_t Y = (19595L*r + 38470L*g + 7471L*b + 0x8000L)>>16;
-		// u in YUV
-		// b_y = 0.492111*(b - Y); // range +/- 111.18
-		// b_y = (0x00010000*0.492111*(b - Y) + 0x08008000 - 1) / 0x00010000 - 0x0800
-		int32_t b_y = (int32_t)(((uint32_t)(32251L*((int32_t)b - Y) + 0x08007fffL))>>16) - 0x0800;
-		// v in YUV
-		// r_y = 0.877283*(r - Y); // range +/- 156.82
-		// r_y = (0x00010000*0.877283*(b - Y) + 0x08008000 - 1) / 0x00010000 - 0x0800
-		int32_t r_y = (int32_t)(((uint32_t)(57494L*((int32_t)r - Y) + 0x08007fffL))>>16) - 0x0800;
-		
-		// sat = sqrt(pow(b_y,2) + pow(r_y,2)); // range 0,192
-		// alpha max plus beta min algorithm, using alpha = 15/16 and beta = 15/32
-		uint8_t sat = (abs(b_y) > abs(r_y)) ? (15*((abs(b_y)<<1) + abs(r_y)))>>5 : (15*(abs(b_y) + (abs(r_y)<<1)))>>5;
-		// hue_phase = atan2(r_y,b_y); // range -PI,PI
-		// hue_phase = fmod(atan2(r_y,b_y)+2*PI,2*PI)*256/(2*PI); // range 0,255
-		int32_t hue_phase = integeratan2aprox(r_y,b_y)>>8;
-		
-		// position_phase = fmod(x + firstPixelOffset,colorClockPeriod)*256/colorClockPeriod; // range 0,255 // colorClockPeriod in pixels (= pixelClock/colorClock)
-		uint32_t position_phase = ((((x + firstPixelOffset)<<12)%colorClock0x1000Periods)<<8)/colorClock0x1000Periods;
-		
-		int32_t signal = 0; // nominally the Y range, 0,255, but color excursion avobe and bellow are possible
-		
-		if(bufferPhaseAlternating)
-		{
-			// signal = Y + b_y*sin(position_phase) + (((int)(y & 1)==0)?((float)(-1)):((float)(1)))*r_y*cos(position_phase);
-			// signal = Y + sat*sin((((int)(y & 1)==0)?((float)(-1)):((float)(1)))*hue_phase + position_phase);
-			// signal 0,1 mapped to 0, (255*(0x01L<<(7+7))) to preserve precision in subsequent re-scaling
-			// signal = (Y + sat*sin((((int)(y & 1)==0)?((float)(-1)):((float)(1)))*hue_phase + position_phase))*(0x01L<<(7+7));
-			// signal = (0x01L<<(7+7))*Y + (0x01L<<(7+7))*sat*sin((((int)(y & 1)==0)?((float)(-1)):((float)(1)))*hue_phase + position_phase);
-			// sin ranges -1, 1 for arguments -PI,PI; integersinaprox ranges -127, 127 for arguments 0, 255
-			signal = (0x01L<<(7+7))*Y + (0x01L<<(7))*sat*integersinaprox((((int)(y & 1)==0)?((int)(-1)):((int)(1)))*hue_phase + position_phase);
-		} else {
-			// signal = 0.925*Y + 0.075*255 + 0.925*(b_y*sin(position_phase) + r_y*cos(position_phase));
-			// signal = 0.925*Y + 0.075*255 + 0.925*sat*sin(hue_phase + position_phase);
-			// signal 0,1 mapped to 0, (255*(0x01L<<(7+7))) to preserve precision in subsequent re-scaling
-			// signal = (0.925*Y + 0.075*255 + 0.925*sat*sin(hue_phase + position_phase))*(0x01L<<(7+7));
-			// signal = 0.925*(0x01L<<(7+7))*Y + 0.075*255*(0x01L<<(7+7)) + 0.925*(0x01L<<(7+7))*sat*sin(hue_phase + position_phase);
-			// sin ranges -1, 1 for arguments -PI,PI; integersinaprox ranges -127, 127 for arguments 0, 255
-			// signal = 0.925*(0x01L<<(7+7))*Y + 0.075*255*(0x01L<<(7+7)) + 0.925*(0x01L<<(7))*sat*integersinaprox(hue_phase + position_phase);
-			signal = 15154*Y + 313344 + 118*sat*integersinaprox(hue_phase + position_phase);
-		}
-		// signal = levelBlanking + signal * (levelWhite - levelBlanking + 1) / 256;
-		signal = ((int32_t)(((int32_t)levelBlanking<<(8+7+7)) + signal * (levelWhite - levelBlanking + 1))) >> (8+7+7);
-		if (signal > levelHighClipping) signal = levelHighClipping;
-		if (signal < levelLowClipping) signal = levelLowClipping;
-		backBuffer[y][x^2] = ((uint8_t)signal);
+		//decide x position[sw] -> shift depending (or not) on x[shval] -> mask[bufferdatamask] -> erase bits
+		backBuffer[static_swy(y)][static_swx(x)] &= ~static_shval(static_colormask(), x, y); // delete bits
+		//mask[colormask] -> convert to buffer[coltobuf] -> shift depending (or not) on x[shval] -> decide x position[sw] -> store data
+		backBuffer[static_swy(y)][static_swx(x)] |= static_shval(coltobuf(color & static_colormask(), x, y), x, y); // write new bits
 	}
 
+	//TODO:eventually (when it is equal for all subclasses) move into a non-virtual function in Graphics class wrapped in a virtual one
 	virtual Color getFast(int x, int y)
 	{
-		return 0; // Not possible to retrieve color from this buffer
+		//decide x position[sw] -> retrieve data -> shift depending (or not) on x[shbuf] -> mask[bufferdatamask] -> convert to color[buftocol]
+		return buftocol(static_shbuf(backBuffer[static_swy(y)][static_swx(x)], x, y) & static_colormask());
 	}
 
+	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
 	virtual InternalColor** allocateFrameBuffer()
 	{
 		return Graphics::allocateFrameBuffer(xres, yres, (InternalColor)levelBlack);
