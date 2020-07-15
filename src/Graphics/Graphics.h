@@ -143,6 +143,19 @@ class Graphics: public ImageDrawer, public InterfaceColor, public BufferLayout, 
 		}
 		return frame;
 	}
+	static void **allocateRegularBufferArray(int count, int bytes)
+	{
+		void **arr = (void **)malloc(count * sizeof(void *));
+		if(!arr)
+			ERROR("Not enough regular memory");
+		for (int i = 0; i < count; i++)
+		{
+			arr[i] = (void *)malloc(bytes);
+			if(!arr[i])
+				ERROR("Not enough regular memory");
+		}
+		return arr;
+	}
 	virtual Color colorAdd(Color colorOld, Color colorNew)
 	{
 		return InterfaceColor::static_colorAdd(colorOld, colorNew);
