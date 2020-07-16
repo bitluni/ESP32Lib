@@ -18,12 +18,7 @@ class GraphicsX8CA8Swapped: public Graphics<ColorR8G8B8A8, BLpx1sz16sw1sh8, CTBC
 	{
 		//TODO:decide where to move these.
 		frontColor = 0xffffffff;
-	}
-
-	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
-	virtual BufferUnit** allocateFrameBuffer()
-	{
-		return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)levelBlack<<8);
+		defaultBufferValue = (int)levelBlack<<8;
 	}
 
 	virtual void dotAdd(int x, int y, Color color)

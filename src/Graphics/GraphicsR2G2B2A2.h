@@ -21,10 +21,4 @@ class GraphicsR2G2B2A2: public Graphics<ColorR2G2B2A2, BLpx1sz8sw0sh0, CTBIdenti
 		//TODO:decide where to move this.
 		frontColor = 0xff;
 	}
-
-	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
-	virtual BufferUnit** allocateFrameBuffer()
-	{
-		return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)0);
-	}
 };

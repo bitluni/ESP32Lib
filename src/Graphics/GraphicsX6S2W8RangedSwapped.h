@@ -23,12 +23,7 @@ class GraphicsX6S2W8RangedSwapped: public Graphics<ColorW8, BLpx1sz16sw1sh8, CTB
 		//TODO:decide where to move these.
 		SBits = 0x00c0;
 		frontColor = 0xff;
-	}
-
-	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
-	virtual BufferUnit** allocateFrameBuffer()
-	{
-		return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)(colorMinValue<<8)|SBits);
+		defaultBufferValue = ((int)colorMinValue<<8)|SBits;
 	}
 
 	virtual void clear(Color color = 0)

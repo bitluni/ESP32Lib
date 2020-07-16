@@ -24,12 +24,7 @@ class GraphicsTextBuffer: public Graphics<ColorW8, BLpx1sz8sw0sh0, CTBIdentity>
 		frontColor = 0x30;
 		frontGlobalColor = 0xf;
 		backGlobalColor = 0x0;
-	}
-
-	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
-	virtual BufferUnit** allocateFrameBuffer()
-	{
-		return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)32);
+		defaultBufferValue = 32;
 	}
 
 	virtual void clear(Color color = 32)

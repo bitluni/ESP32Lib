@@ -76,6 +76,7 @@ class Graphics: public ImageDrawer, public InterfaceColor, public BufferLayout, 
 	bool autoScroll;
 	size_t sizeOfBufferUnit = sizeof(BufferUnit);
 	int storageCoefficient = 1; //number of pixels in an BufferUnit variable
+	int defaultBufferValue = 0;
 
 	int xres;
 	int yres;
@@ -127,7 +128,47 @@ class Graphics: public ImageDrawer, public InterfaceColor, public BufferLayout, 
 			return _getFast(x, y);
 		return 0;
 	}
-	virtual BufferUnit** allocateFrameBuffer() = 0;
+	//virtual BufferUnit** allocateFrameBuffer() = 0;
+	virtual BufferUnit** allocateFrameBuffer()
+	{
+		//GraphicsCA8Swapped
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)levelBlack);
+		//GraphicsR5G5B4S2Swapped
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)SBits);
+		//GraphicsX8CA8Swapped
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)levelBlack<<8);
+		//GraphicsX6S2W8RangedSwapped
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)(colorMinValue<<8)|SBits);
+		//GraphicsW8RangedSwapped
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)colorMinValue);
+		//GraphicsTextBuffer
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)32);
+		//GraphicsW8
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)0);
+		//GraphicsW1
+		//return Graphics::allocateFrameBuffer(4*((xres + 3) / 4), (yres + static_ypixperunit() - 1) / static_ypixperunit(), (BufferUnit)0);
+		//GraphicsR5G5B4A2
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)0);
+		//GraphicsR2G2B2S2Swapped
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)SBits);
+		//GraphicsR2G2B2A2
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)0);
+		//GraphicsR1G1B1X3S2Swapped
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)SBits);
+		//GraphicsR1G1B1A1
+		//return Graphics::allocateFrameBuffer((xres + static_xpixperunit() - 1) / static_xpixperunit(), yres, (BufferUnit)0);
+		return Graphics::allocateFrameBuffer(
+			(xres + BufferLayout::static_xpixperunit() - 1) / BufferLayout::static_xpixperunit(),
+			(yres + BufferLayout::static_ypixperunit() - 1) / BufferLayout::static_ypixperunit(),
+			(BufferUnit)defaultBufferValue);
+		//TODO Fixes:
+		// - round up x to multiples of 4 bytes (when necessary: in GraphicsW1 for renderer, in DMA buffers)
+		//TODO:
+		// - calculate and use byte-based allocation instead of unit/pixel based allocation
+		//   (at this stage for some buffers the size of the buffer =/= xres, so in the next function "xres" is not such any more)
+		// - move elsewhere: acondition the buffer with the fixed sync bytes or blank values
+		//   this has to be done for all buffers allocated (front, back, and reserve)
+	}
 	virtual BufferUnit** allocateFrameBuffer(int xres, int yres, BufferUnit value)
 	{
 		BufferUnit** frame = (BufferUnit **)malloc(yres * sizeof(BufferUnit *));

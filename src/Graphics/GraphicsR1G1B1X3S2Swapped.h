@@ -23,11 +23,6 @@ class GraphicsR1G1B1X3S2Swapped: public Graphics<ColorR1G1B1A1X4, BLpx1sz8sw2sh0
 		//TODO:decide where to move these.
 		SBits = 0xc0;
 		frontColor = 0xf;
-	}
-
-	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
-	virtual BufferUnit** allocateFrameBuffer()
-	{
-		return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)SBits);
+		defaultBufferValue = SBits;
 	}
 };

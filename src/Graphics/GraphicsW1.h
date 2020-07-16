@@ -27,12 +27,6 @@ class GraphicsW1: public Graphics<ColorW1X7, BLpx8sz8swyshy, CTBIdentity>
 		backGlobalColor = 0x0;
 	}
 
-	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
-	virtual BufferUnit** allocateFrameBuffer()
-	{
-		return Graphics::allocateFrameBuffer(4*((xres + 3) / 4), (yres + static_ypixperunit() - 1) / static_ypixperunit(), (BufferUnit)0);
-	}
-
 	virtual void clear(Color color = 0)
 	{
 		BufferUnit storeWord = (color & 0x1) * 0b11111111; // masked for robustness

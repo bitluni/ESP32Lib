@@ -22,12 +22,6 @@ class GraphicsR1G1B1A1: public Graphics<ColorR1G1B1A1X4, BLpx2sz8swxshx, CTBIden
 		frontColor = 0xf;
 	}
 
-	//TODO:study differences between subclasses and decide where it is optimal to allocate buffer
-	virtual BufferUnit** allocateFrameBuffer()
-	{
-		return Graphics::allocateFrameBuffer((xres + static_xpixperunit() - 1) / static_xpixperunit(), yres, (BufferUnit)0);
-	}
-
 	virtual void clear(Color color = 0)
 	{
 		unsigned char storeWord = (color & 0xf) * 0b00010001; // masked high-nibble for robustness
