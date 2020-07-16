@@ -11,4 +11,5 @@
 #include "ColorToBuffer/CTBIdentity.h"
 #include "ColorToBuffer/CTBRange.h"
 #include "ColorToBuffer/CTBComposite.h"
+#include "ColorToBuffer/CTBCompositeMemory.h"
 
