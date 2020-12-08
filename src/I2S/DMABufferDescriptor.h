@@ -11,6 +11,11 @@
 */
 #pragma once
 #include "../Tools/Log.h"
+#ifdef ESP32
+  #include "rom/lldesc.h"
+#else
+  #include "lldesc.h"
+#endif
 
 class DMABufferDescriptor : protected lldesc_t
 {
@@ -18,7 +23,11 @@ class DMABufferDescriptor : protected lldesc_t
 	static void *allocateBuffer(int bytes, bool clear = true, unsigned long clearValue = 0)
 	{
 		bytes = (bytes + 3) & 0xfffffffc;
+		#ifdef ESP32
 		void *b = heap_caps_malloc(bytes, MALLOC_CAP_DMA);
+		#else
+		void *b = malloc(bytes);
+		#endif
 		if (!b)
 			DEBUG_PRINTLN("Failed to alloc dma buffer");
 		if (clear)
@@ -68,7 +77,11 @@ class DMABufferDescriptor : protected lldesc_t
 
 	static DMABufferDescriptor *allocateDescriptors(int count)
 	{
+		#ifdef ESP32
 		DMABufferDescriptor *b = (DMABufferDescriptor *)heap_caps_malloc(sizeof(DMABufferDescriptor) * count, MALLOC_CAP_DMA);
+		#else
+		DMABufferDescriptor *b = (DMABufferDescriptor *)malloc(sizeof(DMABufferDescriptor) * count);
+		#endif
 		if (!b)
 			DEBUG_PRINTLN("Failed to alloc DMABufferDescriptors");
 		for (int i = 0; i < count; i++)
@@ -79,7 +92,11 @@ class DMABufferDescriptor : protected lldesc_t
 	static DMABufferDescriptor *allocateDescriptor(int bytes, bool allocBuffer = true, bool clear = true, unsigned long clearValue = 0)
 	{
 		bytes = (bytes + 3) & 0xfffffffc;
+		#ifdef ESP32
 		DMABufferDescriptor *b = (DMABufferDescriptor *)heap_caps_malloc(sizeof(DMABufferDescriptor), MALLOC_CAP_DMA);
+		#else
+		DMABufferDescriptor *b = (DMABufferDescriptor *)malloc(sizeof(DMABufferDescriptor));
+		#endif
 		if (!b)
 			DEBUG_PRINTLN("Failed to alloc DMABufferDescriptor");
 		b->init();
