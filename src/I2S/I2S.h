@@ -11,22 +11,13 @@
 */
 #pragma once
 
-#include "esp_heap_caps.h"
-#include "soc/soc.h"
-#include "soc/gpio_sig_map.h"
-#include "soc/i2s_reg.h"
-#include "soc/i2s_struct.h"
-#include "soc/io_mux_reg.h"
-#include "driver/gpio.h"
-#include "driver/periph_ctrl.h"
-#include "rom/lldesc.h"
 #include "DMABufferDescriptor.h"
 
 class I2S
 {
   public:
 	int i2sIndex;
-	intr_handle_t interruptHandle;
+	void* interruptHandle;
 	int dmaBufferDescriptorCount;
 	int dmaBufferDescriptorActive;
 	DMABufferDescriptor *dmaBufferDescriptors;

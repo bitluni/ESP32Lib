@@ -9,7 +9,21 @@
 		https://github.com/bitluni
 		http://bitluni.net
 */
+
+#ifdef ESP32
+
 #include "I2S.h"
+
+#include "esp_heap_caps.h"
+#include "soc/soc.h"
+#include "soc/gpio_sig_map.h"
+#include "soc/i2s_reg.h"
+#include "soc/i2s_struct.h"
+#include "soc/io_mux_reg.h"
+#include "driver/gpio.h"
+#include "driver/periph_ctrl.h"
+#include "rom/lldesc.h"
+
 #include "../Tools/Log.h"
 #include <soc/rtc.h>
 #include <driver/rtc_io.h>
@@ -76,7 +90,7 @@ void I2S::reset()
 void I2S::i2sStop()
 {
 	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
-	esp_intr_disable(interruptHandle);
+	esp_intr_disable((intr_handle_t)interruptHandle);
 	reset();
 	i2s.conf.rx_start = 0;
 	i2s.conf.tx_start = 0;
@@ -86,7 +100,7 @@ void I2S::startTX()
 {
 	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
 	DEBUG_PRINTLN("I2S TX");
-	esp_intr_disable(interruptHandle);
+	esp_intr_disable((intr_handle_t)interruptHandle);
 	reset();
     i2s.lc_conf.val    = I2S_OUT_DATA_BURST_EN | I2S_OUTDSCR_BURST_EN;
 	dmaBufferDescriptorActive = 0;
@@ -98,7 +112,7 @@ void I2S::startTX()
 	{
 		i2s.int_ena.out_eof = 1;
 		//enable interrupt
-		esp_intr_enable(interruptHandle);
+		esp_intr_enable((intr_handle_t)interruptHandle);
 	}
 	//start transmission
 	i2s.conf.tx_start = 1;
@@ -108,7 +122,7 @@ void I2S::startRX()
 {
 	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
 	DEBUG_PRINTLN("I2S RX");
-	esp_intr_disable(interruptHandle);
+	esp_intr_disable((intr_handle_t)interruptHandle);
 	reset();
 	dmaBufferDescriptorActive = 0;
 	i2s.rx_eof_num = dmaBufferDescriptors[0].sampleCount();	//TODO: replace with cont of sample to be recorded
@@ -117,7 +131,7 @@ void I2S::startRX()
 	i2s.int_clr.val = i2s.int_raw.val;
 	i2s.int_ena.val = 0;
 	i2s.int_ena.in_done = 1;
-	esp_intr_enable(interruptHandle);
+	esp_intr_enable((intr_handle_t)interruptHandle);
 	i2s.conf.rx_start = 1;
 }
 
@@ -242,7 +256,7 @@ bool I2S::initParallelInputMode(const int *pinMap, long sampleRate, const int bi
 	//allocate disabled i2s interrupt
 	const int interruptSource[] = {ETS_I2S0_INTR_SOURCE, ETS_I2S1_INTR_SOURCE};
 	if(useInterrupt())
-		esp_intr_alloc(interruptSource[i2sIndex], ESP_INTR_FLAG_INTRDISABLED | ESP_INTR_FLAG_LEVEL3 | ESP_INTR_FLAG_IRAM, &interruptStatic, this, &interruptHandle);
+		esp_intr_alloc(interruptSource[i2sIndex], ESP_INTR_FLAG_INTRDISABLED | ESP_INTR_FLAG_LEVEL3 | ESP_INTR_FLAG_IRAM, &interruptStatic, this, reinterpret_cast<intr_handle_t*>(&interruptHandle));
 	return true;
 }
 
@@ -372,7 +386,7 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, const int b
 	//allocate disabled i2s interrupt
 	const int interruptSource[] = {ETS_I2S0_INTR_SOURCE, ETS_I2S1_INTR_SOURCE};
 	if(useInterrupt())
-		esp_intr_alloc(interruptSource[i2sIndex], ESP_INTR_FLAG_INTRDISABLED | ESP_INTR_FLAG_LEVEL3 | ESP_INTR_FLAG_IRAM, &interruptStatic, this, &interruptHandle);
+		esp_intr_alloc(interruptSource[i2sIndex], ESP_INTR_FLAG_INTRDISABLED | ESP_INTR_FLAG_LEVEL3 | ESP_INTR_FLAG_IRAM, &interruptStatic, this, reinterpret_cast<intr_handle_t*>(&interruptHandle));
 	return true;
 }
 
@@ -510,7 +524,7 @@ bool I2S::initSerialOutputMode(int dataPin, const int bitCount, int wordSelect, 
 	//allocate disabled i2s interrupt
 	const int interruptSource[] = {ETS_I2S0_INTR_SOURCE, ETS_I2S1_INTR_SOURCE};
 	if(useInterrupt())
-		esp_intr_alloc(interruptSource[i2sIndex], ESP_INTR_FLAG_INTRDISABLED | ESP_INTR_FLAG_LEVEL3 | ESP_INTR_FLAG_IRAM, &interruptStatic, this, &interruptHandle);
+		esp_intr_alloc(interruptSource[i2sIndex], ESP_INTR_FLAG_INTRDISABLED | ESP_INTR_FLAG_LEVEL3 | ESP_INTR_FLAG_IRAM, &interruptStatic, this, reinterpret_cast<intr_handle_t*>(&interruptHandle));
 	return true;
 }
 
@@ -545,3 +559,5 @@ void I2S::stop()
 	while (stopSignal)
 		;
 }
+
+#endif
