@@ -84,7 +84,7 @@ void ParallelLEDGraphics::clear(ParallelLEDGraphics::Color color)
 			dotFast(x, y, color);
 }
 
-ParallelLEDGraphics::Color** ParallelLEDGraphics::allocateFrameBuffer()
+ParallelLEDGraphics::BufferUnit** ParallelLEDGraphics::allocateFrameBuffer()
 {
 	return 0;
 }

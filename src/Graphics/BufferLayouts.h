@@ -15,4 +15,5 @@
 #include "BufferLayouts/BLpx1sz8sw0sh0.h"
 #include "BufferLayouts/BLpx1sz16sw1sh8.h"
 #include "BufferLayouts/BLpx8sz8swyshy.h"
+#include "BufferLayouts/BLpx1sz32sw0sh0.h"
 

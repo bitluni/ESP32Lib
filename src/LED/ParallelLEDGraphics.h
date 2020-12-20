@@ -14,10 +14,11 @@
 #include "ParallelLED.h"
 #include "../Graphics/Graphics.h"
 
-class ParallelLEDGraphics : public ParallelLED, public Graphics<unsigned long>
+class ParallelLEDGraphics : public ParallelLED, public Graphics<ColorR5G5B4A2, BLpx1sz32sw0sh0, CTBIdentity>
 {
   public:
-  	typedef unsigned long Color;
+  	typedef typename Graphics::Color Color;
+  	//typedef unsigned long Color;
 	ParallelLEDGraphics(const int xres, const int yres, int components = 3);
 	virtual ~ParallelLEDGraphics();
 	//graphics implementations
@@ -38,6 +39,6 @@ class ParallelLEDGraphics : public ParallelLED, public Graphics<unsigned long>
 	virtual void dotMix(int x, int y, Color color);
 	virtual Color get(int x, int y);
 	virtual void clear(Color color = 0);
-	virtual Color** allocateFrameBuffer();
+	virtual BufferUnit** allocateFrameBuffer();
 	virtual bool map(int x, int y, int &channel, int &led) = 0;
 };
