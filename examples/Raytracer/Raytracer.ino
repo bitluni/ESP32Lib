@@ -9,7 +9,7 @@
 #include "Raytracer.h"
 
 //VGA Device
-VGA14Bit vga;
+VGA14Bit videodisplay;
 
 int taskData[2][3] = 
   {
@@ -37,7 +37,7 @@ void raytraceTask(void *param)
         v.normalize();
         Ray r(p, v);
         Vector c = raytrace(objects, 3, r, light, 3);
-        vga.dotFast(x, y, vga.RGB(c[0] * 255, c[1] * 255, c[2] * 255));
+        videodisplay.dotFast(x, y, videodisplay.RGB(c[0] * 255, c[1] * 255, c[2] * 255));
       }
     data[0] = 0;
   }
@@ -47,13 +47,13 @@ void raytraceTask(void *param)
 void setup()
 {
   //we need double buffering for smooth animations
-  vga.setFrameBufferCount(2);  
+  videodisplay.setFrameBufferCount(2);  
 	//initializing i2s vga
   //Pin presets are avaialable for: VGAv01, VGABlackEdition, VGAWhiteEdition, PicoVGA
   //But you can also use custom pins. Check the other examples  
-	vga.init(VGAMode::MODE320x200, vga.VGABlackEdition);
+	videodisplay.init(VGAMode::MODE320x200, videodisplay.VGABlackEdition);
 	//setting the font
-	vga.setFont(Font6x8);
+	videodisplay.setFont(Font6x8);
   light.normalize();
   sphere.reflection = 0.4f;
   sphere2.reflection = 0.5f;
@@ -77,14 +77,14 @@ void loop()
   sphere2.p.v[2] = cos(millis() * 0.0005f) * 2;
   sphere.p.v[1] = sphere2.p[0] * 0.3 + 1;
   //setting the text cursor to the lower left corner of the screen
-  vga.setCursor(0, 0);
+  videodisplay.setCursor(0, 0);
   //setting the text color to white with opaque black background
-  vga.setTextColor(vga.RGB(0xffffff), vga.RGBA(0, 0, 0, 0));
+  videodisplay.setTextColor(videodisplay.RGB(0xffffff), videodisplay.RGBA(0, 0, 0, 0));
   //printing the fps
-  vga.print("ms/frame: ");
+  videodisplay.print("ms/frame: ");
   static long t = 0;
   long ct = millis();
-  vga.print(ct - t);
+  videodisplay.print(ct - t);
   t = ct;
-  vga.show();
+  videodisplay.show();
 }

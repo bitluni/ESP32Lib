@@ -19,7 +19,7 @@ const int hsyncPin = 32;
 const int vsyncPin = 33;
 
 //VGA Device
-VGA14Bit vga;
+VGA14Bit videodisplay;
 //3D engine
 Engine3D<VGA14Bit> engine(1337);
 
@@ -27,11 +27,11 @@ Engine3D<VGA14Bit> engine(1337);
 void setup()
 {
 	//need double buffering
-	vga.setFrameBufferCount(2);
+	videodisplay.setFrameBufferCount(2);
 	//initializing i2s vga
-	vga.init(VGAMode::MODE200x150, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
+	videodisplay.init(VGAMode::MODE200x150, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
 	//setting the font
-	vga.setFont(Font6x8);
+	videodisplay.setFont(Font6x8);
 }
 
 ///a colorful triangle shader actually calculated per triangle
@@ -50,7 +50,7 @@ VGA14Bit::Color myTriangleShader(int trinangleNo, short *v0, short *v1, short *v
 void drawModel()
 {
 	//perspective transformation
-	static Matrix perspective = Matrix::translation(vga.xres / 2, vga.yres / 2, 0) * Matrix::scaling(100 * vga.pixelAspect(), 100, 100) * Matrix::perspective(90, 1, 10);
+	static Matrix perspective = Matrix::translation(videodisplay.xres / 2, videodisplay.yres / 2, 0) * Matrix::scaling(100 * videodisplay.pixelAspect(), 100, 100) * Matrix::perspective(90, 1, 10);
 	static float u = 0;
 	u += 0.02;
 	//rotate model
@@ -62,9 +62,9 @@ void drawModel()
 	engine.begin();
 	//add this model to the render pipeline. it will sort the triangles from back to front and remove backfaced. The tiangle shader will determine the color of the tirangle.
 	//the RGB color gien in the second parameter is not used in this case but could be used for calculations in the triangle shader
-	model.drawTriangles(engine, vga.RGB(128, 70, 20), myTriangleShader);
+	model.drawTriangles(engine, videodisplay.RGB(128, 70, 20), myTriangleShader);
 	//render all triangles in the pipeline. if you render multiple models you want to do this once at the end
-	engine.end(vga);
+	engine.end(videodisplay);
 }
 
 //just draw each frame
@@ -79,15 +79,15 @@ void loop()
 	oldFps = fps;
 	lastMillis = t;
 	//clear the back buffer
-	vga.clear(0);
+	videodisplay.clear(0);
 	//draw the model
 	drawModel();
 	//reset the text cursor
-	vga.setCursor(0, 0);
+	videodisplay.setCursor(0, 0);
 	//print the stats
-	vga.print("fps: ");
-	vga.print(fps, 1, 4);
-	vga.print(" tris/s: ");
-	vga.print(int(fps * model.triangleCount));
-	vga.show();
+	videodisplay.print("fps: ");
+	videodisplay.print(fps, 1, 4);
+	videodisplay.print(" tris/s: ");
+	videodisplay.print(int(fps * model.triangleCount));
+	videodisplay.show();
 }

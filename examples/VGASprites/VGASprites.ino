@@ -18,39 +18,39 @@ const int hsyncPin = 32;
 const int vsyncPin = 33;
 
 //VGA Device
-VGA14Bit vga;
+VGA14Bit videodisplay;
 
 //initial setup
 void setup()
 {
 	//need double buffering
-	vga.setFrameBufferCount(2);
+	videodisplay.setFrameBufferCount(2);
 	//initializing i2s vga
-	vga.init(VGAMode::MODE200x150, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
+	videodisplay.init(VGAMode::MODE200x150, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
 	//setting the font
-	vga.setFont(Font6x8);
+	videodisplay.setFont(Font6x8);
 }
 
 //just draw each frame
 void loop()
 {
 	//draw a background
-	for (int y = 0; y < vga.yres / 10; y++)
-		for (int x = 0; x < vga.xres / 10; x++)
-			vga.fillRect(x * 10, y * 10, 10, 10, (x + y) & 1 ? vga.RGB(0, 128, 0) : vga.RGB(0, 0, 128));
+	for (int y = 0; y < videodisplay.yres / 10; y++)
+		for (int x = 0; x < videodisplay.xres / 10; x++)
+			videodisplay.fillRect(x * 10, y * 10, 10, 10, (x + y) & 1 ? videodisplay.RGB(0, 128, 0) : videodisplay.RGB(0, 0, 128));
 	//print some labels
-	vga.setCursor(36, 41);
-	vga.print("draw   drawMix  drawAdd");
+	videodisplay.setCursor(36, 41);
+	videodisplay.print("draw   drawMix  drawAdd");
 	//there are 20 sprites for the explosion. The second parameter is the index of the sprite.
 	//We used the milliseconds to calculate the current index of the animation.
 	//the last two parameters is the position. During the conversion of the sprite the origin of each sprite is defined.
 	//check the Utilities folder for the converter
 	//"draw" draws the sprite opaque ignoring any existing alpha channel
-	explosion.draw(vga, (millis() / 50) % 20, vga.xres / 4, vga.yres / 2);
+	explosion.draw(videodisplay, (millis() / 50) % 20, videodisplay.xres / 4, videodisplay.yres / 2);
 	//"drawMix" uses the alpha channel
-	explosion.drawMix(vga, (millis() / 50) % 20, vga.xres / 2, vga.yres / 2);
+	explosion.drawMix(videodisplay, (millis() / 50) % 20, videodisplay.xres / 2, videodisplay.yres / 2);
 	//"drawAdd" adds the color components of the back ground and the sprite
-	explosion.drawAdd(vga, (millis() / 50) % 20, vga.xres * 3 / 4, vga.yres / 2);
+	explosion.drawAdd(videodisplay, (millis() / 50) % 20, videodisplay.xres * 3 / 4, videodisplay.yres / 2);
 	//swap the frame buffers and show the rendering
-	vga.show();
+	videodisplay.show();
 }

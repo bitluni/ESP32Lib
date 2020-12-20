@@ -86,7 +86,7 @@ void IRAM_ATTR MyVGA::custominterruptPixelLine(int y, unsigned long *pixels, uns
 }
 
 //get an instance
-MyVGA vga;
+MyVGA videodisplay;
 
 //initial setup
 void setup()
@@ -113,7 +113,7 @@ void setup()
 		rainbow[i] |= rainbow[(i - 1) & 255] << 16;
 
 	//initializing the vga with a high mode where a frambuffer would never fit into the memory
-	vga.init(VGAMode::MODE500x480, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
+	videodisplay.init(VGAMode::MODE500x480, redPins, greenPins, bluePins, hsyncPin, vsyncPin);
 }
 
 //idle, everything is happening in the interrupt

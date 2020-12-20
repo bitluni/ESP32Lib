@@ -28,7 +28,7 @@ const int vsyncPin = 33;
 WebServer server(80);
 
 //The VGA Device
-VGA3Bit vga;
+VGA3Bit videodisplay;
 
 //include html page
 const char *page =
@@ -45,7 +45,7 @@ void sendPage()
 void text()
 {
 	server.send(200, "text/plain", "ok");
-	vga.println(server.arg(0).c_str());
+	videodisplay.println(server.arg(0).c_str());
 }
 
 ///initialization
@@ -66,16 +66,16 @@ void setup()
 		while (WiFi.status() != WL_CONNECTED)
 		{
 			delay(500);
-			vga.print(".");
+			videodisplay.print(".");
 		}
 	}
 	//start vga on the specified pins
-	vga.init(VGAMode::MODE400x300, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
+	videodisplay.init(VGAMode::MODE400x300, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
 	//make the background blue
-	vga.clear(vga.RGBA(0, 0, 255));
-	vga.backColor = vga.RGB(0, 0, 255);
+	videodisplay.clear(videodisplay.RGBA(0, 0, 255));
+	videodisplay.backColor = videodisplay.RGB(0, 0, 255);
 	//select the font
-	vga.setFont(Font6x8);
+	videodisplay.setFont(Font6x8);
 
 	//send page on http://<ip>/
 	server.on("/", sendPage);
@@ -85,27 +85,27 @@ void setup()
 	server.begin();
 
 	//display some text header on the screen including the ip
-	vga.clear(vga.RGBA(0, 0, 255));
-	vga.setCursor(0, 0);
-	vga.println("----------------------");
-	vga.println("bitluni's VGA Terminal");
+	videodisplay.clear(videodisplay.RGBA(0, 0, 255));
+	videodisplay.setCursor(0, 0);
+	videodisplay.println("----------------------");
+	videodisplay.println("bitluni's VGA Terminal");
 	if (AccessPointMode)
 	{
-		vga.print("SSID: ");
-		vga.println(ssid);
+		videodisplay.print("SSID: ");
+		videodisplay.println(ssid);
 		if (strlen(password))
 		{
-			vga.print("password: ");
-			vga.println(password);
+			videodisplay.print("password: ");
+			videodisplay.println(password);
 		}
-		vga.println("http://192.168.4.1");
+		videodisplay.println("http://192.168.4.1");
 	}
 	else
 	{
-		vga.print("http://");
-		vga.println(WiFi.localIP().toString().c_str());
+		videodisplay.print("http://");
+		videodisplay.println(WiFi.localIP().toString().c_str());
 	}
-	vga.println("----------------------");
+	videodisplay.println("----------------------");
 }
 
 void loop()

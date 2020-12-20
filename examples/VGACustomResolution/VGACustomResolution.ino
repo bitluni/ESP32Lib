@@ -16,13 +16,13 @@ const int vsyncPin = 33;
 
 //VGA Device using an interrupt to unpack the pixels from 4bit to 16bit for the I²S
 //This takes some CPU time in the background but is able to fit a frame buffer in the memory
-VGA3Bit vga;
+VGA3Bit videodisplay;
 
 void setup()
 {
 	Serial.begin(115200);
 	//enabling double buffering
-	vga.setFrameBufferCount(2);
+	videodisplay.setFrameBufferCount(2);
 	//Mode::custom(xres, yres, fixedYDivider = 1) calculates the parameters for our custom resolution.
 	//the y resolution is only scaling integer divisors (yet).
 	//if you don't like to let it scale automatically pass a fixed parameter with a fixed divider.
@@ -30,16 +30,16 @@ void setup()
 	//print the parameters
 	myMode.print<HardwareSerial>(Serial);
 	//use the mode
-	vga.init(myMode, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
+	videodisplay.init(myMode, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
 	//setting the font
-	vga.setFont(Font6x8);
+	videodisplay.setFont(Font6x8);
 }
 
 ///draws a bouncing balls
 void balls()
 {
 	//some basic gravity physics
-	static VGA3BitI::Color c[4] = {vga.RGB(0, 255, 0), vga.RGB(0, 255, 255), vga.RGB(255, 0, 255), vga.RGB(255, 255, 0)};
+	static VGA3BitI::Color c[4] = {videodisplay.RGB(0, 255, 0), videodisplay.RGB(0, 255, 255), videodisplay.RGB(255, 0, 255), videodisplay.RGB(255, 255, 0)};
 	static float y[4] = {20, 20, 20, 20};
 	static float x[4] = {20, 20, 20, 20};
 	static float vx[4] = {.01, -0.07, .05, -.03};
@@ -67,14 +67,14 @@ void balls()
 			vx[i] = -vx[i];
 			rx = x[i];
 		}
-		if (x[i] >= vga.xres - r && vx[i] > 0)
+		if (x[i] >= videodisplay.xres - r && vx[i] > 0)
 		{
 			vx[i] = -vx[i];
-			rx = vga.xres - x[i];
+			rx = videodisplay.xres - x[i];
 		}
 		//draw a filled ellipse
-		vga.fillEllipse(x[i], vga.yres - y[i] - 1, rx, ry, c[i]);
-		vga.ellipse(x[i], vga.yres - y[i] - 1, rx, ry, 0);
+		videodisplay.fillEllipse(x[i], videodisplay.yres - y[i] - 1, rx, ry, c[i]);
+		videodisplay.ellipse(x[i], videodisplay.yres - y[i] - 1, rx, ry, 0);
 	}
 }
 
@@ -82,21 +82,21 @@ void balls()
 void loop()
 {
 	//draw a background
-	for (int y = 0; y * 10 < vga.yres; y++)
-		for (int x = 0; x * 10 < vga.xres; x++)
-			vga.fillRect(x * 10, y * 10, 10, 10, (x + y) & 1 ? vga.RGB(255, 0, 0) : vga.RGB(255, 255, 255));
+	for (int y = 0; y * 10 < videodisplay.yres; y++)
+		for (int x = 0; x * 10 < videodisplay.xres; x++)
+			videodisplay.fillRect(x * 10, y * 10, 10, 10, (x + y) & 1 ? videodisplay.RGB(255, 0, 0) : videodisplay.RGB(255, 255, 255));
 	//text position
-	vga.setCursor(2, 2);
+	videodisplay.setCursor(2, 2);
 	//black text color no background color
-	vga.setTextColor(vga.RGB(0));
+	videodisplay.setTextColor(videodisplay.RGB(0));
 	//show the remaining memory
-	vga.print(vga.xres);
-	vga.print("x");
-	vga.println(vga.yres);
-	vga.print("free memory: ");
-	vga.print((int)heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
+	videodisplay.print(videodisplay.xres);
+	videodisplay.print("x");
+	videodisplay.println(videodisplay.yres);
+	videodisplay.print("free memory: ");
+	videodisplay.print((int)heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
 	//draw bouncing balls
 	balls();
 	//show the backbuffer (only needed when using backbuffering)
-	vga.show();
+	videodisplay.show();
 }

@@ -7,7 +7,7 @@
 #include <Ressources/Font6x8.h>
 
 //VGA Device
-VGA6Bit vga;
+VGA6Bit videodisplay;
 //Pin presets are avaialable for: VGAv01, VGABlackEdition, VGAWhiteEdition, PicoVGA
 const PinConfig &pinConfig = VGA6Bit::PicoVGA;
 
@@ -55,8 +55,8 @@ void renderTask(void *param)
       for(int x = data[1]; x < data[2]; x++)
       {
         int c = colors[julia(x, y, -0.74543f, v)];
-        vga.dotFast(x, y, c);
-        vga.dotFast(319 - x, 199 - y, c);
+        videodisplay.dotFast(x, y, c);
+        videodisplay.dotFast(319 - x, 199 - y, c);
       }
     data[0] = 0;
   }
@@ -66,7 +66,7 @@ void renderTask(void *param)
 void setup()
 {
 	//initializing i2s vga (with only one framebuffer)
-	vga.init(VGAMode::MODE320x200, pinConfig);
+	videodisplay.init(VGAMode::MODE320x200, pinConfig);
   TaskHandle_t xHandle = NULL;
   xTaskCreatePinnedToCore(renderTask, "Render1", 2000, taskData[0],  ( 2 | portPRIVILEGE_BIT ), &xHandle, 0);
   xTaskCreatePinnedToCore(renderTask, "Render2", 2000, taskData[1],  ( 2 | portPRIVILEGE_BIT ), &xHandle, 1);

@@ -42,29 +42,29 @@
 //pin configuration for DAC
 const int outputPin = 25;
 
-CompositeGrayDAC display;
-//CompositeGrayLadder display;
+CompositeGrayDAC videodisplay;
+//CompositeGrayLadder videodisplay;
 
 void setup()
 {
   //initializing composite at the specified pins
   //output pin and boolean for voltage divider can be omitted
   //see Composite/CompMode.h for other modes
-  display.init(CompMode::MODEPAL288P, 25, false);
-  //display.init(CompMode::MODEPAL288P, display.XPlayer);
+  videodisplay.init(CompMode::MODEPAL288P, 25, false);
+  //videodisplay.init(CompMode::MODEPAL288P, videodisplay.XPlayer);
 
   //selecting the font
-  display.setFont(Font6x8);
+  videodisplay.setFont(Font6x8);
   //displaying the test pattern
-  display.rect(30, 88, 255+5, 40+4, 127);
+  videodisplay.rect(30, 88, 255+5, 40+4, 127);
   for(int x = 0; x < 256; x++)
   {
-    display.fillRect(x + 32, 90, 1, 40, x);
+    videodisplay.fillRect(x + 32, 90, 1, 40, x);
     if(x % 16 == 0)
     {
-      display.fillRect(x + 32, 85, 1, 4, 255);
-      display.setCursor(x + 32 - 3, 78);
-      display.print(x,HEX);
+      videodisplay.fillRect(x + 32, 85, 1, 4, 255);
+      videodisplay.setCursor(x + 32 - 3, 78);
+      videodisplay.print(x,HEX);
     }
   }
 }

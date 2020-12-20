@@ -14,7 +14,7 @@ const int hsyncPin = 32;
 const int vsyncPin = 33;
 
 //VGA Device
-VGA1BitI vga;
+VGA1BitI videodisplay;
 
 const uint8_t frontColors[] = {0x2,0x0,0x1,0x4,0x1,0x7,0x3};
 const uint8_t backColors[] = {0x0,0x7,0x0,0x6,0x7,0x0,0x4};
@@ -22,40 +22,40 @@ const uint8_t backColors[] = {0x0,0x7,0x0,0x6,0x7,0x0,0x4};
 void setup()
 {
 	//initializing vga at the specified pins
-	vga.init(VGAMode::MODE320x240, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
+	videodisplay.init(VGAMode::MODE320x240, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
 	//selecting the font
-	vga.setFont(Font6x8);
-  vga.setCursor(120,115);
+	videodisplay.setFont(Font6x8);
+  videodisplay.setCursor(120,115);
   //displaying the text
 	//default coloring
-	vga.println("Hello World!");
+	videodisplay.println("Hello World!");
 	delay(10000);
 	//custom coloring
   for(int i = 0; i < 10; i++)
   {
-    vga.setFrontGlobalColor(0,0,255);
-    vga.setBackGlobalColor(0,0,0);
+    videodisplay.setFrontGlobalColor(0,0,255);
+    videodisplay.setBackGlobalColor(0,0,0);
     delay(500);
-  	vga.setFrontGlobalColor(255,255,0);
-  	vga.setBackGlobalColor(0,0,255);
+  	videodisplay.setFrontGlobalColor(255,255,0);
+  	videodisplay.setBackGlobalColor(0,0,255);
     delay(500);
   }
   delay(2000);
-	vga.clear();
+	videodisplay.clear();
 }
 
 void loop()
 {
 	for(int i = 0; i < 10; i++)
 	{
-		vga.setCursor(random(1,300),random(1,220));
-		vga.println("Hello World!");
+		videodisplay.setCursor(random(1,300),random(1,220));
+		videodisplay.println("Hello World!");
 		delay(250);
 	}
 	delay(1500);
-	vga.clear();
+	videodisplay.clear();
 	static int currentpalette = 0;
-	vga.frontGlobalColor = frontColors[currentpalette];
-	vga.backGlobalColor = backColors[currentpalette];
+	videodisplay.frontGlobalColor = frontColors[currentpalette];
+	videodisplay.backGlobalColor = backColors[currentpalette];
 	currentpalette = (currentpalette + 1)%sizeof(frontColors);
 }

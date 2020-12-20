@@ -9,8 +9,8 @@
 #include <Fonts/FreeSerif9pt7b.h>
 
 //VGA Device
-VGA6Bit vga;
-GfxWrapper<VGA6Bit> gfx(vga, 640, 400);
+VGA6Bit videodisplay;
+GfxWrapper<VGA6Bit> gfx(videodisplay, 640, 400);
 
 //initial setup
 void setup()
@@ -18,7 +18,7 @@ void setup()
 	//initializing i2s vga (with only one framebuffer)
   //Pin presets are avaialable for: VGAv01, VGABlackEdition, VGAWhiteEdition, PicoVGA
   //But you can also use custom pins. Check the other examples
-	vga.init(VGAMode::MODE640x400, vga.VGABlackEdition);
+	videodisplay.init(VGAMode::MODE640x400, videodisplay.VGABlackEdition);
 	//using adafruit gfx
   gfx.setFont(&FreeMonoBoldOblique24pt7b);
   gfx.setCursor(100, 100);
