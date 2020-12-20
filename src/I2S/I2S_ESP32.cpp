@@ -14,6 +14,9 @@
 #include <soc/rtc.h>
 #include <driver/rtc_io.h>
 
+#include "driver/dac.h"
+
+
 i2s_dev_t *i2sDevices[] = {&I2S0, &I2S1};
 
 I2S::I2S(const int i2sIndex)
@@ -371,6 +374,16 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, const int b
 	if(useInterrupt())
 		esp_intr_alloc(interruptSource[i2sIndex], ESP_INTR_FLAG_INTRDISABLED | ESP_INTR_FLAG_LEVEL3 | ESP_INTR_FLAG_IRAM, &interruptStatic, this, &interruptHandle);
 	return true;
+}
+
+void I2S::enableDAC(int selectedDACs)
+{
+	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
+	i2s.conf2.lcd_en = 1;
+	i2s.conf.tx_right_first = 1;
+	i2s.conf2.camera_en = 0;
+	dac_i2s_enable();
+	dac_output_enable(selectedDACs==1?DAC_CHANNEL_1:DAC_CHANNEL_2);
 }
 
 void I2S::setAPLLClock(long sampleRate, int bitCount)
