@@ -45,7 +45,7 @@ void bitluni(int x, int y, int s)
 void setup()
 {
 	//initializing the graphics mode
-	vga.init(vga.MODE800x600, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
+	vga.init(VGAMode::MODE800x600, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
 	//setting the font
 	vga.setFont(Font6x8);
 	//clearing with white background

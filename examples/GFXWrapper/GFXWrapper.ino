@@ -18,7 +18,7 @@ void setup()
 	//initializing i2s vga (with only one framebuffer)
   //Pin presets are avaialable for: VGAv01, VGABlackEdition, VGAWhiteEdition, PicoVGA
   //But you can also use custom pins. Check the other examples
-	vga.init(vga.MODE640x400, vga.VGABlackEdition);
+	vga.init(VGAMode::MODE640x400, vga.VGABlackEdition);
 	//using adafruit gfx
   gfx.setFont(&FreeMonoBoldOblique24pt7b);
   gfx.setCursor(100, 100);

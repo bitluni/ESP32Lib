@@ -1,5 +1,5 @@
 /*
-	Author: bitluni 2019
+	Author: bitluni 2019, refactoring by Martin-Laclaustra 2020
 	License: 
 	Creative Commons Attribution ShareAlike 4.0
 	https://creativecommons.org/licenses/by-sa/4.0/
@@ -9,43 +9,174 @@
 		https://github.com/bitluni
 		http://bitluni.net
 */
+
+/*
+Virtual function still needed in child classes
+Color** allocateFrameBuffer()
+Most virtual functions have been moved to templated static inheritance:
+
+Inherited from InterfaceColor
+typedef TYPE Color
+colormask()
+Color RGBA(int r, int g, int b, int a = 255) const
+int R(Color c) const
+int G(Color c) const
+int B(Color c) const
+int A(Color c) const
+
+These functions are wrapped in virtual methods
+void _dotFast(int x, int y, Color color)
+Color _getFast(int x, int y)
+
+They are composed of smaller components:
+
+Inherited from BufferLayout
+typedef TYPE BufferUnit
+xpixperunit
+ypixperunit
+bufferdatamask
+replicate (unused)
+replicate32
+swx
+swy
+shval
+shbuf
+
+Inherited from ColorToBuffer
+coltobuf
+buftocol
+*/
+
 #pragma once
 #include <stdlib.h>
 #include <math.h>
 #include "Font.h"
 #include "ImageDrawer.h"
 
-template<typename Color>
-class Graphics: public ImageDrawer
+#include "InterfaceColors.h"
+#include "BufferLayouts.h"
+#include "ColorToBuffer.h"
+
+// Color defines the interface color, all interactions should use this
+// BufferUnit defines how the color is actually stored in memory
+template<class InterfaceColor, class BufferLayout, class ColorToBuffer>
+class Graphics: public ImageDrawer, public InterfaceColor, public BufferLayout, public ColorToBuffer
 {
   public:
-	int cursorX, cursorY, cursorBaseX;
-	long frontColor, backColor;
+	typedef typename InterfaceColor::Color Color;
+	typedef typename BufferLayout::BufferUnit BufferUnit;
+	int cursorX, cursorY, cursorBaseX, cursorXIncrement, cursorYIncrement;
+	Color frontColor, backColor;
 	Font *font;
 	int frameBufferCount;
 	int currentFrameBuffer;
-	Color **frameBuffers[3];
-	Color **frontBuffer;
-	Color **backBuffer;
+	BufferUnit **frameBuffers[3];
+	BufferUnit **frontBuffer;
+	BufferUnit **backBuffer;
 	bool autoScroll;
+	size_t sizeOfBufferUnit = sizeof(BufferUnit);
+	int storageCoefficient = 1; //number of pixels in an BufferUnit variable
+	int defaultBufferValue = 0;
 
 	int xres;
 	int yres;
 
-	virtual void dotFast(int x, int y, Color color) = 0;
-	virtual void dot(int x, int y, Color color) = 0;
-	virtual void dotAdd(int x, int y, Color color) = 0;
-	virtual void dotMix(int x, int y, Color color) = 0;
-	virtual Color get(int x, int y) = 0;
-	virtual Color** allocateFrameBuffer() = 0;
-	virtual Color** allocateFrameBuffer(int xres, int yres, Color value)
+	void _dotFast(int x, int y, Color color)
 	{
-		Color** frame = (Color **)malloc(yres * sizeof(Color *));
+		//basic concept
+		//backBuffer[y][x] = color;
+		//decide x or y position[sw] -> shift depending (or not) on x or y[shval] -> mask[colormask] -> erase bits
+		backBuffer[BufferLayout::static_swy(y)][BufferLayout::static_swx(x)] &= ~BufferLayout::static_shval(InterfaceColor::static_colormask(), x, y); // delete bits
+		//mask[colormask] -> convert to buffer[coltobuf] -> shift depending (or not) on x or y[shval] -> decide x or y position[sw] -> store data
+		backBuffer[BufferLayout::static_swy(y)][BufferLayout::static_swx(x)] |= BufferLayout::static_shval(ColorToBuffer::coltobuf(color & InterfaceColor::static_colormask(), x, y), x, y); // write new bits
+	}
+	virtual void dotFast(int x, int y, Color color)
+	{
+		_dotFast(x, y, color);
+	}
+	virtual void dot(int x, int y, Color color)
+	{
+		if ((unsigned int)x < xres && (unsigned int)y < yres)
+			_dotFast(x, y, color);
+	}
+	virtual void dotAdd(int x, int y, Color color)
+	{
+		Color oldColor = get(x, y);
+		Color newColor = colorAdd(oldColor, color);
+		dot(x, y, newColor);
+	}
+	virtual void dotMix(int x, int y, Color color)
+	{
+		Color oldColor = get(x, y);
+		Color newColor = colorMix(oldColor, color);
+		dot(x, y, newColor);
+	}
+	Color _getFast(int x, int y)
+	{
+		//basic concept
+		//return backBuffer[y][x];
+		//decide x or y position[sw] -> retrieve data -> shift depending (or not) on x or y[shbuf] -> mask[colormask] -> convert to color[buftocol]
+		return ColorToBuffer::buftocol(BufferLayout::static_shbuf(backBuffer[BufferLayout::static_swy(y)][BufferLayout::static_swx(x)], x, y) & InterfaceColor::static_colormask());
+	}
+	virtual Color getFast(int x, int y)
+	{
+		return _getFast(x, y);
+	}
+	virtual Color get(int x, int y)
+	{
+		if ((unsigned int)x < xres && (unsigned int)y < yres)
+			return _getFast(x, y);
+		return 0;
+	}
+	//virtual BufferUnit** allocateFrameBuffer() = 0;
+	virtual BufferUnit** allocateFrameBuffer()
+	{
+		//GraphicsCA8Swapped
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)levelBlack);
+		//GraphicsR5G5B4S2Swapped
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)SBits);
+		//GraphicsX8CA8Swapped
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)levelBlack<<8);
+		//GraphicsX6S2W8RangedSwapped
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)(colorMinValue<<8)|SBits);
+		//GraphicsW8RangedSwapped
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)colorMinValue);
+		//GraphicsTextBuffer
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)32);
+		//GraphicsW8
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)0);
+		//GraphicsW1
+		//return Graphics::allocateFrameBuffer(4*((xres + 3) / 4), (yres + static_ypixperunit() - 1) / static_ypixperunit(), (BufferUnit)0);
+		//GraphicsR5G5B4A2
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)0);
+		//GraphicsR2G2B2S2Swapped
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)SBits);
+		//GraphicsR2G2B2A2
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)0);
+		//GraphicsR1G1B1X3S2Swapped
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)SBits);
+		//GraphicsR1G1B1A1
+		//return Graphics::allocateFrameBuffer((xres + static_xpixperunit() - 1) / static_xpixperunit(), yres, (BufferUnit)0);
+		return Graphics::allocateFrameBuffer(
+			(xres + BufferLayout::static_xpixperunit() - 1) / BufferLayout::static_xpixperunit(),
+			(yres + BufferLayout::static_ypixperunit() - 1) / BufferLayout::static_ypixperunit(),
+			(BufferUnit)defaultBufferValue);
+		//TODO Fixes:
+		// - round up x to multiples of 4 bytes (when necessary: in GraphicsW1 for renderer, in DMA buffers)
+		//TODO:
+		// - calculate and use byte-based allocation instead of unit/pixel based allocation
+		//   (at this stage for some buffers the size of the buffer =/= xres, so in the next function "xres" is not such any more)
+		// - move elsewhere: acondition the buffer with the fixed sync bytes or blank values
+		//   this has to be done for all buffers allocated (front, back, and reserve)
+	}
+	virtual BufferUnit** allocateFrameBuffer(int xres, int yres, BufferUnit value)
+	{
+		BufferUnit** frame = (BufferUnit **)malloc(yres * sizeof(BufferUnit *));
 		if(!frame)
-			ERROR("Not enough memory for frame buffer");				
+			ERROR("Not enough memory for frame buffer");
 		for (int y = 0; y < yres; y++)
 		{
-			frame[y] = (Color *)malloc(xres * sizeof(Color));
+			frame[y] = (BufferUnit *)malloc(xres * sizeof(BufferUnit));
 			if(!frame[y])
 				ERROR("Not enough memory for frame buffer");
 			for (int x = 0; x < xres; x++)
@@ -53,11 +184,75 @@ class Graphics: public ImageDrawer
 		}
 		return frame;
 	}
-	virtual Color RGBA(int r, int g, int b, int a = 255) const = 0;
-	virtual int R(Color c) const = 0;
-	virtual int G(Color c) const = 0;
-	virtual int B(Color c) const = 0;
-	virtual int A(Color c) const = 0;
+	static void **allocateRegularBufferArray(int count, int bytes)
+	{
+		void **arr = (void **)malloc(count * sizeof(void *));
+		if(!arr)
+			ERROR("Not enough regular memory");
+		for (int i = 0; i < count; i++)
+		{
+			arr[i] = (void *)malloc(bytes);
+			if(!arr[i])
+				ERROR("Not enough regular memory");
+		}
+		return arr;
+	}
+	virtual Color colorAdd(Color colorOld, Color colorNew)
+	{
+		return InterfaceColor::static_colorAdd(colorOld, colorNew);
+	}
+	// Generic function currently not in use
+	//virtual Color colorAdd(Color colorOld, Color colorNew)
+	//{
+		//int newR = R(colorOld)+R(colorNew);
+		//newR = (newR > 255) ? 255 : newR;
+		//int newG = G(colorOld)+G(colorNew);
+		//newG = (newG > 255) ? 255 : newG;
+		//int newB = B(colorOld)+B(colorNew);
+		//newB = (newB > 255) ? 255 : newB;
+		//int newA = A(colorOld)+A(colorNew);
+		//newA = (newA > 255) ? 255 : newA;
+		//return RGBA(newR, newG, newB, newA);
+	//}
+	virtual Color colorMix(Color colorOld, Color colorNew)
+	{
+		return InterfaceColor::static_colorMix(colorOld, colorNew);
+	}
+	// Generic function currently not in use
+	//virtual Color colorMix(Color colorOld, Color colorNew)
+	//{
+		//int colorNewA = A(colorNew);
+		//if (colorNewA != 0)
+		//{
+			//colorNewA = colorNewA + 1;
+			//int newR = (R(colorOld)*(256-colorNewA)+R(colorNew)*colorNewA)>>8;
+			//int newG = (G(colorOld)*(256-colorNewA)+G(colorNew)*colorNewA)>>8;
+			//int newB = (B(colorOld)*(256-colorNewA)+B(colorNew)*colorNewA)>>8;
+			//return RGBA(newR, newG, newB);
+		//} else {
+			//return colorOld;
+		//}
+	//}
+	virtual Color RGBA(int r, int g, int b, int a = 255) const
+	{
+		return InterfaceColor::static_RGBA(r, g, b, a);
+	}
+	virtual int R(Color c) const
+	{
+		return InterfaceColor::static_R(c);
+	}
+	virtual int G(Color c) const
+	{
+		return InterfaceColor::static_G(c);
+	}
+	virtual int B(Color c) const
+	{
+		return InterfaceColor::static_B(c);
+	}
+	virtual int A(Color c) const
+	{
+		return InterfaceColor::static_A(c);
+	}
 	Color RGB(unsigned long rgb) const 
 	{
 		return RGBA(rgb & 255, (rgb >> 8) & 255, (rgb >> 16) & 255);
@@ -91,6 +286,7 @@ class Graphics: public ImageDrawer
 		this->yres = yres;
 		font = 0;
 		cursorX = cursorY = cursorBaseX = 0;
+		cursorXIncrement = cursorYIncrement = 1;
 		frontColor = -1;
 		backColor = 0;
 		frameBufferCount = 1;
@@ -130,9 +326,11 @@ class Graphics: public ImageDrawer
 		backColor = back;
 	}
 
-	void setFont(Font &font)
+	virtual void setFont(Font &font)
 	{
 		this->font = &font;
+		cursorXIncrement = this->font->charWidth;
+		cursorYIncrement = this->font->charHeight;
 	}
 
 	void setCursor(int x, int y)
@@ -164,13 +362,13 @@ class Graphics: public ImageDrawer
 			drawChar(cursorX, cursorY, ch);
 		else
 			drawChar(cursorX, cursorY, ' ');		
-		cursorX += font->charWidth;
-		if (cursorX + font->charWidth > xres)
+		cursorX += cursorXIncrement;
+		if (cursorX + cursorXIncrement > xres)
 		{
 			cursorX = cursorBaseX;
-			cursorY += font->charHeight;
-			if(autoScroll && cursorY + font->charHeight > yres)
-				scroll(cursorY + font->charHeight - yres, backColor);
+			cursorY += cursorYIncrement;
+			if(autoScroll && cursorY + cursorYIncrement > yres)
+				scroll(cursorY + cursorYIncrement - yres, backColor);
 		}
 	}
 
@@ -189,7 +387,7 @@ class Graphics: public ImageDrawer
 			if(*str == '\n')
 			{
 				cursorX = cursorBaseX;
-				cursorY += font->charHeight;
+				cursorY += cursorYIncrement;
 			}
 			else
 				print(*str);
@@ -593,7 +791,7 @@ class Graphics: public ImageDrawer
 		{
 			for(int d = 0; d < dy; d++)
 			{
-				Color *l = backBuffer[0];
+				BufferUnit *l = backBuffer[0];
 				for(int i = 0; i < yres - 1; i++)
 				{
 					backBuffer[i] = backBuffer[i + 1];
@@ -606,7 +804,7 @@ class Graphics: public ImageDrawer
 		{
 			for(int d = 0; d < -dy; d++)
 			{
-				Color *l = backBuffer[yres - 1];
+				BufferUnit *l = backBuffer[yres - 1];
 				for(int i = 1; i < yres; i++)
 				{
 					backBuffer[i] = backBuffer[i - 1];
