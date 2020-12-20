@@ -15,7 +15,13 @@
 #include "Mode.h"
 #include "PinConfig.h"
 
-class VGA : public I2S
+// for back compatibility reasons, allow recalling "pre-configured" modes within the class
+// it might be deprecated in a major version increase
+#include "VGAMode.h"
+
+// for back compatibility reasons, allow recalling "pre-configured" modes within the class
+// by inheriting VGAMode class it might be deprecated in a major version increase
+class VGA : public I2S, public VGAMode
 {
   public:
 	VGA(const int i2sIndex = 0);
