@@ -1,7 +1,7 @@
 #include <ESP32Lib.h>
 #include <Ressources/CodePage437_8x16.h>
 
-CompositeL8 comp;
+CompositeGrayLadder comp;
 GameControllers cont;
 const int controllerPins[] = {33, 34, 35, 36, 39, 23, 18, 19, 5, 16};
 //const int controllerPins[] = {36, 34};
@@ -19,20 +19,20 @@ int winner = -1;
 void initGame()
 {
   comp.clear(comp.RGB(0, 0, 0));
-  comp.rect(0, 0, 360, 270, 255);
+  comp.rect(0, 0, comp.xres, comp.yres, comp.RGB(128, 128, 128));
   for(int i = 0; i < 10; i++)
   {
     if(i < 5)
     {
-      player[i][0] = 100 + 40 * i;
-      player[i][1] = 135 - 25; 
+      player[i][0] = comp.xres/2 + (comp.xres/7) * (i) - (2*comp.xres/7);
+      player[i][1] = comp.yres/2 - 25; 
       player[i][2] = 0;
       player[i][3] = -1; 
     }
     else
     {
-      player[i][0] = 100 + 40 * i - 200;
-      player[i][1] = 135 + 25; 
+      player[i][0] = comp.xres/2 + (comp.xres/7) * (i - 5) - (2*comp.xres/7);
+      player[i][1] = comp.yres/2 + 25; 
       player[i][2] = 0;
       player[i][3] = 1;     
     }
@@ -118,8 +118,9 @@ void setup()
   cont.setControllers(cont.SNES, 10, controllerPins);
   //we need double buffering for smooth animations
   //comp.setFrameBufferCount(2);
-  comp.init(comp.MODE400x300, comp.XPlayer);
-  comp.MODE400x300.print(Serial);
+  //comp.init(CompMode::MODEPAL288P, comp.XPlayer);
+  //in the line below a modified MODEPAL288P is used, trimmed for overscan and centered
+  comp.init(ModeComposite(12+20, 38, 62+20, 400-40,  1+10,  6, 5, 5, 15+18, 288-28, 0, 0, 0, 0, 1, 8000000), comp.XPlayer);
   //selecting the font
   comp.setFont(CodePage437_8x16);
   comp.setTextColor(comp.RGB(255, 255, 255), comp.RGB(0, 0, 0));  
