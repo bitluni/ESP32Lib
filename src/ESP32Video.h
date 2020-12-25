@@ -18,6 +18,8 @@
 #include <Composite/CompositeGrayLadder.h>
 #include <Composite/CompositeColorDAC.h>
 #include <Composite/CompositeColorLadder.h>
+#include <Composite/CompositeColorDACMemory.h>
+#include <Composite/CompositeColorLadderMemory.h>
 
 #include <LED/SerialLED.h>
 #include <LED/ParallelLED.h>
