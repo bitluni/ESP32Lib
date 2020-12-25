@@ -1,7 +1,7 @@
 #include <ESP32Lib.h>
 #include <Ressources/CodePage437_8x16.h>
 
-CompositeGrayLadder comp;
+CompositeGrayLadder videodisplay;
 GameControllers cont;
 const int controllerPins[] = {33, 34, 35, 36, 39, 23, 18, 19, 5, 16};
 //const int controllerPins[] = {36, 34};
@@ -18,29 +18,29 @@ int winner = -1;
 
 void initGame()
 {
-  comp.clear(comp.RGB(0, 0, 0));
-  comp.rect(0, 0, comp.xres, comp.yres, comp.RGB(128, 128, 128));
+  videodisplay.clear(videodisplay.RGB(0, 0, 0));
+  videodisplay.rect(0, 0, videodisplay.xres, videodisplay.yres, videodisplay.RGB(128, 128, 128));
   for(int i = 0; i < 10; i++)
   {
     if(i < 5)
     {
-      player[i][0] = comp.xres/2 + (comp.xres/7) * (i) - (2*comp.xres/7);
-      player[i][1] = comp.yres/2 - 25; 
+      player[i][0] = videodisplay.xres/2 + (videodisplay.xres/7) * (i) - (2*videodisplay.xres/7);
+      player[i][1] = videodisplay.yres/2 - 25; 
       player[i][2] = 0;
       player[i][3] = -1; 
     }
     else
     {
-      player[i][0] = comp.xres/2 + (comp.xres/7) * (i - 5) - (2*comp.xres/7);
-      player[i][1] = comp.yres/2 + 25; 
+      player[i][0] = videodisplay.xres/2 + (videodisplay.xres/7) * (i - 5) - (2*videodisplay.xres/7);
+      player[i][1] = videodisplay.yres/2 + 25; 
       player[i][2] = 0;
       player[i][3] = 1;     
     }
     player[i][4] = -1;
-    comp.dot(player[i][0], player[i][1], 254 - i * 10);
+    videodisplay.dot(player[i][0], player[i][1], 254 - i * 10);
   }
-  comp.setCursor(80, 125);
-  comp.print("Get Ready and press [Start]");
+  videodisplay.setCursor(80, 125);
+  videodisplay.print("Get Ready and press [Start]");
 }
 
 
@@ -76,7 +76,7 @@ void processPlayers()
       }
       player[i][0] += player[i][2];
       player[i][1] += player[i][3];
-      int pix = comp.get(player[i][0], player[i][1]);
+      int pix = videodisplay.get(player[i][0], player[i][1]);
       //Serial.print(pix);
       //Serial.print(" ");
       if(pix > 100)
@@ -85,7 +85,7 @@ void processPlayers()
       }
       else
       {
-        comp.dot(player[i][0], player[i][1], 254 - i * 10);
+        videodisplay.dot(player[i][0], player[i][1], 254 - i * 10);
         living++;
         lastLiving = i;
       }
@@ -94,18 +94,18 @@ void processPlayers()
     {
       ended = true;
       winner = lastLiving;
-      comp.setCursor(30, 125); 
+      videodisplay.setCursor(30, 125); 
       if(winner == -1)
       {
-        comp.setCursor(120, 125); 
-        comp.print("Draw. Press [Start]"); 
+        videodisplay.setCursor(120, 125); 
+        videodisplay.print("Draw. Press [Start]"); 
       }
       else
       {
-        comp.setCursor(30, 125); 
-        comp.print("Player ");
-        comp.print(winner);
-        comp.print(". You are winner! Press [Start]"); 
+        videodisplay.setCursor(30, 125); 
+        videodisplay.print("Player ");
+        videodisplay.print(winner);
+        videodisplay.print(". You are winner! Press [Start]"); 
       }
     }
     //Serial.println();
@@ -117,19 +117,19 @@ void setup()
   cont.init(latchPin, clockPin);
   cont.setControllers(cont.SNES, 10, controllerPins);
   //we need double buffering for smooth animations
-  //comp.setFrameBufferCount(2);
-  //comp.init(CompMode::MODEPAL288P, comp.XPlayer);
+  //videodisplay.setFrameBufferCount(2);
+  //videodisplay.init(CompMode::MODEPAL288P, videodisplay.XPlayer);
   //in the line below a modified MODEPAL288P is used, trimmed for overscan and centered
-  comp.init(ModeComposite(12+20, 38, 62+20, 400-40,  1+10,  6, 5, 5, 15+18, 288-28, 0, 0, 0, 0, 1, 8000000), comp.XPlayer);
+  videodisplay.init(ModeComposite(12+20, 38, 62+20, 400-40,  1+10,  6, 5, 5, 15+18, 288-28, 0, 0, 0, 0, 1, 8000000), videodisplay.XPlayer);
   //selecting the font
-  comp.setFont(CodePage437_8x16);
-  comp.setTextColor(comp.RGB(255, 255, 255), comp.RGB(0, 0, 0));  
+  videodisplay.setFont(CodePage437_8x16);
+  videodisplay.setTextColor(videodisplay.RGB(255, 255, 255), videodisplay.RGB(0, 0, 0));  
   /*
-  comp.setTextColor(comp.RGB(255, 255, 0), comp.RGB(0, 255, 255));
-  comp.println("CodePage437_8x16");
+  videodisplay.setTextColor(videodisplay.RGB(255, 255, 0), videodisplay.RGB(0, 255, 255));
+  videodisplay.println("CodePage437_8x16");
   for (int i = 0; i < 256; i++)
-    comp.print((char)i);
-  comp.println();*/
+    videodisplay.print((char)i);
+  videodisplay.println();*/
   initGame();
 }
 
@@ -155,7 +155,7 @@ void loop()
       if(cont.pressed(i, GameControllers::START))
       {
         started = true;
-        comp.fillRect(10, 120, 340, 30, comp.RGB(0, 0, 0));
+        videodisplay.fillRect(10, 120, 340, 30, videodisplay.RGB(0, 0, 0));
         break;
       }
     return;
@@ -178,6 +178,6 @@ void loop()
     stepT = 0;
     processPlayers();
   }
-  //comp.rect(0, 0, 360, 270, 255);
-  //comp.show();
+  //videodisplay.rect(0, 0, 360, 270, 255);
+  //videodisplay.show();
 }
