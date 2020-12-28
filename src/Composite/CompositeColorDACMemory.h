@@ -30,10 +30,6 @@
 #include "Composite.h"
 #include "../Graphics/GraphicsM8CA8Swapped.h"
 
-#include "driver/dac.h"
-
-#include <soc/rtc.h>
-#include <driver/rtc_io.h>
 
 class CompositeColorDACMemory : public Composite, public GraphicsM8CA8Swapped
 {
@@ -108,7 +104,6 @@ class CompositeColorDACMemory : public Composite, public GraphicsM8CA8Swapped
 
 	bool initDAC(const ModeComposite &mode, const int *pinMap, const int bitCount, const int clockPin)
 	{
-		i2s_dev_t *i2sDevices[] = {&I2S0, &I2S1};
 		this->mode = mode;
 		int xres = mode.hRes;
 		int yres = mode.vRes / mode.vDiv;
@@ -118,12 +113,7 @@ class CompositeColorDACMemory : public Composite, public GraphicsM8CA8Swapped
 		currentLine = 0;
 		vSyncPassed = false;
 		initParallelOutputMode(pinMap, mode.pixelClock, bitCount, clockPin);
-		volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
-		i2s.conf2.lcd_en = 1;
-		i2s.conf.tx_right_first = 1;
-		i2s.conf2.camera_en = 0;
-		dac_i2s_enable();
-		dac_output_enable(outputPin==25?DAC_CHANNEL_1:DAC_CHANNEL_2);
+		enableDAC(outputPin==25?1:2);
 		startTX();
 		return true;
 	}
