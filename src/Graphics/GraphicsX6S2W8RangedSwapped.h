@@ -16,7 +16,7 @@ class GraphicsX6S2W8RangedSwapped: public Graphics<ColorW8, BLpx1sz16sw1sh8, CTB
 {
 	public:
 	//TODO:this must disappear and be tackled in the VGA class
-	BufferUnit SBits;
+	BufferGraphicsUnit SBits;
 
 	GraphicsX6S2W8RangedSwapped()
 	{
@@ -28,7 +28,7 @@ class GraphicsX6S2W8RangedSwapped: public Graphics<ColorW8, BLpx1sz16sw1sh8, CTB
 
 	virtual void clear(Color color = 0)
 	{
-		BufferUnit newColor = (BufferUnit)static_shval(coltobuf(color & static_colormask(), 0, 0), 0, 0) | SBits;
+		BufferGraphicsUnit newColor = (BufferGraphicsUnit)static_shval(coltobuf(color & static_colormask(), 0, 0), 0, 0) | SBits;
 		for (int y = 0; y < this->yres; y++)
 			for (int x = 0; x < this->xres; x++)
 				backBuffer[y][x] = newColor;

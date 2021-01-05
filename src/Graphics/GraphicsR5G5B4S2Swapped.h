@@ -15,7 +15,7 @@
 class GraphicsR5G5B4S2Swapped: public Graphics<ColorR5G5B4A2, BLpx1sz16sw1sh0, CTBIdentity>
 {
 	public:
-	BufferUnit SBits;
+	BufferGraphicsUnit SBits;
 
 	GraphicsR5G5B4S2Swapped()
 	{

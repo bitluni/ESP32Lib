@@ -64,17 +64,17 @@ class Graphics: public ImageDrawer, public InterfaceColor, public BufferLayout, 
 {
   public:
 	typedef typename InterfaceColor::Color Color;
-	typedef typename BufferLayout::BufferUnit BufferUnit;
+	typedef typename BufferLayout::BufferUnit BufferGraphicsUnit;
 	int cursorX, cursorY, cursorBaseX, cursorXIncrement, cursorYIncrement;
 	Color frontColor, backColor;
 	Font *font;
 	int frameBufferCount;
 	int currentFrameBuffer;
-	BufferUnit **frameBuffers[3];
-	BufferUnit **frontBuffer;
-	BufferUnit **backBuffer;
+	BufferGraphicsUnit **frameBuffers[3];
+	BufferGraphicsUnit **frontBuffer;
+	BufferGraphicsUnit **backBuffer;
 	bool autoScroll;
-	size_t sizeOfBufferUnit = sizeof(BufferUnit);
+	size_t sizeOfBufferUnit = sizeof(BufferGraphicsUnit);
 	int storageCoefficient = 1; //number of pixels in an BufferUnit variable
 	int defaultBufferValue = 0;
 
@@ -128,39 +128,39 @@ class Graphics: public ImageDrawer, public InterfaceColor, public BufferLayout, 
 			return _getFast(x, y);
 		return 0;
 	}
-	//virtual BufferUnit** allocateFrameBuffer() = 0;
-	virtual BufferUnit** allocateFrameBuffer()
+	//virtual BufferGraphicsUnit** allocateFrameBuffer() = 0;
+	virtual BufferGraphicsUnit** allocateFrameBuffer()
 	{
 		//GraphicsCA8Swapped
-		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)levelBlack);
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferGraphicsUnit)levelBlack);
 		//GraphicsR5G5B4S2Swapped
-		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)SBits);
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferGraphicsUnit)SBits);
 		//GraphicsX8CA8Swapped
-		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)levelBlack<<8);
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferGraphicsUnit)levelBlack<<8);
 		//GraphicsX6S2W8RangedSwapped
-		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)(colorMinValue<<8)|SBits);
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferGraphicsUnit)(colorMinValue<<8)|SBits);
 		//GraphicsW8RangedSwapped
-		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)colorMinValue);
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferGraphicsUnit)colorMinValue);
 		//GraphicsTextBuffer
-		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)32);
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferGraphicsUnit)32);
 		//GraphicsW8
-		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)0);
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferGraphicsUnit)0);
 		//GraphicsW1
-		//return Graphics::allocateFrameBuffer(4*((xres + 3) / 4), (yres + static_ypixperunit() - 1) / static_ypixperunit(), (BufferUnit)0);
+		//return Graphics::allocateFrameBuffer(4*((xres + 3) / 4), (yres + static_ypixperunit() - 1) / static_ypixperunit(), (BufferGraphicsUnit)0);
 		//GraphicsR5G5B4A2
-		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)0);
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferGraphicsUnit)0);
 		//GraphicsR2G2B2S2Swapped
-		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)SBits);
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferGraphicsUnit)SBits);
 		//GraphicsR2G2B2A2
-		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)0);
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferGraphicsUnit)0);
 		//GraphicsR1G1B1X3S2Swapped
-		//return Graphics::allocateFrameBuffer(xres, yres, (BufferUnit)SBits);
+		//return Graphics::allocateFrameBuffer(xres, yres, (BufferGraphicsUnit)SBits);
 		//GraphicsR1G1B1A1
-		//return Graphics::allocateFrameBuffer((xres + static_xpixperunit() - 1) / static_xpixperunit(), yres, (BufferUnit)0);
+		//return Graphics::allocateFrameBuffer((xres + static_xpixperunit() - 1) / static_xpixperunit(), yres, (BufferGraphicsUnit)0);
 		return Graphics::allocateFrameBuffer(
 			(xres + BufferLayout::static_xpixperunit() - 1) / BufferLayout::static_xpixperunit(),
 			(yres + BufferLayout::static_ypixperunit() - 1) / BufferLayout::static_ypixperunit(),
-			(BufferUnit)defaultBufferValue);
+			(BufferGraphicsUnit)defaultBufferValue);
 		//TODO Fixes:
 		// - round up x to multiples of 4 bytes (when necessary: in GraphicsW1 for renderer, in DMA buffers)
 		//TODO:
@@ -169,14 +169,14 @@ class Graphics: public ImageDrawer, public InterfaceColor, public BufferLayout, 
 		// - move elsewhere: acondition the buffer with the fixed sync bytes or blank values
 		//   this has to be done for all buffers allocated (front, back, and reserve)
 	}
-	virtual BufferUnit** allocateFrameBuffer(int xres, int yres, BufferUnit value)
+	virtual BufferGraphicsUnit** allocateFrameBuffer(int xres, int yres, BufferGraphicsUnit value)
 	{
-		BufferUnit** frame = (BufferUnit **)malloc(yres * sizeof(BufferUnit *));
+		BufferGraphicsUnit** frame = (BufferGraphicsUnit **)malloc(yres * sizeof(BufferGraphicsUnit *));
 		if(!frame)
 			ERROR("Not enough memory for frame buffer");
 		for (int y = 0; y < yres; y++)
 		{
-			frame[y] = (BufferUnit *)malloc(xres * sizeof(BufferUnit));
+			frame[y] = (BufferGraphicsUnit *)malloc(xres * sizeof(BufferGraphicsUnit));
 			if(!frame[y])
 				ERROR("Not enough memory for frame buffer");
 			for (int x = 0; x < xres; x++)
@@ -791,7 +791,7 @@ class Graphics: public ImageDrawer, public InterfaceColor, public BufferLayout, 
 		{
 			for(int d = 0; d < dy; d++)
 			{
-				BufferUnit *l = backBuffer[0];
+				BufferGraphicsUnit *l = backBuffer[0];
 				for(int i = 0; i < yres - 1; i++)
 				{
 					backBuffer[i] = backBuffer[i + 1];
@@ -804,7 +804,7 @@ class Graphics: public ImageDrawer, public InterfaceColor, public BufferLayout, 
 		{
 			for(int d = 0; d < -dy; d++)
 			{
-				BufferUnit *l = backBuffer[yres - 1];
+				BufferGraphicsUnit *l = backBuffer[yres - 1];
 				for(int i = 1; i < yres; i++)
 				{
 					backBuffer[i] = backBuffer[i - 1];

@@ -25,7 +25,7 @@ class GraphicsW8RangedSwapped: public Graphics<ColorW8, BLpx1sz8sw2sh0, CTBRange
 
 	virtual void clear(Color color = 0)
 	{
-		BufferUnit newColor = (BufferUnit)static_shval(coltobuf(color & static_colormask(), 0, 0), 0, 0);
+		BufferGraphicsUnit newColor = (BufferGraphicsUnit)static_shval(coltobuf(color & static_colormask(), 0, 0), 0, 0);
 		for (int y = 0; y < this->yres; y++)
 			for (int x = 0; x < this->xres; x++)
 				backBuffer[y][x] = newColor;

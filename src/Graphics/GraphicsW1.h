@@ -29,7 +29,7 @@ class GraphicsW1: public Graphics<ColorW1X7, BLpx8sz8swyshy, CTBIdentity>
 
 	virtual void clear(Color color = 0)
 	{
-		BufferUnit storeWord = (color & 0x1) * 0b11111111; // masked for robustness
+		BufferGraphicsUnit storeWord = (color & 0x1) * 0b11111111; // masked for robustness
 		for (int y = 0; y < (yres + static_ypixperunit() - 1) / static_ypixperunit(); y++)
 			for (int x = 0; x < xres; x++)
 				backBuffer[y][x] = storeWord;

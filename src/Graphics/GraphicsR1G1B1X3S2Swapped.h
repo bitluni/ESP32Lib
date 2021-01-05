@@ -16,7 +16,7 @@ class GraphicsR1G1B1X3S2Swapped: public Graphics<ColorR1G1B1A1X4, BLpx1sz8sw2sh0
 {
 	public:
 	//TODO:this must disappear and be tackled in the VGA class
-	BufferUnit SBits;
+	BufferGraphicsUnit SBits;
 	
 	GraphicsR1G1B1X3S2Swapped()
 	{
