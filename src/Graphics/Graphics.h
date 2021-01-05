@@ -805,7 +805,7 @@ class Graphics: public ImageDrawer, public InterfaceColor, public BufferLayout, 
 			for(int d = 0; d < -dy; d++)
 			{
 				BufferGraphicsUnit *l = backBuffer[yres - 1];
-				for(int i = 1; i < yres; i++)
+				for(int i = yres - 1; i > 0; i--)
 				{
 					backBuffer[i] = backBuffer[i - 1];
 				}
