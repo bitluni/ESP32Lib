@@ -37,7 +37,7 @@ class VGA : public I2S, public VGAMode, public VGAPinConfig
 		this->lineBufferCount = lineBufferCount;
 	}
 
-	bool init(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin = -1)
+	virtual bool init(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin = -1)
 	{
 		this->mode = mode;
 		int xres = mode.hRes;
