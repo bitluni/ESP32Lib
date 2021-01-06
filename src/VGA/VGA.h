@@ -78,11 +78,6 @@ class VGA : public I2S, public VGAMode, public VGAPinConfig
 	int totalLines;
 	volatile bool vSyncPassed;
 
-	void *vSyncInactiveBuffer;
-	void *vSyncActiveBuffer;
-	void *inactiveBuffer;
-	void *blankActiveBuffer;
-
 	// simple ringbuffer of blocks of size bytes each
 	void allocateLineBuffers(const int lines)
 	{
@@ -105,6 +100,11 @@ class VGA : public I2S, public VGAMode, public VGAPinConfig
 	//complete ringbuffer from frame
 	virtual void allocateLineBuffers(void **frameBuffer)
 	{
+		void *vSyncInactiveBuffer;
+		void *vSyncActiveBuffer;
+		void *inactiveBuffer;
+		void *blankActiveBuffer;
+
 		dmaBufferDescriptorCount = totalLines * 2;
 		int inactiveSamples = (mode.hFront + mode.hSync + mode.hBack + 3) & 0xfffffffc;
 		vSyncInactiveBuffer = DMABufferDescriptor::allocateBuffer(inactiveSamples * bytesPerSample(), true);
