@@ -15,24 +15,20 @@
 #include "Mode.h"
 #include "PinConfig.h"
 
-// for back compatibility reasons, allow recalling "pre-configured" modes within the class
+// for back compatibility reasons, allow recalling "pre-configured" modes and PinConfigs within the class
 // it might be deprecated in a major version increase
 #include "VGAMode.h"
+#include "VGAPinConfig.h"
 
-// for back compatibility reasons, allow recalling "pre-configured" modes within the class
-// by inheriting VGAMode class it might be deprecated in a major version increase
-class VGA : public I2S, public VGAMode
+// for back compatibility reasons, allow recalling "pre-configured" modes and PinConfigs within the class
+// by inheriting VGAMode and VGAPinConfig classes, it might be deprecated in a major version increase
+class VGA : public I2S, public VGAMode, public VGAPinConfig
 {
   public:
 	VGA(const int i2sIndex = 0);
 	void setLineBufferCount(int lineBufferCount);
 	bool init(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin = -1);
 	virtual bool init(const Mode &mode, const PinConfig &pinConfig) = 0;
-
-	static const PinConfig VGAv01;
-	static const PinConfig VGABlackEdition;
-	static const PinConfig VGAWhiteEdition;
-	static const PinConfig PicoVGA;
 
 
 	Mode mode;
