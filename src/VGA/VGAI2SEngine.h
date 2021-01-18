@@ -80,7 +80,7 @@ class VGAI2SEngine : public VGA, public BufferLayout
 
 	BufferRendererUnit * getBufferDescriptor(int y, int bufferIndex = 0)
 	{
-		return (BufferRendererUnit *) dmaBufferDescriptors[indexRendererDataBuffer[bufferIndex] + y*mode.vDiv * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes;
+		return (BufferRendererUnit *) (dmaBufferDescriptors[indexRendererDataBuffer[bufferIndex] + y*mode.vDiv * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
 	}
 
 	void switchToRendererBuffer(int bufferNumber)
