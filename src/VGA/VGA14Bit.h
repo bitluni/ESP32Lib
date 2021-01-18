@@ -10,15 +10,17 @@
 		http://bitluni.net
 */
 #pragma once
-#include "VGA.h"
-#include "../Graphics/GraphicsR5G5B4S2Swapped.h"
+#include "VGAI2SEngine.h"
+#include "../Graphics/Graphics.h"
+//#include "../Graphics/GraphicsR5G5B4S2Swapped.h"
 
-class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
+class VGA14Bit : public VGAI2SEngine<BLpx1sz16sw1sh0>, public Graphics<ColorR5G5B4A2, BLpx1sz16sw1sh0, CTBIdentity>
 {
   public:
 	VGA14Bit(const int i2sIndex = 1)
-		: VGA(i2sIndex)
+		: VGAI2SEngine<BLpx1sz16sw1sh0>(i2sIndex)
 	{
+		frontColor = 0xffff;
 	}
 
 	bool init(Mode &mode,
@@ -27,19 +29,21 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 			  const int B0Pin, const int B1Pin, const int B2Pin, const int B3Pin,
 			  const int hsyncPin, const int vsyncPin, const int clockPin = -1)
 	{
-		int pinMap[16] = {
+		const int bitCount = 16;
+		int pinMap[bitCount] = {
 			R0Pin, R1Pin, R2Pin, R3Pin, R4Pin,
 			G0Pin, G1Pin, G2Pin, G3Pin, G4Pin,
 			B0Pin, B1Pin, B2Pin, B3Pin,
 			hsyncPin, vsyncPin
 		};
 
-		return VGA::init(mode, pinMap, 16, clockPin);
+		return initoverlappingbuffers(mode, pinMap, bitCount, clockPin);
 	}
 
 	bool init(const Mode &mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin, const int clockPin = -1)
 	{
-		int pinMap[16];
+		const int bitCount = 16;
+		int pinMap[bitCount];
 		for (int i = 0; i < 5; i++)
 		{
 			pinMap[i] = redPins[i];
@@ -48,39 +52,51 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 				pinMap[i + 10] = bluePins[i];
 		}
 		pinMap[14] = hsyncPin;
-		pinMap[15] = vsyncPin;			
-		return VGA::init(mode, pinMap, 16, clockPin);
+		pinMap[15] = vsyncPin;
+
+		return initoverlappingbuffers(mode, pinMap, bitCount, clockPin);
 	}
 
 	bool init(const Mode &mode, const PinConfig &pinConfig)
 	{
-		int pins[16];
-		pinConfig.fill14Bit(pins);
-		return VGA::init(mode, pins, 16, pinConfig.clock);
+		const int bitCount = 16;
+		int pinMap[bitCount];
+		pinConfig.fill14Bit(pinMap);
+		int clockPin = pinConfig.clock;
+
+		return initoverlappingbuffers(mode, pinMap, bitCount, clockPin);
+	}
+
+	//THE REST OF THE FILE IS SHARED CODE BETWEEN 3BIT, 6BIT, AND 14BIT
+
+	static const int bitMaskInRenderingBufferHSync()
+	{
+		return 1<<(8*bytesPerBufferUnit()-2);
+	}
+
+	static const int bitMaskInRenderingBufferVSync()
+	{
+		return 1<<(8*bytesPerBufferUnit()-1);
+	}
+
+	bool initoverlappingbuffers(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin = -1)
+	{
+		lineBufferCount = mode.vRes / mode.vDiv; // yres
+		rendererBufferCount = frameBufferCount;
+		return initengine(mode, pinMap, bitCount, clockPin, 2); // 2 buffers per line
 	}
 
 	virtual void initSyncBits()
 	{
-		hsyncBitI = mode.hSyncPolarity ? 0x4000 : 0;
-		vsyncBitI = mode.vSyncPolarity ? 0x8000 : 0;
-		hsyncBit = hsyncBitI ^ 0x4000;
-		vsyncBit = vsyncBitI ^ 0x8000;
-		SBits = hsyncBitI | vsyncBitI;
+		hsyncBitI = mode.hSyncPolarity ? (bitMaskInRenderingBufferHSync()) : 0;
+		vsyncBitI = mode.vSyncPolarity ? (bitMaskInRenderingBufferVSync()) : 0;
+		hsyncBit = hsyncBitI ^ (bitMaskInRenderingBufferHSync());
+		vsyncBit = vsyncBitI ^ (bitMaskInRenderingBufferVSync());
 	}
 
 	virtual long syncBits(bool hSync, bool vSync)
 	{
-		return ((hSync ? hsyncBit : hsyncBitI) | (vSync ? vsyncBit : vsyncBitI)) * 0x10001;
-	}
-
-	virtual int bytesPerSample() const
-	{
-		return 2;
-	}
-
-	virtual float pixelAspect() const
-	{
-		return 1;
+		return ((hSync ? hsyncBit : hsyncBitI) | (vSync ? vsyncBit : vsyncBitI)) * rendererStaticReplicate32();
 	}
 
 	virtual void propagateResolution(const int xres, const int yres)
@@ -88,39 +104,42 @@ class VGA14Bit : public VGA, public GraphicsR5G5B4S2Swapped
 		setResolution(xres, yres);
 	}
 
-	virtual BufferUnit **allocateFrameBuffer()
-	{
-		return (BufferUnit **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, syncBits(false, false));
-	}
+	int currentBufferToAssign = 0;
 
-	virtual void allocateLineBuffers()
+	virtual BufferGraphicsUnit **allocateFrameBuffer()
 	{
-		VGA::allocateLineBuffers((void **)frameBuffers[0]);
+		void **arr = (void **)malloc(yres * sizeof(void *));
+		if(!arr)
+			ERROR("Not enough memory");
+		for (int y = 0; y < yres; y++)
+		{
+			arr[y] = (void *)getBufferDescriptor(y, currentBufferToAssign);
+		}
+		currentBufferToAssign++;
+		return (BufferGraphicsUnit **)arr;
 	}
 
 	virtual void show(bool vSync = false)
 	{
 		if (!frameBufferCount)
 			return;
-		if (vSync)
-		{
-			//TODO read the I2S docs to find out
-		}
+
 		Graphics::show(vSync);
-		if(dmaBufferDescriptors)
-			for (int i = 0; i < yres * mode.vDiv; i++)
-				dmaBufferDescriptors[(mode.vFront + mode.vSync + mode.vBack + i) * 2 + 1].setBuffer(frontBuffer[i / mode.vDiv], mode.hRes * bytesPerSample());
+		switchToRendererBuffer(currentFrameBuffer);
 	}
 
 	virtual void scroll(int dy, Color color)
 	{
 		Graphics::scroll(dy, color);
-		if (frameBufferCount == 1)
-			show();
-	}
-
-  protected:
-	virtual void interrupt()
-	{
+		if(dmaBufferDescriptors)
+			for (int i = 0; i < yres * mode.vDiv; i++)
+				dmaBufferDescriptors[
+						indexRendererDataBuffer[(currentFrameBuffer + frameBufferCount - 1) % frameBufferCount]
+						 + i * descriptorsPerLine + descriptorsPerLine - 1
+					].setBuffer(
+							((uint8_t *) backBuffer[i / mode.vDiv]) - dataOffsetInLineInBytes
+							,
+							((descriptorsPerLine > 1)?mode.hRes:mode.pixelsPerLine()) * bytesPerBufferUnit()/samplesPerBufferUnit()
+						);
 	}
 };
