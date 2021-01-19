@@ -137,6 +137,16 @@ class VGA14Bit : public VGAI2SEngine<BLpx1sz16sw1sh0>, public Graphics<ColorR5G5
 
 		Graphics::show(vSync);
 		switchToRendererBuffer(currentFrameBuffer);
+		// wait at least one frame
+		// else the switch does not take place for the display
+		// until the frame is completed
+		// and drawing starts in the backbuffer while still shown
+		if (frameBufferCount == 2) // in triple buffer or single buffer this is not an issue
+		{
+			uint32_t timemark = micros();
+			uint32_t framedurationinus = (uint64_t)mode.pixelsPerLine() * (uint64_t)mode.linesPerField() * (uint64_t)1000000 / (uint64_t)mode.pixelClock;
+			while((micros() - timemark) < framedurationinus){delay(0);}
+		}
 	}
 
 	virtual void scroll(int dy, Color color)
