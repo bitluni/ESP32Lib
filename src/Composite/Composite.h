@@ -15,7 +15,10 @@
 #include "ModeComposite.h"
 #include "PinConfigComposite.h"
 
-class Composite : public I2S
+#include "CompMode.h"
+#include "CompositePinConfig.h"
+
+class Composite : public I2S, public CompMode, public CompositePinConfig
 {
   public:
 	Composite(const int i2sIndex = 0);
@@ -25,9 +28,6 @@ class Composite : public I2S
 	static const ModeComposite MODE400x300;
 	static const ModeComposite MODEPAL312P;
 
-
-	static const PinConfigComposite GameWing;
-	static const PinConfigComposite XPlayer;
 
 	ModeComposite mode;
 

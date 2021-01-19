@@ -26,8 +26,6 @@ const ModeComposite Composite::MODEPAL312P(64, 96, 640, 56, 8, 23, 272, 9, 1, 32
 //const ModeComposite Composite::MODENTSC312P(64, 96, 640, 56, 8, 23, 272, 9, 1, 32, 13333333, 70, 38, 4433619);
 
 //4.43361875 * 4
-const PinConfigComposite Composite::GameWing(22, 14, 32, 15, 33, 27, 12, 13);
-const PinConfigComposite Composite::XPlayer(32, 27, 14, 12, 13, 4, 21, 22);
 
 Composite::Composite(const int i2sIndex)
 	: I2S(i2sIndex)
