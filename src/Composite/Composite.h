@@ -25,10 +25,6 @@ class Composite : public I2S, public CompMode, public CompositePinConfig
 	bool init(const ModeComposite &mode, const int *pinMap, const int bitCount);
 	virtual bool init(const ModeComposite &mode, const PinConfigComposite &pinConfig) = 0;
 
-	static const ModeComposite MODE400x300;
-	static const ModeComposite MODEPAL312P;
-
-
 	ModeComposite mode;
 
 	virtual int bytesPerSample() const = 0;

@@ -32,5 +32,10 @@ class CompMode
 	static const ModeComposite MODEPAL576Idiv3;
 
 	static const ModeComposite MODENTSC240Pmax;
+
+	//OLD MODES
+
+	static const ModeComposite MODE400x300;
+	static const ModeComposite MODEPAL312P;
 };
 
