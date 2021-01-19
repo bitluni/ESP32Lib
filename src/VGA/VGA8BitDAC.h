@@ -72,6 +72,23 @@ class VGA8BitDAC : public VGAI2SEngine<BLpx1sz16sw1sh0>, public GraphicsX6S2W8Ra
 		return initoverlappingbuffers(mode, pinMap, bitCount, clockPin);
 	}
 
+	bool init(const Mode &mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin, const int clockPin = -1, const bool mostSignigicantPinFirst = false)
+	{
+		const int bitCount = 16;
+		int pinMap[bitCount];
+		this->hsyncPin = hsyncPin;
+		this->vsyncPin = vsyncPin;
+		for (int i = 0; i < 16; i++)
+		{
+			pinMap[i] = -1;
+		}
+		pinMap[6] = this->hsyncPin;
+		pinMap[7] = this->vsyncPin;
+		colorDepthConversionFactor = colorMaxValue - colorMinValue + 1;
+
+		return initoverlappingbuffers(mode, pinMap, bitCount, clockPin);
+	}
+
 	bool init(const Mode &mode, const PinConfig &pinConfig)
 	{
 		const int bitCount = 16;

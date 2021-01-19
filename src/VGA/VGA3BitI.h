@@ -37,6 +37,23 @@ class VGA3BitI : public VGAI2SEngine<BLpx1sz8sw2sh0>, public GraphicsR1G1B1A1 //
 		return initdynamicwritetorenderbuffer(mode, pinMap, bitCount, clockPin);
 	}
 
+	bool init(const Mode &mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin, const int clockPin = -1, const bool mostSignigicantPinFirst = false)
+	{
+		const int bitCount = 8;
+		int pinMap[bitCount];
+		for (int i = 0; i < 8; i++)
+		{
+			pinMap[i] = -1;
+		}
+		pinMap[0] = redPins[0];
+		pinMap[1] = greenPins[0];
+		pinMap[2] = bluePins[0];
+		pinMap[6] = hsyncPin;
+		pinMap[7] = vsyncPin;
+
+		return initdynamicwritetorenderbuffer(mode, pinMap, bitCount, clockPin);
+	}
+
 	bool init(const Mode &mode, const PinConfig &pinConfig)
 	{
 		const int bitCount = 8;

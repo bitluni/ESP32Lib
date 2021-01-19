@@ -40,7 +40,7 @@ class VGA6Bit : public VGAI2SEngine<BLpx1sz8sw2sh0>, public Graphics<ColorR2G2B2
 		return initoverlappingbuffers(mode, pinMap, bitCount, clockPin);
 	}
 
-	bool init(const Mode &mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin, const int clockPin = -1)
+	bool init(const Mode &mode, const int *redPins, const int *greenPins, const int *bluePins, const int hsyncPin, const int vsyncPin, const int clockPin = -1, const bool mostSignigicantPinFirst = false)
 	{
 		const int bitCount = 8;
 		int pinMap[bitCount];
@@ -52,6 +52,16 @@ class VGA6Bit : public VGAI2SEngine<BLpx1sz8sw2sh0>, public Graphics<ColorR2G2B2
 		}
 		pinMap[6] = hsyncPin;
 		pinMap[7] = vsyncPin;
+
+		if(mostSignigicantPinFirst)
+		{
+			for (int i = 0; i < 2; i++)
+			{
+				pinMap[i] = redPins[1-i];
+				pinMap[i + 2] = greenPins[1-i];
+				pinMap[i + 4] = bluePins[1-i];
+			}
+		}
 
 		return initoverlappingbuffers(mode, pinMap, bitCount, clockPin);
 	}
