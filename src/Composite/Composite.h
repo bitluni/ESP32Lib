@@ -27,7 +27,7 @@ class Composite : public I2S, public CompMode, public CompositePinConfig
 		dmaBufferDescriptors = 0;
 	}
 
-	bool init(const ModeComposite &mode, const int *pinMap, const int bitCount)
+	virtual bool init(const ModeComposite &mode, const int *pinMap, const int bitCount)
 	{
 		this->mode = mode;
 		int xres = mode.hRes;
