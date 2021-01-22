@@ -100,7 +100,11 @@ class ModeComposite
 		  (
 			(((vOPreRegHL + vOPostRegHL + vEPreRegHL + vEPostRegHL) > 0)?2:1) // fields per frame
 			*
-			(vFront + ((vPreEqHL + vSyncHL + vPostEqHL) / 2) + vBack + vActive) // lines in every field
+			(vFront + vBack + vActive) // lines in every field
+			+
+			( (((vOPreRegHL + vOPostRegHL + vEPreRegHL + vEPostRegHL) > 0)?2:1) // fields per frame
+			*
+			(vPreEqHL + vSyncHL + vPostEqHL) ) / 2
 			+
 			(vOPreRegHL + vOPostRegHL + vEPreRegHL + vEPostRegHL) / 2
 		  )
