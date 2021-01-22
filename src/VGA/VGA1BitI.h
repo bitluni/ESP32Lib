@@ -154,7 +154,7 @@ void IRAM_ATTR VGA1BitI::interrupt(void *arg)
 		);
 
 		int y = renderActiveLine / staticthis->mode.vDiv;
-		if (y >= 0 && y < staticthis->mode.vRes)
+		if (y >= 0 && y < staticthis->yres)
 			staticthis->interruptPixelLine(y, activeRenderingBuffer, arg);
 	}
 
