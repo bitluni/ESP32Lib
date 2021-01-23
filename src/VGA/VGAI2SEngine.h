@@ -54,6 +54,25 @@ class VGAI2SEngine : public VGA, public BufferLayout
 
 	typedef typename BufferLayout::BufferUnit BufferRendererUnit;
 
+	//pass templated functions
+	static int renderer_swx(int x)
+	{
+		return BufferLayout::static_swx(x);
+	}
+	static int renderer_swy(int y)
+	{
+		return BufferLayout::static_swy(y);
+	}
+	static int renderer_shval(BufferRendererUnit val, int x, int y)
+	{
+		return BufferLayout::static_shval(val, x, y);
+	}
+	static int renderer_shbuf(BufferRendererUnit val, int x, int y)
+	{
+		return BufferLayout::static_shbuf(val, x, y);
+	}
+
+
 	int rendererBufferCount;
 	int indexRendererDataBuffer[3];
 	int indexHingeDataBuffer; // last fixed buffer that "jumps" to the active data buffer
