@@ -81,6 +81,36 @@ class Graphics: public ImageDrawer, public InterfaceColor, public BufferLayout, 
 	int xres;
 	int yres;
 
+	//pass templated functions
+	static const int graphics_colormask()
+	{
+		return InterfaceColor::static_colormask();
+	}
+	static int graphics_swx(int x)
+	{
+		return BufferLayout::static_swx(x);
+	}
+	static int graphics_swy(int y)
+	{
+		return BufferLayout::static_swy(y);
+	}
+	static int graphics_shval(BufferGraphicsUnit val, int x, int y)
+	{
+		return BufferLayout::static_shval(val, x, y);
+	}
+	static int graphics_shbuf(BufferGraphicsUnit val, int x, int y)
+	{
+		return BufferLayout::static_shbuf(val, x, y);
+	}
+	static int graphics_coltobuf(int val, int x, int y)
+	{
+		return ColorToBuffer::coltobuf(val, x, y);
+	}
+	static int graphics_buftocol(int val)
+	{
+		return ColorToBuffer::buftocol(val);
+	}
+
 	void _dotFast(int x, int y, Color color)
 	{
 		//basic concept
