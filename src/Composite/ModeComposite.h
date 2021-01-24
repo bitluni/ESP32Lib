@@ -92,8 +92,8 @@ class ModeComposite
 		  aspect(aspect),
 		  vRes(vActive*(((vOPreRegHL + vOPostRegHL + vEPreRegHL + vEPostRegHL) > 0)?2:1)),
 		  activeLineCount( (vActive*(((vOPreRegHL + vOPostRegHL + vEPreRegHL + vEPostRegHL) > 0)?2:1)) / vDiv),
-		  vOddFieldOffset((vPreEqHL + vSyncHL + vPostEqHL + vOPreRegHL + vOPostRegHL) / 2),
-		  vEvenFieldOffset(((vPreEqHL + vSyncHL + vPostEqHL + vOPreRegHL + vOPostRegHL) / 2) + vFront + vBack + vActive + (vPreEqHL + vSyncHL + vPostEqHL + vEPreRegHL + vEPostRegHL) / 2),
+		  vOddFieldOffset((vOPreRegHL + vPreEqHL + vSyncHL + vPostEqHL + vOPostRegHL) / 2),
+		  vEvenFieldOffset(((vOPreRegHL + vPreEqHL + vSyncHL + vPostEqHL + vOPostRegHL) / 2) + vBack + vActive + vFront + ((vEPreRegHL + vPreEqHL + vSyncHL + vPostEqHL + vEPostRegHL) / 2)),
 		  interlaced((vOPreRegHL + vOPostRegHL + vEPreRegHL + vEPostRegHL) > 0),
 		  linesPerFrame(
 		  
