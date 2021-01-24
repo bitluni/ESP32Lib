@@ -62,6 +62,11 @@ class DMABufferDescriptor : protected lldesc_t
 		return (void *)buf;
 	}
 
+	int getSize() const
+	{
+		return (int)size;
+	}
+
 	void init()
 	{
 		length = 0;
