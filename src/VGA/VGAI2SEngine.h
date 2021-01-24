@@ -107,6 +107,32 @@ class VGAI2SEngine : public VGA, public BufferLayout
 		dmaBufferDescriptors[indexHingeDataBuffer].next(dmaBufferDescriptors[indexRendererDataBuffer[bufferNumber]]);
 	}
 
+	void dump()
+	{
+		DEBUG_PRINTLN("");
+		DEBUG_PRINTLN("=================================================");
+		DEBUG_PRINTLN("");
+
+		int byteCounter = 0;
+
+		for (int i = 0; i < dmaBufferDescriptorCount; i++)
+		{
+			uint8_t* currentDMABuffer = (uint8_t*)dmaBufferDescriptors[i].buffer();
+			int currentDMABufferSize = dmaBufferDescriptors[i].getSize();
+			for (int j = 0; j < currentDMABufferSize; j++)
+			{
+				if(byteCounter++ % 32 == 0) DEBUG_PRINT("\n");
+				DEBUG_PRINTF(currentDMABuffer[j],HEX);
+				DEBUG_PRINT(" ");
+			}
+			delay(0);
+		}
+
+		DEBUG_PRINTLN("");
+		DEBUG_PRINTLN("=================================================");
+		DEBUG_PRINTLN("");
+	}
+
 	//complete ringbuffer for frame
 	void allocateRendererBuffers2DescriptorsPerLine()
 	{
