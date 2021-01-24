@@ -11,7 +11,7 @@
 /*
 	CONNECTION
 	
-	A) R–2R resistor ladder; B) unequal rungs ladder
+	A) R-2R resistor ladder; B) unequal rungs ladder
 	
 	   55 shades                  up to 254 shades?
 	
@@ -28,14 +28,15 @@
 	Custom ladders can be used by tweaking colorMinValue and colorMaxValue
 */
 #pragma once
-#include "Composite.h"
+#include "CompositeI2SEngine.h"
+//#include "../Graphics/Graphics.h"
 #include "../Graphics/GraphicsW8RangedSwapped.h"
 
-class CompositeGrayLadder : public Composite, public GraphicsW8RangedSwapped
+class CompositeGrayLadder : public CompositeI2SEngine<BLpx1sz8sw2sh0>, public GraphicsW8RangedSwapped // (=) Graphics<ColorW8, BLpx1sz8sw2sh0, CTBRange>
 {
   public:
 	CompositeGrayLadder() //8 bit based modes only work with I2S1
-		: Composite(1)
+		: CompositeI2SEngine<BLpx1sz8sw2sh0>(1)
 	{
 		colorMinValue = 76;
 		syncLevel = 0;
@@ -49,274 +50,106 @@ class CompositeGrayLadder : public Composite, public GraphicsW8RangedSwapped
 			  const int C4Pin, const int C5Pin,
 			  const int C6Pin, const int C7Pin)
 	{
-		int pinMap[8] = {
+		const int bitCount = 8;
+		int pinMap[bitCount] = {
 			C0Pin, C1Pin,
 			C2Pin, C3Pin,
 			C4Pin, C5Pin,
 			C6Pin, C7Pin
 		};
+		int clockPin = -1;
 
-		//values must be divided to fit 8bits
-		//instead of using a float, bitshift 8 bits to the right later:
-		//colorDepthConversionFactor = (colorMaxValue - colorMinValue + 1)/256;
-		colorDepthConversionFactor = colorMaxValue - colorMinValue + 1;
-		return Composite::init(mode, pinMap, 8);
+		return initoverlappingbuffers(mode, pinMap, bitCount, clockPin);
 	}
 
-	bool init(const ModeComposite &mode, const int *compositePins)
+	bool init(const ModeComposite &mode, const int *pinMap)
 	{
-		colorDepthConversionFactor = colorMaxValue - colorMinValue + 1;
-		return Composite::init(mode, compositePins, 8);
+		const int bitCount = 8;
+		int clockPin = -1;
+
+		return initoverlappingbuffers(mode, pinMap, bitCount, clockPin);
 	}
 
 	bool init(const ModeComposite &mode, const PinConfigComposite &pinConfig)
 	{
+		const int bitCount = 8;
+		int pinMap[bitCount];
+		pinConfig.fill(pinMap);
+		int clockPin = -1;
+
+		return initoverlappingbuffers(mode, pinMap, bitCount, clockPin);
+	}
+
+	bool initoverlappingbuffers(const ModeComposite &mode, const int *pinMap, const int bitCount, const int clockPin = -1)
+	{
+		//values must be divided to fit 8bits
+		//instead of using a float, bitshift 8 bits to the right later:
+		//colorDepthConversionFactor = (colorMaxValue - colorMinValue + 1)/256;
 		colorDepthConversionFactor = colorMaxValue - colorMinValue + 1;
-		int pins[8];
-		pinConfig.fill(pins);
-		return Composite::init(mode, pins, 8);
+
+		baseBufferValue = coltobuf(0,0,0);
+		syncBufferValue = syncLevel;
+
+		lineBufferCount = mode.vRes / mode.vDiv; // yres
+		rendererBufferCount = frameBufferCount;
+		return initengine(mode, pinMap, bitCount, clockPin, 2); // 2 buffers per line
 	}
 
-	virtual int bytesPerSample() const
-	{
-		return 1;
-	}
-
-	virtual float pixelAspect() const
-	{
-		return 1;
-	}
+	//THE REST OF THE FILE IS SHARED CODE BETWEEN ...
 
 	virtual void propagateResolution(const int xres, const int yres)
 	{
 		setResolution(xres, yres);
 	}
 
-	virtual BufferUnit **allocateFrameBuffer()
+	int currentBufferToAssign = 0;
+
+	virtual BufferGraphicsUnit **allocateFrameBuffer()
 	{
-		return (BufferUnit **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, 0x01010101*colorMinValue);
-	}
-
-	virtual void allocateLineBuffers()
-	{
-		allocateLineBuffers((void **)frameBuffers[0]);
-	}
-
-	void *hSyncLineBuffer;
-
-	void *vBlankLineBuffer;
-
-	//Vertical sync
-	//4 possible Half Lines (HL):
-	// NormalFront (NF), NormalBack (NB), Equalizing (EQ), Sync (SY)
-	void *normalFrontLineBuffer;
-	void *equalizingLineBuffer;
-	void *vSyncLineBuffer;
-	void *normalBackLineBuffer;
-
-	//complete ring of buffer descriptors for one frame
-	virtual void allocateLineBuffers(void **frameBuffer)
-	{
-		//lenght of each line
-		int samples = mode.hFront + mode.hSync + mode.hBack + mode.hRes;
-		int bytes = samples * bytesPerSample();
-		int samplesHL = samples/2;
-		int bytesHL = bytes/2;
-		int samplesHSync = mode.hFront + mode.hSync + mode.hBack;
-		int bytesHSync = samplesHSync * bytesPerSample();
-
-		//create and fill the buffers with their default values
-
-		//create the buffers
-		//1 blank prototype line for vFront and vBack
-		vBlankLineBuffer = DMABufferDescriptor::allocateBuffer(bytes, true, 0x01010101*colorMinValue);
-		//1 prototype for each HL type in vSync
-		equalizingLineBuffer = DMABufferDescriptor::allocateBuffer(bytesHL, true, 0x01010101*colorMinValue);
-		vSyncLineBuffer = DMABufferDescriptor::allocateBuffer(bytesHL, true, 0x01010101*colorMinValue);
-		normalFrontLineBuffer = vBlankLineBuffer;
-		normalBackLineBuffer = (void*)&(((uint8_t*)vBlankLineBuffer)[bytesHL]);
-		//1 prototype for hSync
-		hSyncLineBuffer = DMABufferDescriptor::allocateBuffer(bytesHSync, true, 0x01010101*colorMinValue);
-		//n lines as buffer for active lines
-		//already allocated in allocateFrameBuffer
-
-		//fill the buffers with their default values
-		//(bytesPerSample() == 2)(actually only MSByte is used)
-		for (int i = 0; i < samples; i++)
+		void **arr = (void **)malloc(yres * sizeof(void *));
+		if(!arr)
+			ERROR("Not enough memory");
+		for (int y = 0; y < yres; y++)
 		{
-			if (i >= mode.hFront && i < (mode.hFront + mode.hSync))
-			{
-				//blank line
-				((unsigned char *)vBlankLineBuffer)[i ^ 2] = syncLevel;
-				//hsync
-				((unsigned char *)hSyncLineBuffer)[i ^ 2] = syncLevel;
-			}
-			if (i >= mode.hFront && i < (mode.hFront + mode.hSync/2))
-			{
-				//equalizing
-				((unsigned char *)equalizingLineBuffer)[i ^ 2] = syncLevel;
-			}
-			if (i >= mode.hFront && i < (mode.hFront + (samplesHL - mode.hSync)))
-			{
-				//vsync // hFront should never be bigger than hSync or this overflows
-				((unsigned char *)vSyncLineBuffer)[i ^ 2] = syncLevel;
-			}
+			arr[y] = (void *)getBufferDescriptor(y, currentBufferToAssign);
 		}
-
-
-		//allocate DMA buffer descriptors for the whole frame
-		dmaBufferDescriptorCount = mode.linesPerFrame * 2;
-		dmaBufferDescriptors = DMABufferDescriptor::allocateDescriptors(dmaBufferDescriptorCount);
-		//link all buffer descriptors in a ring
-		for (int i = 0; i < dmaBufferDescriptorCount; i++)
-			dmaBufferDescriptors[i].next(dmaBufferDescriptors[(i + 1) % dmaBufferDescriptorCount]);
-
-		//assign the buffers accross the DMA buffer descriptors
-		//CONVENTION: the frame starts after the last non-sync line of previous frame
-		int d = 0;
-		//pre-line
-		int consumelines = mode.vOPreRegHL;
-		while(consumelines>=2)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-			consumelines-=2;
-		}
-		//NF
-		if(consumelines == 1)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-		}
-		//EQ
-		consumelines = mode.vPreEqHL;
-		for (int i = 0; i < consumelines; i++)
-			dmaBufferDescriptors[d++].setBuffer(equalizingLineBuffer, bytesHL);
-		//SY
-		consumelines = mode.vSyncHL;
-		for (int i = 0; i < consumelines; i++)
-			dmaBufferDescriptors[d++].setBuffer(vSyncLineBuffer, bytesHL);
-		//EQ
-		consumelines = mode.vPostEqHL;
-		for (int i = 0; i < consumelines; i++)
-			dmaBufferDescriptors[d++].setBuffer(equalizingLineBuffer, bytesHL);
-		//NB
-		consumelines = mode.vOPostRegHL;
-		if(consumelines & 1 == 1)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-			consumelines--;
-		}
-		//post-line
-		while(consumelines>=2)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-			consumelines-=2;
-		}
-
-		for (int i = 0; i < mode.vBack; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-		}
-		for (int i = 0; i < mode.vActive; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHSync);
-			dmaBufferDescriptors[d++].setBuffer(frameBuffer[(i*(mode.interlaced?2:1) - (mode.interlaced?1:0)) / mode.vDiv], mode.hRes * bytesPerSample());
-		}
-		for (int i = 0; i < mode.vFront; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-		}
-
-		// here d should be linesPerFrame*2 if mode is progressive
-		// and linesPerFrame*2 / 2 if mode is interlaced
-		if(mode.interlaced)
-		{
-
-		//pre-line
-		int consumelines = mode.vEPreRegHL;
-		while(consumelines>=2)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-			consumelines-=2;
-		}
-		//NF
-		if(consumelines == 1)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-		}
-		//EQ
-		consumelines = mode.vPreEqHL;
-		for (int i = 0; i < consumelines; i++)
-			dmaBufferDescriptors[d++].setBuffer(equalizingLineBuffer, bytesHL);
-		//SY
-		consumelines = mode.vSyncHL;
-		for (int i = 0; i < consumelines; i++)
-			dmaBufferDescriptors[d++].setBuffer(vSyncLineBuffer, bytesHL);
-		//EQ
-		consumelines = mode.vPostEqHL;
-		for (int i = 0; i < consumelines; i++)
-			dmaBufferDescriptors[d++].setBuffer(equalizingLineBuffer, bytesHL);
-		//NB
-		consumelines = mode.vEPostRegHL;
-		if(consumelines & 1 == 1)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-			consumelines--;
-		}
-		//post-line
-		while(consumelines>=2)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-			consumelines-=2;
-		}
-
-		for (int i = 0; i < mode.vBack; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-		}
-		for (int i = 0; i < mode.vActive; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHSync);
-			dmaBufferDescriptors[d++].setBuffer(frameBuffer[(i*2) / mode.vDiv], mode.hRes * bytesPerSample());
-		}
-		for (int i = 0; i < mode.vFront; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-		}
-
-		}
+		currentBufferToAssign++;
+		return (BufferGraphicsUnit **)arr;
 	}
 
 	virtual void show(bool vSync = false)
 	{
 		if (!frameBufferCount)
 			return;
-		if (vSync)
-		{
-			//TODO read the I2S docs to find out
-		}
+
 		Graphics::show(vSync);
-		//if(dmaBufferDescriptors)
-		//for (int i = 0; i < yres * mode.vDiv; i++)
-			//dmaBufferDescriptors[(mode.vFront + mode.vSync + mode.vBack + i) * 2 + 1].setBuffer(frontBuffer[i / mode.vDiv], mode.hRes * bytesPerSample());
+		switchToRendererBuffer(currentFrameBuffer);
+		// wait at least one frame
+		// else the switch does not take place for the display
+		// until the frame is completed
+		// and drawing starts in the backbuffer while still shown
+		if (frameBufferCount == 2) // in triple buffer or single buffer this is not an issue
+		{
+			uint32_t timemark = micros();
+			uint32_t framedurationinus = (uint64_t)mode.pixelsPerLine() * (uint64_t)mode.linesPerField() * (uint64_t)1000000 / (uint64_t)mode.pixelClock;
+			while((micros() - timemark) < framedurationinus){delay(0);}
+		}
 	}
 
 	virtual void scroll(int dy, Color color)
 	{
-		Graphics::scroll(dy, color);
-		if (frameBufferCount == 1)
-			show();
-	}
+		//Scroll currently broken in this implementation
 
-  protected:
-	virtual void interrupt()
-	{
+		//Graphics::scroll(dy, color);
+		//if(dmaBufferDescriptors)
+			//for (int i = 0; i < yres * mode.vDiv; i++)
+				//dmaBufferDescriptors[
+						//indexRendererDataBuffer[(currentFrameBuffer + frameBufferCount - 1) % frameBufferCount]
+						 //+ i * descriptorsPerLine + descriptorsPerLine - 1
+					//].setBuffer(
+							//((uint8_t *) backBuffer[i / mode.vDiv]) - dataOffsetInLineInBytes
+							//,
+							//((descriptorsPerLine > 1)?mode.hRes:mode.pixelsPerLine()) * bytesPerBufferUnit()/samplesPerBufferUnit()
+						//);
 	}
 };

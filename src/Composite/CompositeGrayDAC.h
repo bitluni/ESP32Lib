@@ -22,35 +22,40 @@
 	pin26|-                    pin26|-        220 ohm
 	     |                          |
 	     |                          |
-	-----+                     -----+                              
+	-----+                     -----+
 	
 	Connect pin 25 or 26
 */
 #pragma once
-#include "Composite.h"
+#include "CompositeI2SEngine.h"
+//#include "../Graphics/Graphics.h"
 #include "../Graphics/GraphicsX6S2W8RangedSwapped.h"
 
 
-class CompositeGrayDAC : public Composite, public GraphicsX6S2W8RangedSwapped
+class CompositeGrayDAC : public CompositeI2SEngine<BLpx1sz16sw1sh8>, public GraphicsX6S2W8RangedSwapped // (=) Graphics<ColorW8, BLpx1sz16sw1sh8, CTBRange>
 {
   public:
 	CompositeGrayDAC() //DAC based modes only work with I2S0
-		: Composite(0)
+		: CompositeI2SEngine<BLpx1sz16sw1sh8>(0)
 	{
-		lineBufferCount = 3;
 		colorMinValue = 23;
 		syncLevel = 0;
 		colorMaxValue = 77;
 	}
 
+	int outputPin = 25;
+	bool voltageDivider = false;
+
 	bool init(const ModeComposite &mode, const int outputPin = 25, const bool voltageDivider = false)
 	{
-		int pinMap[16] = {
+		const int bitCount = 16;
+		int pinMap[bitCount] = {
 			-1, -1, 
 			-1, -1, -1, -1, -1,
 			-1, -1, -1, -1, -1,
 			-1, -1, -1, -1
 		};
+		int clockPin = -1;
 		this->outputPin = outputPin;
 		this->voltageDivider = voltageDivider;
 		if(voltageDivider)
@@ -59,34 +64,35 @@ class CompositeGrayDAC : public Composite, public GraphicsX6S2W8RangedSwapped
 			syncLevel = 0;
 			colorMaxValue = 255;
 		}
-		//values must be shifted to the MSByte to be output
-		//which is equivalent to multiplying by 256
-		//instead of shifting, do not divide here:
-		//colorDepthConversionFactor = (colorMaxValue - colorMinValue + 1)/256;
-		colorDepthConversionFactor = colorMaxValue - colorMinValue + 1;
-		return initDAC(mode, pinMap, 16, -1);
+
+		return initoverlappingbuffers(mode, pinMap, bitCount, clockPin);
 	}
 
 	bool init(const ModeComposite &mode, const PinConfigComposite &pinConfig)
 	{
-		int pinMap[16] = {
+		const int bitCount = 16;
+		int pinMap[bitCount] = {
 			-1, -1, 
 			-1, -1, -1, -1, -1,
 			-1, -1, -1, -1, -1,
 			-1, -1, -1, -1
 		};
-		colorDepthConversionFactor = colorMaxValue - colorMinValue + 1;
-		return initDAC(mode, pinMap, 16, -1);
+		int clockPin = -1;
+
+		return initoverlappingbuffers(mode, pinMap, bitCount, clockPin);
 	}
 
-	bool initDAC(const ModeComposite &mode, const int *pinMap, const int bitCount, const int clockPin)
+	bool initDAC(const ModeComposite &mode, const int *pinMap, const int bitCount, const int clockPin = -1, int descriptorsPerLine = 2)
 	{
 		this->mode = mode;
 		int xres = mode.hRes;
 		int yres = mode.vRes / mode.vDiv;
-		propagateResolution(xres, yres);
 		totalLines = mode.linesPerFrame;
-		allocateLineBuffers();
+		if(descriptorsPerLine < 1 || descriptorsPerLine > 2) ERROR("Wrong number of descriptors per line");
+		if(descriptorsPerLine == 1) allocateRendererBuffers1DescriptorsPerLine();
+		if(descriptorsPerLine == 2) allocateRendererBuffers2DescriptorsPerLine();
+		propagateResolution(xres, yres);
+		//allocateLineBuffers();
 		currentLine = 0;
 		vSyncPassed = false;
 		initParallelOutputMode(pinMap, mode.pixelClock, bitCount, clockPin);
@@ -95,239 +101,77 @@ class CompositeGrayDAC : public Composite, public GraphicsX6S2W8RangedSwapped
 		return true;
 	}
 
-	virtual int bytesPerSample() const
+	bool initoverlappingbuffers(const ModeComposite &mode, const int *pinMap, const int bitCount, const int clockPin = -1)
 	{
-		return 2;
+		//values must be shifted to the MSByte to be output
+		//which is equivalent to multiplying by 256
+		//instead of shifting, do not divide here:
+		//colorDepthConversionFactor = (colorMaxValue - colorMinValue + 1)/256;
+		colorDepthConversionFactor = colorMaxValue - colorMinValue + 1;
+
+		baseBufferValue = coltobuf(0,0,0);
+		syncBufferValue = syncLevel;
+
+		lineBufferCount = mode.vRes / mode.vDiv; // yres
+		rendererBufferCount = frameBufferCount;
+		return initDAC(mode, pinMap, bitCount, clockPin, 2); // 2 buffers per line
 	}
 
-	virtual float pixelAspect() const
-	{
-		return 1;
-	}
+	//THE REST OF THE FILE IS SHARED CODE BETWEEN ...
 
 	virtual void propagateResolution(const int xres, const int yres)
 	{
 		setResolution(xres, yres);
 	}
 
-	int outputPin = 25;
-	bool voltageDivider = false;
+	int currentBufferToAssign = 0;
 
-	virtual BufferUnit **allocateFrameBuffer()
+	virtual BufferGraphicsUnit **allocateFrameBuffer()
 	{
-		return (BufferUnit **)DMABufferDescriptor::allocateDMABufferArray(yres, mode.hRes * bytesPerSample(), true, 0x01000100*colorMinValue);
-	}
-
-	virtual void allocateLineBuffers()
-	{
-		allocateLineBuffers((void **)frameBuffers[0]);
-	}
-
-	void *hSyncLineBuffer;
-
-	void *vBlankLineBuffer;
-
-	//Vertical sync
-	//4 possible Half Lines (HL):
-	// NormalFront (NF), NormalBack (NB), Equalizing (EQ), Sync (SY)
-	void *normalFrontLineBuffer;
-	void *equalizingLineBuffer;
-	void *vSyncLineBuffer;
-	void *normalBackLineBuffer;
-
-	//complete ring of buffer descriptors for one frame
-	virtual void allocateLineBuffers(void **frameBuffer)
-	{
-		//lenght of each line
-		int samples = mode.hFront + mode.hSync + mode.hBack + mode.hRes;
-		int bytes = samples * bytesPerSample();
-		int samplesHL = samples/2;
-		int bytesHL = bytes/2;
-		int samplesHSync = mode.hFront + mode.hSync + mode.hBack;
-		int bytesHSync = samplesHSync * bytesPerSample();
-
-		//create and fill the buffers with their default values
-
-		//create the buffers
-		//1 blank prototype line for vFront and vBack
-		vBlankLineBuffer = DMABufferDescriptor::allocateBuffer(bytes, true, 0x01000100*colorMinValue);
-		//1 prototype for each HL type in vSync
-		equalizingLineBuffer = DMABufferDescriptor::allocateBuffer(bytesHL, true, 0x01000100*colorMinValue);
-		vSyncLineBuffer = DMABufferDescriptor::allocateBuffer(bytesHL, true, 0x01000100*colorMinValue);
-		normalFrontLineBuffer = vBlankLineBuffer;
-		normalBackLineBuffer = (void*)&(((uint8_t*)vBlankLineBuffer)[bytesHL]);
-		//1 prototype for hSync
-		hSyncLineBuffer = DMABufferDescriptor::allocateBuffer(bytesHSync, true, 0x01000100*colorMinValue);
-		//n lines as buffer for active lines
-		//already allocated in allocateFrameBuffer
-
-		//fill the buffers with their default values
-		//(bytesPerSample() == 2)(actually only MSByte is used)
-		for (int i = 0; i < samples; i++)
+		void **arr = (void **)malloc(yres * sizeof(void *));
+		if(!arr)
+			ERROR("Not enough memory");
+		for (int y = 0; y < yres; y++)
 		{
-			if (i >= mode.hFront && i < (mode.hFront + mode.hSync))
-			{
-				//blank line
-				((unsigned short *)vBlankLineBuffer)[i ^ 1] = syncLevel << 8;
-				//hsync
-				((unsigned short *)hSyncLineBuffer)[i ^ 1] = syncLevel << 8;
-			}
-			if (i >= mode.hFront && i < (mode.hFront + mode.hSync/2))
-			{
-				//equalizing
-				((unsigned short *)equalizingLineBuffer)[i ^ 1] = syncLevel << 8;
-			}
-			if (i >= mode.hFront && i < (mode.hFront + (samplesHL - mode.hSync)))
-			{
-				//vsync // hFront should never be bigger than hSync or this overflows
-				((unsigned short *)vSyncLineBuffer)[i ^ 1] = syncLevel << 8;
-			}
+			arr[y] = (void *)getBufferDescriptor(y, currentBufferToAssign);
 		}
-
-
-		//allocate DMA buffer descriptors for the whole frame
-		dmaBufferDescriptorCount = mode.linesPerFrame * 2;
-		dmaBufferDescriptors = DMABufferDescriptor::allocateDescriptors(dmaBufferDescriptorCount);
-		//link all buffer descriptors in a ring
-		for (int i = 0; i < dmaBufferDescriptorCount; i++)
-			dmaBufferDescriptors[i].next(dmaBufferDescriptors[(i + 1) % dmaBufferDescriptorCount]);
-
-		//assign the buffers accross the DMA buffer descriptors
-		//CONVENTION: the frame starts after the last non-sync line of previous frame
-		int d = 0;
-		//pre-line
-		int consumelines = mode.vOPreRegHL;
-		while(consumelines>=2)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-			consumelines-=2;
-		}
-		//NF
-		if(consumelines == 1)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-		}
-		//EQ
-		consumelines = mode.vPreEqHL;
-		for (int i = 0; i < consumelines; i++)
-			dmaBufferDescriptors[d++].setBuffer(equalizingLineBuffer, bytesHL);
-		//SY
-		consumelines = mode.vSyncHL;
-		for (int i = 0; i < consumelines; i++)
-			dmaBufferDescriptors[d++].setBuffer(vSyncLineBuffer, bytesHL);
-		//EQ
-		consumelines = mode.vPostEqHL;
-		for (int i = 0; i < consumelines; i++)
-			dmaBufferDescriptors[d++].setBuffer(equalizingLineBuffer, bytesHL);
-		//NB
-		consumelines = mode.vOPostRegHL;
-		if(consumelines & 1 == 1)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-			consumelines--;
-		}
-		//post-line
-		while(consumelines>=2)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-			consumelines-=2;
-		}
-
-		for (int i = 0; i < mode.vBack; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-		}
-		for (int i = 0; i < mode.vActive; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHSync);
-			dmaBufferDescriptors[d++].setBuffer(frameBuffer[(i*(mode.interlaced?2:1) - (mode.interlaced?1:0)) / mode.vDiv], mode.hRes * bytesPerSample());
-		}
-		for (int i = 0; i < mode.vFront; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-		}
-
-		// here d should be linesPerFrame*2 if mode is progressive
-		// and linesPerFrame*2 / 2 if mode is interlaced
-		if(mode.interlaced)
-		{
-
-		//pre-line
-		int consumelines = mode.vEPreRegHL;
-		while(consumelines>=2)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-			consumelines-=2;
-		}
-		//NF
-		if(consumelines == 1)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-		}
-		//EQ
-		consumelines = mode.vPreEqHL;
-		for (int i = 0; i < consumelines; i++)
-			dmaBufferDescriptors[d++].setBuffer(equalizingLineBuffer, bytesHL);
-		//SY
-		consumelines = mode.vSyncHL;
-		for (int i = 0; i < consumelines; i++)
-			dmaBufferDescriptors[d++].setBuffer(vSyncLineBuffer, bytesHL);
-		//EQ
-		consumelines = mode.vPostEqHL;
-		for (int i = 0; i < consumelines; i++)
-			dmaBufferDescriptors[d++].setBuffer(equalizingLineBuffer, bytesHL);
-		//NB
-		consumelines = mode.vEPostRegHL;
-		if(consumelines & 1 == 1)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-			consumelines--;
-		}
-		//post-line
-		while(consumelines>=2)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-			consumelines-=2;
-		}
-
-		for (int i = 0; i < mode.vBack; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-		}
-		for (int i = 0; i < mode.vActive; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHSync);
-			dmaBufferDescriptors[d++].setBuffer(frameBuffer[(i*2) / mode.vDiv], mode.hRes * bytesPerSample());
-		}
-		for (int i = 0; i < mode.vFront; i++)
-		{
-			dmaBufferDescriptors[d++].setBuffer(normalFrontLineBuffer, bytesHL);
-			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
-		}
-
-		}
+		currentBufferToAssign++;
+		return (BufferGraphicsUnit **)arr;
 	}
 
 	virtual void show(bool vSync = false)
 	{
 		if (!frameBufferCount)
 			return;
-		if (vSync)
-		{
-			//TODO read the I2S docs to find out
-		}
+
 		Graphics::show(vSync);
+		switchToRendererBuffer(currentFrameBuffer);
+		// wait at least one frame
+		// else the switch does not take place for the display
+		// until the frame is completed
+		// and drawing starts in the backbuffer while still shown
+		if (frameBufferCount == 2) // in triple buffer or single buffer this is not an issue
+		{
+			uint32_t timemark = micros();
+			uint32_t framedurationinus = (uint64_t)mode.pixelsPerLine() * (uint64_t)mode.linesPerField() * (uint64_t)1000000 / (uint64_t)mode.pixelClock;
+			while((micros() - timemark) < framedurationinus){delay(0);}
+		}
 	}
 
-  protected:
-	virtual void interrupt()
+	virtual void scroll(int dy, Color color)
 	{
+		//Scroll currently broken in this implementation
+
+		//Graphics::scroll(dy, color);
+		//if(dmaBufferDescriptors)
+			//for (int i = 0; i < yres * mode.vDiv; i++)
+				//dmaBufferDescriptors[
+						//indexRendererDataBuffer[(currentFrameBuffer + frameBufferCount - 1) % frameBufferCount]
+						 //+ i * descriptorsPerLine + descriptorsPerLine - 1
+					//].setBuffer(
+							//((uint8_t *) backBuffer[i / mode.vDiv]) - dataOffsetInLineInBytes
+							//,
+							//((descriptorsPerLine > 1)?mode.hRes:mode.pixelsPerLine()) * bytesPerBufferUnit()/samplesPerBufferUnit()
+						//);
 	}
 };
