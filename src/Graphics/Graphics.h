@@ -409,6 +409,21 @@ class Graphics: public ImageDrawer
 
 	void line(int x1, int y1, int x2, int y2, Color color)
 	{
+		// If line is not inside screen bounds, don't draw it
+		if ( (x1 < 0 && x2 < 0) || (x1 > xres && x2 > xres) ||
+		     (y1 < 0 && y2 < 0) || (y1 > yres && y2 > yres) )
+			return;
+
+		// Truncate the line so that it does not waste cycles on off-screen pixels
+		if (x1 < 0)
+			x1 = 0;
+		if (x1 > xres)
+			x1 = xres;
+		if (y1 < 0)
+			y1 = 0;
+		if (y1 > yres)
+			y1 = yres;
+
 		int x, y, xe, ye;
 		int dx = x2 - x1;
 		int dy = y2 - y1;
