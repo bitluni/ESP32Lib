@@ -116,9 +116,9 @@ class Graphics: public ImageDrawer, public InterfaceColor, public BufferLayout, 
 		//basic concept
 		//backBuffer[y][x] = color;
 		//decide x or y position[sw] -> shift depending (or not) on x or y[shval] -> mask[colormask] -> erase bits
-		backBuffer[BufferLayout::static_swy(y)][BufferLayout::static_swx(x)] &= ~BufferLayout::static_shval(InterfaceColor::static_colormask(), x, y); // delete bits
+		backBuffer[BufferLayout::static_swy(y)][BufferLayout::static_swx(x)] &= ~BufferLayout::static_shval(BufferLayout::static_bufferdatamask() & InterfaceColor::static_colormask(), x, y); // delete bits
 		//mask[colormask] -> convert to buffer[coltobuf] -> shift depending (or not) on x or y[shval] -> decide x or y position[sw] -> store data
-		backBuffer[BufferLayout::static_swy(y)][BufferLayout::static_swx(x)] |= BufferLayout::static_shval(ColorToBuffer::coltobuf(color & InterfaceColor::static_colormask(), x, y), x, y); // write new bits
+		backBuffer[BufferLayout::static_swy(y)][BufferLayout::static_swx(x)] |= BufferLayout::static_shval(ColorToBuffer::coltobuf(color & InterfaceColor::static_colormask(), x, y) & BufferLayout::static_bufferdatamask(), x, y); // write new bits
 	}
 	virtual void dotFast(int x, int y, Color color)
 	{
