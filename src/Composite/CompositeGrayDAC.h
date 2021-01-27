@@ -160,18 +160,28 @@ class CompositeGrayDAC : public CompositeI2SEngine<BLpx1sz16sw1sh8>, public Grap
 
 	virtual void scroll(int dy, Color color)
 	{
-		//Scroll currently broken in this implementation
-
-		//Graphics::scroll(dy, color);
-		//if(dmaBufferDescriptors)
-			//for (int i = 0; i < yres * mode.vDiv; i++)
-				//dmaBufferDescriptors[
-						//indexRendererDataBuffer[(currentFrameBuffer + frameBufferCount - 1) % frameBufferCount]
-						 //+ i * descriptorsPerLine + descriptorsPerLine - 1
-					//].setBuffer(
-							//((uint8_t *) backBuffer[i / mode.vDiv]) - dataOffsetInLineInBytes
-							//,
-							//((descriptorsPerLine > 1)?mode.hRes:mode.pixelsPerLine()) * bytesPerBufferUnit()/samplesPerBufferUnit()
-						//);
+		Graphics::scroll(dy, color);
+		if(dmaBufferDescriptors)
+			for (int i = 0; i < yres * mode.vDiv; i++)
+				if(!mode.interlaced || (i & 1) == 0) // odd line
+				{
+					dmaBufferDescriptors[
+							indexRendererDataBuffer[(currentFrameBuffer + frameBufferCount - 1) % frameBufferCount]
+							 + (i/(mode.interlaced?2:1)) * descriptorsPerLine + descriptorsPerLine - 1
+						].setBuffer(
+								((uint8_t *) backBuffer[i / mode.vDiv]) - dataOffsetInLineInBytes
+								,
+								((descriptorsPerLine > 1)?mode.hRes:mode.pixelsPerLine()) * bytesPerBufferUnit()/samplesPerBufferUnit()
+						);
+				} else { // even line
+					dmaBufferDescriptors[
+							indexRendererEvenDataBuffer[(currentFrameBuffer + frameBufferCount - 1) % frameBufferCount]
+							 + ((i - 1)/2) * descriptorsPerLine + descriptorsPerLine - 1
+						].setBuffer(
+								((uint8_t *) backBuffer[i / mode.vDiv]) - dataOffsetInLineInBytes
+								,
+								((descriptorsPerLine > 1)?mode.hRes:mode.pixelsPerLine()) * bytesPerBufferUnit()/samplesPerBufferUnit()
+						);
+				}
 	}
 };
