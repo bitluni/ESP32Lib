@@ -73,10 +73,17 @@ class CompositeI2SEngine : public Composite, public BufferLayout
 	}
 
 
-	int rendererBufferCount;
-	int indexRendererDataBuffer[3];
-	int indexHingeDataBuffer; // last fixed buffer that "jumps" to the active data buffer
+	//members for multiple buffers (at the renderer "side")
+	//used in DMA-based (no interrupt-based) modes
+	int rendererBufferCount; // number of buffers (1-3)
+	int indexRendererDataBuffer[3]; // index of the first DMA descriptor of each buffer (or its odd field in interlaced modes)
+	int indexHingeDataBuffer; // last common DMA descriptor that "jumps" to the first DMA descriptor of active data buffer (or its odd field)
 
+	int indexLandingFromOddDataBuffer; // first common DMA descriptor that "receives" from the last DMA descriptor of active (or odd) data buffer (0 in non-interlaced modes) (Landing is always 0 for the even field)
+	int indexRendererEvenDataBuffer[3]; // index of the first DMA descriptor of each even field buffer
+	int indexHingeEvenDataBuffer; // last common DMA descriptor that "jumps" to the first DMA descriptor of the even field active data buffer
+
+	//other members
 	int baseBufferValue = 0;
 	int syncBufferValue = 0;
 
@@ -100,11 +107,13 @@ class CompositeI2SEngine : public Composite, public BufferLayout
 
 	BufferRendererUnit * getBufferDescriptor(int y, int bufferIndex = 0)
 	{
-		if(!mode.interlaced || (y*mode.vDiv & 1) == 0) // odd line
+		if(!mode.interlaced || ((y*mode.vDiv) & 1) == 0) // odd line
 		{
-			return (BufferRendererUnit *) (dmaBufferDescriptors[(mode.vFront + mode.vOddFieldOffset + mode.vBack) * descriptorsPerLine + ((y*mode.vDiv)/(mode.interlaced?2:1)) * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
+			return (BufferRendererUnit *) (dmaBufferDescriptors[indexRendererDataBuffer[bufferIndex] + ((y*mode.vDiv)/(mode.interlaced?2:1)) * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
+			//return (BufferRendererUnit *) (dmaBufferDescriptors[(mode.vFront + mode.vOddFieldOffset + mode.vBack) * descriptorsPerLine + ((y*mode.vDiv)/(mode.interlaced?2:1)) * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
 		} else { // even line
-			return (BufferRendererUnit *) (dmaBufferDescriptors[(mode.vFront + mode.vEvenFieldOffset + mode.vBack) * descriptorsPerLine + ((y*mode.vDiv - 1)/2) * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
+			return (BufferRendererUnit *) (dmaBufferDescriptors[indexRendererEvenDataBuffer[bufferIndex] + ((y*mode.vDiv - 1)/2) * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
+			//return (BufferRendererUnit *) (dmaBufferDescriptors[(mode.vFront + mode.vEvenFieldOffset + mode.vBack) * descriptorsPerLine + ((y*mode.vDiv - 1)/2) * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
 		}
 		//THIS MUST BE FIXED FOR INTERLACED MODES
 		//return (BufferRendererUnit *) (dmaBufferDescriptors[indexRendererDataBuffer[bufferIndex] + y*mode.vDiv * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
@@ -112,8 +121,10 @@ class CompositeI2SEngine : public Composite, public BufferLayout
 
 	void switchToRendererBuffer(int bufferNumber)
 	{
-		//THIS MUST BE FIXED FOR ALL MODES
-		//dmaBufferDescriptors[indexHingeDataBuffer].next(dmaBufferDescriptors[indexRendererDataBuffer[bufferNumber]]);
+		//THIS MUST BE FIXED FOR INTERLACED MODES
+		dmaBufferDescriptors[indexHingeDataBuffer].next(dmaBufferDescriptors[indexRendererDataBuffer[bufferNumber]]);
+		if (mode.interlaced)
+			dmaBufferDescriptors[indexHingeEvenDataBuffer].next(dmaBufferDescriptors[indexRendererEvenDataBuffer[bufferNumber]]);
 	}
 
 	void dump()
@@ -175,23 +186,40 @@ class CompositeI2SEngine : public Composite, public BufferLayout
 		//calculate DMA buffer descriptors needed
 		dmaBufferDescriptorCount = linesTotal * descriptorsPerLine;
 		//account for more descriptors for additional backbuffers
-		//if (rendererBufferCount > 1) dmaBufferDescriptorCount += (rendererBufferCount - 1) * mode.vRes * descriptorsPerLine; // this will not work for interlaced frames (then, use only 1 buffer)
+		if (rendererBufferCount > 1) dmaBufferDescriptorCount += (rendererBufferCount - 1) * mode.vRes * descriptorsPerLine;
 		//allocate DMA buffer descriptors for the whole frame
 		dmaBufferDescriptors = DMABufferDescriptor::allocateDescriptors(dmaBufferDescriptorCount);
 		//link all buffer descriptors in a ring
 		for (int i = 0; i < dmaBufferDescriptorCount; i++)
 			dmaBufferDescriptors[i].next(dmaBufferDescriptors[(i + 1) % dmaBufferDescriptorCount]);
-		//indexRendererDataBuffer[0] = (mode.vOddFieldOffset + mode.vBack) * descriptorsPerLine;
+		//
+		//IMPLEMENTATION FOR MULTIPLE BUFFERS
 		//WARNING: FOR INTERLACED MODES THERE ARE TWO BIFURCATIONS AND TWO REENTRY POINTS
-		//THIS WILL BE RATHER COMPLEX TO IMPLEMENT
+		//THIS MAY BE COMPLEX TO IMPLEMENT - CURRENLY EXPERIMENTAL
+		//
 		//close the ring at the appropriate descriptors in case there are additional backbuffers
 		//and record the position of descriptors for the data part of the buffer
-		//for (int b = 0; b < rendererBufferCount; b++)
-		//{
-			//indexRendererDataBuffer[b] = (mode.vFront + mode.vSync + mode.vBack) * descriptorsPerLine + b * mode.vRes * descriptorsPerLine;
-			//dmaBufferDescriptors[indexRendererDataBuffer[b] + mode.vRes * descriptorsPerLine - 1].next(dmaBufferDescriptors[0]);
-		//}
-		//indexHingeDataBuffer = (mode.vFront + mode.vSync + mode.vBack) * descriptorsPerLine - 1;
+		//even additional data buffer descriptors will be located after odd additional data buffer descriptors
+		indexLandingFromOddDataBuffer = mode.interlaced?((mode.vFront + mode.vOddFieldOffset + mode.vBack + mode.vActive) * descriptorsPerLine):0;
+		indexRendererDataBuffer[0] = (mode.vFront + mode.vOddFieldOffset + mode.vBack) * descriptorsPerLine + 0 * mode.vActive * descriptorsPerLine;
+		dmaBufferDescriptors[indexRendererDataBuffer[0] + mode.vActive * descriptorsPerLine - 1].next(dmaBufferDescriptors[indexLandingFromOddDataBuffer]);
+		if(mode.interlaced)
+		{
+			indexRendererEvenDataBuffer[0] = (mode.vFront + mode.vEvenFieldOffset + mode.vBack) * descriptorsPerLine + 0 * mode.vActive * descriptorsPerLine;
+			dmaBufferDescriptors[indexRendererEvenDataBuffer[0] + mode.vActive * descriptorsPerLine - 1].next(dmaBufferDescriptors[0]);
+		}
+		for (int b = 1; b < rendererBufferCount; b++)
+		{
+			indexRendererDataBuffer[b] = linesTotal * descriptorsPerLine + (b - 1) * mode.vActive * descriptorsPerLine;
+			dmaBufferDescriptors[indexRendererDataBuffer[b] + mode.vActive * descriptorsPerLine - 1].next(dmaBufferDescriptors[indexLandingFromOddDataBuffer]);
+			if(mode.interlaced)
+			{
+				indexRendererEvenDataBuffer[b] = linesTotal * descriptorsPerLine + (rendererBufferCount - 1 + (b - 1)) * mode.vActive * descriptorsPerLine;
+				dmaBufferDescriptors[indexRendererEvenDataBuffer[b] + mode.vActive * descriptorsPerLine - 1].next(dmaBufferDescriptors[0]);
+			}
+		}
+		indexHingeDataBuffer = (mode.vFront + mode.vOddFieldOffset + mode.vBack) * descriptorsPerLine - 1;
+		indexHingeEvenDataBuffer = (mode.vFront + mode.vEvenFieldOffset + mode.vBack) * descriptorsPerLine - 1;
 
 
 
@@ -446,6 +474,28 @@ class CompositeI2SEngine : public Composite, public BufferLayout
 
 		}
 
+		//assign additional (or odd field) buffers
+		for (int b = 1; b < rendererBufferCount; b++)
+		{
+			for (int i = 0; i < mode.vActive; i++)
+			{
+				dmaBufferDescriptors[d++].setBuffer(normalFrontHalfLineBuffer, sizeHBlanking);
+				dmaBufferDescriptors[d++].setBuffer(DataBuffer[b * dataLinesBufferCount + ((i*(mode.interlaced?2:1)) / mode.vDiv) % dataLinesBufferCount], sizeHData);
+			}
+		}
+		if(mode.interlaced)
+		{
+		//assign additional even field buffers
+		for (int b = 1; b < rendererBufferCount; b++)
+		{
+			for (int i = 0; i < mode.vActive; i++)
+			{
+				dmaBufferDescriptors[d++].setBuffer(normalFrontHalfLineBuffer, sizeHBlanking);
+				dmaBufferDescriptors[d++].setBuffer(DataBuffer[b * dataLinesBufferCount + ((i*2 + 1) / mode.vDiv) % dataLinesBufferCount], sizeHData);
+			}
+		}
+		}
+
 		free(DataBuffer);
 	}
 
@@ -478,23 +528,40 @@ class CompositeI2SEngine : public Composite, public BufferLayout
 		//calculate DMA buffer descriptors needed
 		dmaBufferDescriptorCount = linesTotal * descriptorsPerLine;
 		//account for more descriptors for additional backbuffers
-		//if (rendererBufferCount > 1) dmaBufferDescriptorCount += (rendererBufferCount - 1) * mode.vRes * descriptorsPerLine; // this will not work for interlaced frames (then, use only 1 buffer)
+		if (rendererBufferCount > 1) dmaBufferDescriptorCount += (rendererBufferCount - 1) * mode.vRes * descriptorsPerLine; // this will not work for interlaced frames (then, use only 1 buffer)
 		//allocate DMA buffer descriptors for the whole frame
 		dmaBufferDescriptors = DMABufferDescriptor::allocateDescriptors(dmaBufferDescriptorCount);
 		//link all buffer descriptors in a ring
 		for (int i = 0; i < dmaBufferDescriptorCount; i++)
 			dmaBufferDescriptors[i].next(dmaBufferDescriptors[(i + 1) % dmaBufferDescriptorCount]);
-		//indexRendererDataBuffer[0] = (mode.vOddFieldOffset + mode.vBack) * descriptorsPerLine;
+		//
+		//IMPLEMENTATION FOR MULTIPLE BUFFERS
 		//WARNING: FOR INTERLACED MODES THERE ARE TWO BIFURCATIONS AND TWO REENTRY POINTS
-		//THIS WILL BE RATHER COMPLEX TO IMPLEMENT
+		//THIS MAY BE COMPLEX TO IMPLEMENT - CURRENLY EXPERIMENTAL
+		//
 		//close the ring at the appropriate descriptors in case there are additional backbuffers
 		//and record the position of descriptors for the data part of the buffer
-		//for (int b = 0; b < rendererBufferCount; b++)
-		//{
-			//indexRendererDataBuffer[b] = (mode.vFront + mode.vSync + mode.vBack) * descriptorsPerLine + b * mode.vRes * descriptorsPerLine;
-			//dmaBufferDescriptors[indexRendererDataBuffer[b] + mode.vRes * descriptorsPerLine - 1].next(dmaBufferDescriptors[0]);
-		//}
-		//indexHingeDataBuffer = (mode.vFront + mode.vSync + mode.vBack) * descriptorsPerLine - 1;
+		//even additional data buffer descriptors will be located after odd additional data buffer descriptors
+		indexLandingFromOddDataBuffer = mode.interlaced?((mode.vFront + mode.vOddFieldOffset + mode.vBack + mode.vActive) * descriptorsPerLine):0;
+		indexRendererDataBuffer[0] = (mode.vFront + mode.vOddFieldOffset + mode.vBack) * descriptorsPerLine + 0 * mode.vActive * descriptorsPerLine;
+		dmaBufferDescriptors[indexRendererDataBuffer[0] + mode.vActive * descriptorsPerLine - 1].next(dmaBufferDescriptors[indexLandingFromOddDataBuffer]);
+		if(mode.interlaced)
+		{
+			indexRendererEvenDataBuffer[0] = (mode.vFront + mode.vEvenFieldOffset + mode.vBack) * descriptorsPerLine + 0 * mode.vActive * descriptorsPerLine;
+			dmaBufferDescriptors[indexRendererEvenDataBuffer[0] + mode.vActive * descriptorsPerLine - 1].next(dmaBufferDescriptors[0]);
+		}
+		for (int b = 1; b < rendererBufferCount; b++)
+		{
+			indexRendererDataBuffer[b] = linesTotal * descriptorsPerLine + (b - 1) * mode.vActive * descriptorsPerLine;
+			dmaBufferDescriptors[indexRendererDataBuffer[b] + mode.vActive * descriptorsPerLine - 1].next(dmaBufferDescriptors[indexLandingFromOddDataBuffer]);
+			if(mode.interlaced)
+			{
+				indexRendererEvenDataBuffer[b] = linesTotal * descriptorsPerLine + (rendererBufferCount - 1 + (b - 1)) * mode.vActive * descriptorsPerLine;
+				dmaBufferDescriptors[indexRendererEvenDataBuffer[b] + mode.vActive * descriptorsPerLine - 1].next(dmaBufferDescriptors[0]);
+			}
+		}
+		indexHingeDataBuffer = (mode.vFront + mode.vOddFieldOffset + mode.vBack) * descriptorsPerLine - 1;
+		indexHingeEvenDataBuffer = (mode.vFront + mode.vEvenFieldOffset + mode.vBack) * descriptorsPerLine - 1;
 
 
 
@@ -852,6 +919,26 @@ class CompositeI2SEngine : public Composite, public BufferLayout
 			dmaBufferDescriptors[d++].setBuffer(DataBuffer[b * dataLinesBufferCount + ((i*2 + 1) / mode.vDiv) % dataLinesBufferCount], sizeHLineComplete);
 		}
 
+		}
+
+		//assign additional (or odd field) buffers
+		for (int b = 1; b < rendererBufferCount; b++)
+		{
+			for (int i = 0; i < mode.vActive; i++)
+			{
+				dmaBufferDescriptors[d++].setBuffer(DataBuffer[b * dataLinesBufferCount + ((i*(mode.interlaced?2:1)) / mode.vDiv) % dataLinesBufferCount], sizeHLineComplete);
+			}
+		}
+		if(mode.interlaced)
+		{
+		//assign additional even field buffers
+		for (int b = 1; b < rendererBufferCount; b++)
+		{
+			for (int i = 0; i < mode.vActive; i++)
+			{
+				dmaBufferDescriptors[d++].setBuffer(DataBuffer[b * dataLinesBufferCount + ((i*2 + 1) / mode.vDiv) % dataLinesBufferCount], sizeHLineComplete);
+			}
+		}
 		}
 
 		free(DataBuffer);
