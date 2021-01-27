@@ -419,6 +419,46 @@ class Graphics: public ImageDrawer
 		int dy = y2 - y1;
 		int dx1 = labs(dx);
 		int dy1 = labs(dy);
+
+		float dxo = dx;
+		float dyo = dy;
+		if (x1 < 0 || x1 > xres)
+		{
+			x1 = (x1 < 0) ? 0 : xres;
+			dx = x2 - x1;
+			dx1 = labs(dx);
+			y1 = y2 - dy * dx / dxo;
+			dyo = dy = y2 - y1;
+			dy1 = labs(dy);
+		}
+		if (x2 < 0 || x2 > xres)
+		{
+			x2 = (x2 < 0) ? 0 : xres;
+			dx = x2 - x1;
+			dx1 = labs(dx);
+			y2 = y1 + dy * dx / dxo;
+			dyo = dy = y2 - y1;
+			dy1 = labs(dy);
+		}
+		if (y1 < 0 || y1 > yres)
+		{
+			y1 = (y1 < 0) ? 0 : yres;
+			dy = y2 - y1;
+			dy1 = labs(dy);
+			x1 = x2 - dx * dy / dyo;
+			dx = x2 - x1;
+			dx1 = labs(dx);
+		}
+		if (y2 < 0 || y2 > yres)
+		{
+			y2 = (y2 < 0) ? 0 : yres;
+			dy = y2 - y1;
+			dy1 = labs(dy);
+			x2 = x1 + dx * dy / dyo;
+			dx = x2 - x1;
+			dx1 = labs(dx);
+		}
+
 		int px = 2 * dy1 - dx1;
 		int py = 2 * dx1 - dy1;
 		if (dy1 <= dx1)
