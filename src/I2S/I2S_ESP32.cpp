@@ -462,7 +462,7 @@ void I2S::setClock(long sampleRate, int bitCount, bool useAPLL)
 	}
 }
 
-bool I2S::initSerialOutputMode(int dataPin, const int bitCount, int wordSelect, int baseClock)
+bool I2S::initSerialOutputMode(int dataPin, const int bitCount, int wordSelect, int baseClock, long sampleRate)
 {
 	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
 	//route peripherals
@@ -520,6 +520,12 @@ bool I2S::initSerialOutputMode(int dataPin, const int bitCount, int wordSelect, 
 	i2s.conf.tx_mono = 0;
 	i2s.conf.tx_short_sync = 0;
 
+	if(sampleRate != -1)
+	{
+		setClock(sampleRate*bitCount, bitCount, true);
+		i2s.sample_rate_conf.tx_bits_mod = 32; //this should be revised to a formula based on bitCount
+		i2s.conf_chan.tx_chan_mod = 0;
+	}
 
 	//allocate disabled i2s interrupt
 	const int interruptSource[] = {ETS_I2S0_INTR_SOURCE, ETS_I2S1_INTR_SOURCE};
