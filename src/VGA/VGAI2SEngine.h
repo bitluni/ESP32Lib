@@ -31,7 +31,7 @@ class VGAI2SEngine : public VGA, public BufferLayout
 	//stump to fullfil requirement implementation from parent VGA class
 	virtual int bytesPerSample() const { return 0; }
 
-	virtual bool initengine(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin = -1, int descriptorsPerLine = 2)
+	virtual bool initenginePreparation(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin = -1, int descriptorsPerLine = 2)
 	{
 		this->mode = mode;
 		int xres = mode.hRes;
@@ -47,6 +47,12 @@ class VGAI2SEngine : public VGA, public BufferLayout
 		//allocateLineBuffers();
 		currentLine = 0;
 		vSyncPassed = false;
+		return true;
+	}
+
+	virtual bool initengine(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin = -1, int descriptorsPerLine = 2)
+	{
+		initenginePreparation(mode, pinMap, bitCount, clockPin, descriptorsPerLine);
 		initParallelOutputMode(pinMap, mode.pixelClock, bitCount, clockPin);
 		startTX();
 		return true;
