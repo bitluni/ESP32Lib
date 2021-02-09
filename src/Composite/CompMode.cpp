@@ -30,8 +30,9 @@
 //=========
 //PAL MODES
 //=========
-//625 lines/frame, 25 frames/s, h 15.625 kHz, v 50 Hz, visible horizontal proportion 0.812
-
+//625 lines/frame, 25 frames/s, h 15625 Hz, v 50 Hz, visible horizontal proportion 0.812
+//color burst: ((1135/4) + (1/625)) * 15625 = 4433618.75 Hz +/- 5 Hz
+//line: 64 us = 1.65 us + 4.7 us + 5.5 us + 52.15 us
 
 const ModeComposite CompMode::MODEPAL288P(12, 38, 62, 400,  1,  6, 5, 5,  15, 288, 0, 0, 0, 0, 1, 8000000);
 //312 line / 50 frame
@@ -93,8 +94,12 @@ const ModeComposite CompMode::MODEPAL576Idiv3(12, 38, 62, 400,  1,  5, 5, 5,  15
 //==========
 //NTSC MODES
 //==========
-//525 lines/frame, 30 frames/s, h 15.750 kHz, v 60 Hz, visible horizontal proportion 0.812
+//525 lines/frame, 30 frames/s, h 15750 Hz, v 60 Hz, visible horizontal proportion 0.812
+//color burst: 3579545 Hz
 
+//525 lines/frame, 30 * 1000 / 1001 = 29.97 frames/s, h (5*1000000*63/88)*2/455 = 15734.2657 Hz = 4.5 * 1000000 / 286, v 59.94 Hz, visible horizontal proportion 0.812
+//color burst: 5*1000000*63/88 = 3579545.4545 Hz +/- 10 Hz
+//line: 63.5555 us = 1.5 us + 4.7 us + 4.5 us + 52.8555 us
 
 const ModeComposite CompMode::MODENTSC240P(12, 38, 58, 400,  1,  6, 6, 6,  12, 240, 0, 0, 0, 0, 1, 8000000);
 //262 line / 60 frame
