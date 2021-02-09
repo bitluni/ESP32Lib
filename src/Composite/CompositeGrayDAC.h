@@ -82,21 +82,12 @@ class CompositeGrayDAC : public CompositeI2SEngine<BLpx1sz16sw1sh8>, public Grap
 		return initoverlappingbuffers(mode, pinMap, bitCount, clockPin);
 	}
 
-	bool initDAC(const ModeComposite &mode, const int *pinMap, const int bitCount, const int clockPin = -1, int descriptorsPerLine = 2)
+	bool initengine(const ModeComposite &mode, const int *pinMap, const int bitCount, const int clockPin = -1, int descriptorsPerLine = 2)
+	override
 	{
-		this->mode = mode;
-		int xres = mode.hRes;
-		int yres = mode.vRes / mode.vDiv;
-		totalLines = mode.linesPerFrame;
-		if(descriptorsPerLine < 1 || descriptorsPerLine > 2) ERROR("Wrong number of descriptors per line");
-		if(descriptorsPerLine == 1) allocateRendererBuffers1DescriptorsPerLine();
-		if(descriptorsPerLine == 2) allocateRendererBuffers2DescriptorsPerLine();
-		propagateResolution(xres, yres);
-		//allocateLineBuffers();
-		currentLine = 0;
-		vSyncPassed = false;
+		initenginePreparation(mode, pinMap, bitCount, clockPin, descriptorsPerLine);
 		initParallelOutputMode(pinMap, mode.pixelClock, bitCount, clockPin);
-		enableDAC(outputPin==25?1:2);
+		enableDAC(outputPin==25?1:2); // this is added here to the initengine() base method
 		startTX();
 		return true;
 	}
@@ -114,7 +105,7 @@ class CompositeGrayDAC : public CompositeI2SEngine<BLpx1sz16sw1sh8>, public Grap
 
 		lineBufferCount = mode.vRes / mode.vDiv; // yres
 		rendererBufferCount = frameBufferCount;
-		return initDAC(mode, pinMap, bitCount, clockPin, 2); // 2 buffers per line
+		return initengine(mode, pinMap, bitCount, clockPin, 2); // 2 buffers per line
 	}
 
 	//THE REST OF THE FILE IS SHARED CODE BETWEEN ...
