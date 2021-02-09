@@ -37,8 +37,8 @@ class VGAI2SEngine : public VGA, public BufferLayout
 		int xres = mode.hRes;
 		int yres = mode.vRes / mode.vDiv;
 		initSyncBits();
-		this->vsyncPin = vsyncPin;
-		this->hsyncPin = hsyncPin;
+		this->vsyncPin = pinMap[8*bytesPerBufferUnit()-1];
+		this->hsyncPin = pinMap[8*bytesPerBufferUnit()-2];
 		totalLines = mode.linesPerField();
 		if(descriptorsPerLine < 1 || descriptorsPerLine > 2) ERROR("Wrong number of descriptors per line");
 		if(descriptorsPerLine == 1) allocateRendererBuffers1DescriptorsPerLine();
