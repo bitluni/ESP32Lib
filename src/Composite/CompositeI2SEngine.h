@@ -34,7 +34,7 @@ class CompositeI2SEngine : public Composite, public BufferLayout
 	//stump to fullfil requirement implementation from parent Composite class
 	virtual void allocateLineBuffers() {}
 
-	virtual bool initengine(const ModeComposite &mode, const int *pinMap, const int bitCount, const int clockPin = -1, int descriptorsPerLine = 2)
+	virtual bool initenginePreparation(const ModeComposite &mode, const int *pinMap, const int bitCount, const int clockPin = -1, int descriptorsPerLine = 2)
 	{
 		this->mode = mode;
 		int xres = mode.hRes;
@@ -47,6 +47,12 @@ class CompositeI2SEngine : public Composite, public BufferLayout
 		//allocateLineBuffers();
 		currentLine = 0;
 		vSyncPassed = false;
+		return true;
+	}
+
+	virtual bool initengine(const ModeComposite &mode, const int *pinMap, const int bitCount, const int clockPin = -1, int descriptorsPerLine = 2)
+	{
+		initenginePreparation(mode, pinMap, bitCount, clockPin, descriptorsPerLine);
 		initParallelOutputMode(pinMap, mode.pixelClock, bitCount, clockPin);
 		startTX();
 		return true;
