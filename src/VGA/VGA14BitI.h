@@ -151,7 +151,7 @@ void IRAM_ATTR VGA14BitI::interrupt(void *arg)
 	//render only when the sync half of the line ended (longer period until next interrupt)
 	//else exit early
 	//This might need to be revised, because it might be better to overlap and miss the second interrupt
-	if ( (staticthis->descriptorsPerLine==2) && (staticthis->dmaBufferDescriptorActive & 1 != 0) ) return;
+	if ( (staticthis->descriptorsPerLine==2) && ((staticthis->dmaBufferDescriptorActive & 1) != 0) ) return;
 
 	//TO DO: This should be precalculated outside the interrupt
 	int vInactiveLinesCount = staticthis->mode.vFront + staticthis->mode.vSync + staticthis->mode.vBack;

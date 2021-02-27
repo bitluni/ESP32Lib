@@ -143,7 +143,7 @@ void IRAM_ATTR CompositeGrayLadderI::interrupt(void *arg)
 	//render only when the sync half of the line ended (longer period until next interrupt)
 	//else exit early
 	//This might need to be revised, because it might be better to overlap and miss the second interrupt
-	if ( (staticthis->descriptorsPerLine==2) && (staticthis->dmaBufferDescriptorActive & 1 != 0) ) return;
+	if ( (staticthis->descriptorsPerLine==2) && ((staticthis->dmaBufferDescriptorActive & 1) != 0) ) return;
 
 	//render ahead (the lenght of buffered lines)
 	int renderLine = (staticthis->currentLine + staticthis->lineBufferCount);
