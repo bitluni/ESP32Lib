@@ -389,7 +389,7 @@ class CompositeI2SEngine : public Composite, public BufferLayout
 			dmaBufferDescriptors[d++].setBuffer(equalizingHalfLineBuffer, sizeHalfLine);
 		//NB
 		consumelines = mode.vOPostRegHL;
-		if(consumelines & 1 == 1)
+		if((consumelines & 1) == 1)
 		{
 			dmaBufferDescriptors[d++].setBuffer(normalBackHalfLineBuffer, sizeHalfLine);
 			consumelines--;
@@ -452,7 +452,7 @@ class CompositeI2SEngine : public Composite, public BufferLayout
 			dmaBufferDescriptors[d++].setBuffer(equalizingHalfLineBuffer, sizeHalfLine);
 		//NB
 		consumelines = mode.vEPostRegHL;
-		if(consumelines & 1 == 1)
+		if((consumelines & 1) == 1)
 		{
 			dmaBufferDescriptors[d++].setBuffer(normalBackHalfLineBuffer, sizeHalfLine);
 			consumelines--;

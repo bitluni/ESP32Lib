@@ -277,7 +277,7 @@ class CompositeColorLadder : public Composite, public GraphicsCA8Swapped
 			dmaBufferDescriptors[d++].setBuffer(equalizingLineBuffer, bytesHL);
 		//NB
 		consumelines = mode.vOPostRegHL;
-		if(consumelines & 1 == 1)
+		if((consumelines & 1) == 1)
 		{
 			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
 			consumelines--;
@@ -339,7 +339,7 @@ class CompositeColorLadder : public Composite, public GraphicsCA8Swapped
 			dmaBufferDescriptors[d++].setBuffer(equalizingLineBuffer, bytesHL);
 		//NB
 		consumelines = mode.vEPostRegHL;
-		if(consumelines & 1 == 1)
+		if((consumelines & 1) == 1)
 		{
 			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
 			consumelines--;
