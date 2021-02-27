@@ -311,7 +311,8 @@ class CompositeColorLadderMemory : public Composite, public GraphicsM8CA8Swapped
 		}
 		for (int i = 0; i < mode.vActive; i++)
 		{
-			dmaBufferDescriptors[d++].setBuffer(vBlankLineBuffer[(d/2)&1], bytesHSync);
+			dmaBufferDescriptors[d].setBuffer(vBlankLineBuffer[(d/2)&1], bytesHSync);
+			d++;
 			dmaBufferDescriptors[d++].setBuffer(frameBuffer[(i*(mode.interlaced?2:1) - (mode.interlaced?1:0)) / mode.vDiv], mode.hRes * bytesPerSample());
 		}
 		for (int i = 0; i < mode.vFront; i++)
@@ -367,12 +368,14 @@ class CompositeColorLadderMemory : public Composite, public GraphicsM8CA8Swapped
 
 		for (int i = 0; i < mode.vBack; i++)
 		{
-			dmaBufferDescriptors[d++].setBuffer(vBlankLineBuffer[(d/2)&1], bytesHL);
+			dmaBufferDescriptors[d].setBuffer(vBlankLineBuffer[(d/2)&1], bytesHL);
+			d++;
 			dmaBufferDescriptors[d++].setBuffer(normalBackLineBuffer, bytesHL);
 		}
 		for (int i = 0; i < mode.vActive; i++)
 		{
-			dmaBufferDescriptors[d++].setBuffer(vBlankLineBuffer[(d/2)&1], bytesHSync);
+			dmaBufferDescriptors[d].setBuffer(vBlankLineBuffer[(d/2)&1], bytesHSync);
+			d++;
 			dmaBufferDescriptors[d++].setBuffer(frameBuffer[(i*2) / mode.vDiv], mode.hRes * bytesPerSample());
 		}
 		for (int i = 0; i < mode.vFront; i++)
