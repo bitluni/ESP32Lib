@@ -53,4 +53,5 @@ static inline uint32_t integeratan2aprox(const int32_t y, const int32_t x) {
       case 6 : return 3*2*OCTANTSIZE - slope;
       case 7 : return 4*2*OCTANTSIZE + slope;
     }
+    return 0; // to avoid false return-type (control reaches end of non-void function) compilation error
 }
