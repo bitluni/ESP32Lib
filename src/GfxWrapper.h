@@ -19,8 +19,9 @@ class GfxWrapper : public Adafruit_GFX
 	Base &base;
 	typedef typename Base::Color Color;
 	GfxWrapper(Base &vga, const int xres, const int yres)
-		:base(vga),
-		Adafruit_GFX(xres, yres)
+		:
+		Adafruit_GFX(xres, yres),
+		base(vga)
 	{
 	}
 

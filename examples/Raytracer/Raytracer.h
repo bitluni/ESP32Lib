@@ -34,9 +34,10 @@ class Sphere : public Raytracable
   float r2;
   Vector p;
   Sphere(Vector pos, float radius)
-    :p(pos),
+    :
      r(radius),
-     r2(radius * radius)
+     r2(radius * radius),
+     p(pos)
   { 
   }
 
