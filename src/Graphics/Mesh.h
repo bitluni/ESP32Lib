@@ -71,8 +71,8 @@ class Mesh
 		const float L[3] = {0, 0, -1};
 
 		float NdotL = nx * L[0] + ny * L[1] + nz * L[2];
-		if(NdotL < 0) NdotL = 0; 
-		return  int(NdotL * (color & 0x1f)) | (int(NdotL * ((color >> 5) & 0x1f)) << 5) | (int(NdotL * ((color >> 10) & 0xf)) << 10);
+		if(NdotL < 0) NdotL = 0;
+		return Graphics::static_RGBA(NdotL * Graphics::static_R(color), NdotL * Graphics::static_G(color), NdotL * Graphics::static_B(color),255);
 	}
 
 	void drawTriangles(Engine3D<Graphics> &e, Color color = -1, triangleShader ts = 0)
