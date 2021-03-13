@@ -4,7 +4,7 @@
 //bitluni
 
 //include libraries
-#include <ESP32Lib.h>
+#include <ESP32Video.h>
 #include <Ressources/Font6x8.h>
 
 //include the sprites converted the SpriteConverter. Check the documentation for further infos.

@@ -36,7 +36,7 @@
     Custom ladders can be used by tweaking colorMinValue and colorMaxValue
 */
 
-#include <ESP32Lib.h>
+#include <ESP32Video.h>
 #include <Ressources/Font6x8.h>
 
 //pin configuration for DAC

@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <WiFi.h>
 #include <WebServer.h>
-//ESP32Lib headers
-#include <ESP32Lib.h>
+//ESP32Lib video headers
+#include <ESP32Video.h>
 #include <Ressources/Font6x8.h>
 
 //true: creates an access point, false: connects to an existing wifi

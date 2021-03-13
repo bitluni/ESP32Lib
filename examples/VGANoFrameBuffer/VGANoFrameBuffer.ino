@@ -4,7 +4,7 @@
 //cc by-sa 4.0 license
 //bitluni
 
-#include <ESP32Lib.h>
+#include <ESP32Video.h>
 #include <math.h>
 
 //pin configuration

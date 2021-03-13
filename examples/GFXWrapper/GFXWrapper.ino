@@ -2,7 +2,7 @@
 //cc by-sa 4.0 license
 //bitluni
 
-#include <ESP32Lib.h>
+#include <ESP32Video.h>
 #include <Ressources/Font6x8.h>
 #include <GfxWrapper.h>
 #include <Fonts/FreeMonoBoldOblique24pt7b.h>
