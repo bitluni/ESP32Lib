@@ -10,15 +10,14 @@
 		http://bitluni.net
 */
 #pragma once
-#include "VGAI2SEngine.h"
+#include "VGAI2SDynamic.h"
 #include "../Graphics/Graphics.h"
-//#include "../Graphics/GraphicsR5G5B4A2.h"
 
-class VGA14BitI : public VGAI2SEngine<BLpx1sz16sw1sh0>, public Graphics<ColorR5G5B4A2, BLpx1sz16sw0sh0, CTBIdentity>
+class VGA14BitI : public VGAI2SDynamic< BLpx1sz16sw1sh0, Graphics<ColorR5G5B4A2, BLpx1sz16sw0sh0, CTBIdentity> >
 {
   public:
 	VGA14BitI(const int i2sIndex = 1)
-		: VGAI2SEngine<BLpx1sz16sw1sh0>(i2sIndex)
+		: VGAI2SDynamic< BLpx1sz16sw1sh0, Graphics<ColorR5G5B4A2, BLpx1sz16sw0sh0, CTBIdentity> >(i2sIndex)
 	{
 		frontColor = 0xffff;
 		interruptStaticChild = &VGA14BitI::interrupt;
@@ -78,62 +77,7 @@ class VGA14BitI : public VGAI2SEngine<BLpx1sz16sw1sh0>, public Graphics<ColorR5G
 		return initdynamicwritetorenderbuffer(mode, pinMap, bitCount, clockPin);
 	}
 
-	//UPPER LIMIT: THE CODE BETWEEN THESE MARKS IS SHARED BETWEEN 3BIT, 6BIT, AND 14BIT
-
-	static const int bitMaskInRenderingBufferHSync()
-	{
-		return 1<<(8*bytesPerBufferUnit()-2);
-	}
-
-	static const int bitMaskInRenderingBufferVSync()
-	{
-		return 1<<(8*bytesPerBufferUnit()-1);
-	}
-
-	bool initdynamicwritetorenderbuffer(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin = -1)
-	{
-		lineBufferCount = 3;
-		rendererBufferCount = 1;
-		return initengine(mode, pinMap, bitCount, clockPin, 1); // 1 buffer per line
-	}
-
-	virtual void initSyncBits()
-	{
-		hsyncBitI = mode.hSyncPolarity ? (bitMaskInRenderingBufferHSync()) : 0;
-		vsyncBitI = mode.vSyncPolarity ? (bitMaskInRenderingBufferVSync()) : 0;
-		hsyncBit = hsyncBitI ^ (bitMaskInRenderingBufferHSync());
-		vsyncBit = vsyncBitI ^ (bitMaskInRenderingBufferVSync());
-	}
-
-	virtual long syncBits(bool hSync, bool vSync)
-	{
-		return ((hSync ? hsyncBit : hsyncBitI) | (vSync ? vsyncBit : vsyncBitI)) * rendererStaticReplicate32();
-	}
-
-	virtual void propagateResolution(const int xres, const int yres)
-	{
-		setResolution(xres, yres);
-	}
-
-	virtual void show(bool vSync = false)
-	{
-		if (!frameBufferCount)
-			return;
-		if (vSync)
-		{
-			vSyncPassed = false;
-			while (!vSyncPassed)
-				delay(0);
-		}
-		Graphics::show(vSync);
-	}
-
   protected:
-	bool useInterrupt()
-	{ 
-		return true; 
-	};
-
 	static void interrupt(void *arg);
 
 	static void interruptPixelLine(int y, uint8_t *pixels, void *arg);

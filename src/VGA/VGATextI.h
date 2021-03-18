@@ -9,15 +9,14 @@
 		https://github.com/bitluni
 */
 #pragma once
-#include "VGAI2SEngine.h"
-//#include "../Graphics/Graphics.h"
+#include "VGAI2SDynamic.h"
 #include "../Graphics/GraphicsTextBuffer.h"
 
-class VGATextI : public VGAI2SEngine<BLpx1sz8sw2sh0>, public GraphicsTextBuffer // (=) Graphics<ColorW8, BLpx1sz8sw0sh0, CTBIdentity>
+class VGATextI : public VGAI2SDynamic< BLpx1sz8sw2sh0, GraphicsTextBuffer > // GraphicsTextBuffer (=) Graphics<ColorW8, BLpx1sz8sw0sh0, CTBIdentity>
 {
   public:
 	VGATextI() //8 bit based modes only work with I2S1
-		: VGAI2SEngine<BLpx1sz8sw2sh0>(1)
+		: VGAI2SDynamic< BLpx1sz8sw2sh0, GraphicsTextBuffer >(1)
 	{
 		frontColor = 0xf;
 		interruptStaticChild = &VGATextI::interrupt;
@@ -63,7 +62,8 @@ class VGATextI : public VGAI2SEngine<BLpx1sz8sw2sh0>, public GraphicsTextBuffer 
 		return initdynamicwritetorenderbuffer(mode, pinMap, bitCount, clockPin);
 	}
 
-	bool inittext(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin, int descriptorsPerLine = 1)
+	bool initenginePreparation(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin, int descriptorsPerLine = 1)
+	override
 	{
 		if (!font)
 			return false;
@@ -81,67 +81,10 @@ class VGATextI : public VGAI2SEngine<BLpx1sz8sw2sh0>, public GraphicsTextBuffer 
 		//allocateLineBuffers();
 		currentLine = 0;
 		vSyncPassed = false;
-		initParallelOutputMode(pinMap, mode.pixelClock, bitCount, clockPin);
-		startTX();
 		return true;
 	}
 
-	static const int bitMaskInRenderingBufferHSync()
-	{
-		return 1<<(8*bytesPerBufferUnit()-2);
-	}
-
-	static const int bitMaskInRenderingBufferVSync()
-	{
-		return 1<<(8*bytesPerBufferUnit()-1);
-	}
-
-	bool initdynamicwritetorenderbuffer(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin = -1)
-	{
-		lineBufferCount = 3;
-		rendererBufferCount = 1;
-		return inittext(mode, pinMap, bitCount, clockPin, 1); // 1 buffer per line
-	}
-
-	//UPPER LIMIT: THE CODE BETWEEN THESE MARKS IS SHARED BETWEEN 3BIT, 6BIT, AND 14BIT
-
-	virtual void initSyncBits()
-	{
-		hsyncBitI = mode.hSyncPolarity ? (bitMaskInRenderingBufferHSync()) : 0;
-		vsyncBitI = mode.vSyncPolarity ? (bitMaskInRenderingBufferVSync()) : 0;
-		hsyncBit = hsyncBitI ^ (bitMaskInRenderingBufferHSync());
-		vsyncBit = vsyncBitI ^ (bitMaskInRenderingBufferVSync());
-	}
-
-	virtual long syncBits(bool hSync, bool vSync)
-	{
-		return ((hSync ? hsyncBit : hsyncBitI) | (vSync ? vsyncBit : vsyncBitI)) * rendererStaticReplicate32();
-	}
-
-	virtual void propagateResolution(const int xres, const int yres)
-	{
-		setResolution(xres, yres);
-	}
-
-	virtual void show(bool vSync = false)
-	{
-		if (!frameBufferCount)
-			return;
-		if (vSync)
-		{
-			vSyncPassed = false;
-			while (!vSyncPassed)
-				delay(0);
-		}
-		Graphics::show(vSync);
-	}
-
   protected:
-	bool useInterrupt()
-	{ 
-		return true; 
-	};
-
 	static void interrupt(void *arg);
 
 	static void interruptPixelLine(int y, uint8_t *pixels, void *arg);
