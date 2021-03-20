@@ -12,6 +12,7 @@
 #include <VGA/VGA14BitI.h>
 #include <VGA/VGA6BitI.h>
 #include <VGA/VGA3BitI.h>
+#include <VGA/VGA8BitDACI.h>
 #include <VGA/VGA1BitI.h>
 #include <VGA/VGATextI.h>
 
