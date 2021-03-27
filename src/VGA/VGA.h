@@ -37,6 +37,8 @@ class VGA : public VGAMode, public VGAPinConfig
 
 	virtual bool init(const Mode &mode, const PinConfig &pinConfig) = 0;
 
+	int getCurrentLine(){ return currentLine; }
+
 	Mode mode;
 
   protected:
