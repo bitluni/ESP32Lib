@@ -11,7 +11,6 @@
 */
 #pragma once
 
-#include "../I2S/I2S.h"
 #include "Mode.h"
 #include "PinConfig.h"
 
@@ -26,11 +25,10 @@
 
 // for back compatibility reasons, allow recalling "pre-configured" modes and PinConfigs within the class
 // by inheriting VGAMode and VGAPinConfig classes, it might be deprecated in a major version increase
-class VGA : public I2S, public VGAMode, public VGAPinConfig
+class VGA : public VGAMode, public VGAPinConfig
 {
   public:
-	VGA(const int i2sIndex = 0)
-	: I2S(i2sIndex)
+	VGA()
 	{}
 
 	// TODO This function should be pure virtual, but it is currently implemented with added arguments in children classes

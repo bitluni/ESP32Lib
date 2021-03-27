@@ -12,15 +12,16 @@
 #pragma once
 
 #include "VGA.h"
+#include "../I2S/I2S.h"
 
 #include "../Tools/Log.h"
 
 template<class BufferLayout>
-class VGAI2SEngine : public VGA, public BufferLayout
+class VGAI2SEngine : public I2S, public VGA, public BufferLayout
 {
   public:
 	VGAI2SEngine(const int i2sIndex = 0)
-	: VGA(i2sIndex)
+	: I2S(i2sIndex)
 	{
 		dmaBufferDescriptors = 0; // I2S member variable
 		lineBufferCount = 1;
