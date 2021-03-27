@@ -28,13 +28,6 @@ class VGA : public I2S, public VGAMode, public VGAPinConfig
 	VGA(const int i2sIndex = 0)
 	: I2S(i2sIndex)
 	{
-		lineBufferCount = 8;
-		dmaBufferDescriptors = 0;
-	}
-
-	void setLineBufferCount(int lineBufferCount)
-	{
-		this->lineBufferCount = lineBufferCount;
 	}
 
 	virtual bool init(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin = -1)
@@ -59,14 +52,13 @@ class VGA : public I2S, public VGAMode, public VGAPinConfig
 
 	Mode mode;
 
-	virtual int bytesPerSample() const = 0;
+	virtual int bytesPerSample() const {}
 
   protected:
 	
 	virtual void initSyncBits() = 0;
 	virtual long syncBits(bool h, bool v) = 0;
  
-	int lineBufferCount;
 	int vsyncPin;
 	int hsyncPin;
 	int currentLine;
@@ -94,7 +86,7 @@ class VGA : public I2S, public VGAMode, public VGAPinConfig
 	}
 	virtual void allocateLineBuffers()
 	{
-		allocateLineBuffers(lineBufferCount);
+		//allocateLineBuffers(lineBufferCount);
 	}
 
 	//complete ringbuffer from frame

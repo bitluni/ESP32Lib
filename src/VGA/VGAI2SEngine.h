@@ -28,9 +28,6 @@ class VGAI2SEngine : public VGA, public BufferLayout
 		rendererStaticReplicate32mask = rendererStaticReplicate32();
 	}
 
-	//stump to fullfil requirement implementation from parent VGA class
-	virtual int bytesPerSample() const { return 0; }
-
 	virtual bool initenginePreparation(const Mode &mode, const int *pinMap, const int bitCount, const int clockPin = -1, int descriptorsPerLine = 2)
 	{
 		this->mode = mode;
@@ -133,6 +130,7 @@ class VGAI2SEngine : public VGA, public BufferLayout
 
 	// Member variables specific to this engine
 
+	int lineBufferCount;
 	int rendererBufferCount;
 	int indexRendererDataBuffer[3];
 	int indexHingeDataBuffer; // last fixed buffer that "jumps" to the active data buffer
@@ -146,6 +144,11 @@ class VGAI2SEngine : public VGA, public BufferLayout
 
 
 	// Functions specific to this engine
+
+	void setLineBufferCount(int lineBufferCount)
+	{
+		this->lineBufferCount = lineBufferCount;
+	}
 
 	BufferRendererUnit * getBufferDescriptor(int y, int bufferIndex = 0)
 	{
