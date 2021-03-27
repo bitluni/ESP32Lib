@@ -30,29 +30,6 @@ class VGAI2SDynamic : public VGAI2SEngine<BufferLayout>, public GraphicsCombinat
 		return this->initengine(mode, pinMap, bitCount, clockPin, 1); // 1 buffer per line
 	}
 
-	virtual const int bitMaskInRenderingBufferHSync()
-	{
-		return 1<<(8*this->bytesPerBufferUnit()-2);
-	}
-
-	virtual const int bitMaskInRenderingBufferVSync()
-	{
-		return 1<<(8*this->bytesPerBufferUnit()-1);
-	}
-
-	virtual void initSyncBits()
-	{
-		this->hsyncBitI = this->mode.hSyncPolarity ? (this->bitMaskInRenderingBufferHSync()) : 0;
-		this->vsyncBitI = this->mode.vSyncPolarity ? (this->bitMaskInRenderingBufferVSync()) : 0;
-		this->hsyncBit = this->hsyncBitI ^ (this->bitMaskInRenderingBufferHSync());
-		this->vsyncBit = this->vsyncBitI ^ (this->bitMaskInRenderingBufferVSync());
-	}
-
-	virtual long syncBits(bool hSync, bool vSync)
-	{
-		return ((hSync ? this->hsyncBit : this->hsyncBitI) | (vSync ? this->vsyncBit : this->vsyncBitI)) * this->rendererStaticReplicate32();
-	}
-
 	virtual void propagateResolution(const int xres, const int yres)
 	{
 		this->setResolution(xres, yres);
