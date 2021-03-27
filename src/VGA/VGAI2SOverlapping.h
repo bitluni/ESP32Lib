@@ -49,7 +49,7 @@ class VGAI2SOverlapping : public VGAI2SEngine<BufferLayout>, public GraphicsComb
 			ERROR("Not enough memory");
 		for (int y = 0; y < this->yres; y++)
 		{
-			arr[y] = (void *)this->getBufferDescriptor(y, currentBufferToAssign);
+			arr[y] = (void *)this->getBufferDescriptor(this->graphics_swy(y), currentBufferToAssign);
 		}
 		currentBufferToAssign++;
 		return (BufferGraphicsUnit **)arr;
