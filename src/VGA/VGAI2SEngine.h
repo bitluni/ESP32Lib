@@ -22,8 +22,8 @@ class VGAI2SEngine : public VGA, public BufferLayout
 	VGAI2SEngine(const int i2sIndex = 0)
 	: VGA(i2sIndex)
 	{
+		dmaBufferDescriptors = 0; // I2S member variable
 		lineBufferCount = 1;
-		dmaBufferDescriptors = 0;
 		rendererBufferCount = 1;
 		rendererStaticReplicate32mask = rendererStaticReplicate32();
 	}
@@ -58,9 +58,35 @@ class VGAI2SEngine : public VGA, public BufferLayout
 		return true;
 	}
 
+
+	// Templated definitions and functions to pass to children (might this work with alias or using?)
+
 	typedef typename BufferLayout::BufferUnit BufferRendererUnit;
 
-	//pass templated functions
+	static int bytesPerBufferUnit()
+	{
+		return sizeof(BufferRendererUnit);
+	}
+	static int samplesPerBufferUnit()
+	{
+		return BufferLayout::static_xpixperunit();
+	}
+	static int renderer_xpixperunit()
+	{
+		return BufferLayout::static_xpixperunit();
+	}
+	static int renderer_ypixperunit()
+	{
+		return BufferLayout::static_ypixperunit();
+	}
+	static int renderer_replicate()
+	{
+		return BufferLayout::static_replicate();
+	}
+	static int rendererStaticReplicate32() // TODO Refactor to renderer_replicate32()
+	{
+		return BufferLayout::static_replicate32();
+	}
 	static int renderer_swx(int x)
 	{
 		return BufferLayout::static_swx(x);
@@ -79,29 +105,7 @@ class VGAI2SEngine : public VGA, public BufferLayout
 	}
 
 
-	int rendererBufferCount;
-	int indexRendererDataBuffer[3];
-	int indexHingeDataBuffer; // last fixed buffer that "jumps" to the active data buffer
-
-	int baseBufferValue = 0;
-
-	int descriptorsPerLine = 0;
-	int dataOffsetInLineInBytes = 0;
-
-	int rendererStaticReplicate32mask = 0;
-
-	static int bytesPerBufferUnit()
-	{
-		return sizeof(BufferRendererUnit);
-	}
-	static int samplesPerBufferUnit()
-	{
-		return BufferLayout::static_xpixperunit();
-	}
-	static int rendererStaticReplicate32()
-	{
-		return BufferLayout::static_replicate32();
-	}
+	// Functions related with sync bits
 
 	virtual const int bitMaskInRenderingBufferHSync()
 	{
@@ -125,6 +129,23 @@ class VGAI2SEngine : public VGA, public BufferLayout
 	{
 		return ((hSync ? this->hsyncBit : this->hsyncBitI) | (vSync ? this->vsyncBit : this->vsyncBitI)) * this->rendererStaticReplicate32();
 	}
+
+
+	// Member variables specific to this engine
+
+	int rendererBufferCount;
+	int indexRendererDataBuffer[3];
+	int indexHingeDataBuffer; // last fixed buffer that "jumps" to the active data buffer
+
+	int baseBufferValue = 0;
+
+	int descriptorsPerLine = 0;
+	int dataOffsetInLineInBytes = 0;
+
+	int rendererStaticReplicate32mask = 0;
+
+
+	// Functions specific to this engine
 
 	BufferRendererUnit * getBufferDescriptor(int y, int bufferIndex = 0)
 	{
