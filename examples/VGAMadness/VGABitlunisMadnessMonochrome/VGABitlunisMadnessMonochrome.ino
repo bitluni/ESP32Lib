@@ -1,44 +1,47 @@
-#include <ESP32Lib.h>
+#include <ESP32Video.h>
 #include <Ressources/Font6x8.h>
-#include "VGA/VGA6Multimonitor.h"
+#include "VGA/VGA6MonochromeVGAMadnessMultimonitor.h"
 
 //pin configuration
 //red pins
-//const int M0Pin = 17;
-//const int M1Pin = 2;
-//const int M2Pin = 19;
-//const int M3Pin = 12;
-//const int M4Pin = 23;
-//const int M5Pin = 26;
+const int redPin0 = 17;
+const int redPin1 = 2;
+const int redPin2 = 19;
+const int redPin3 = 12;
+const int redPin4 = 23;
+const int redPin5 = 26;
 //green pins
-const int M0Pin = 16;
-const int M1Pin = 15;
-const int M2Pin = 18;
-const int M3Pin = 14;
-const int M4Pin = 22;
-const int M5Pin = 25;
+const int greenPin0 = 16;
+const int greenPin1 = 15;
+const int greenPin2 = 18;
+const int greenPin3 = 14;
+const int greenPin4 = 22;
+const int greenPin5 = 25;
 //blue pins
-//const int M0Pin = 4;
-//const int M1Pin = 13;
-//const int M2Pin = 5;
-//const int M3Pin = 27;
-//const int M4Pin = 21;
-//const int M5Pin = 0;
+const int bluePin0 = 4;
+const int bluePin1 = 13;
+const int bluePin2 = 5;
+const int bluePin3 = 27;
+const int bluePin4 = 21;
+const int bluePin5 = 0;
 const int hsyncPin = 32;
 const int vsyncPin = 33;
 
 //VGA Device
-VGA6Multimonitor videodisplay;
+VGA6MonochromeVGAMadnessMultimonitor videodisplay;
 
 void setup()
 {
   Serial.begin(115200);
   //initializing vga at the specified pins
   videodisplay.init(VGAMode::MODE320x240,
-      M0Pin, M1Pin,
-      M2Pin, M3Pin,
-      M4Pin, M5Pin,
-      hsyncPin, vsyncPin, -1,3,2);
+                    redPin0,greenPin0,bluePin0,
+                    redPin1,greenPin1,bluePin1,
+                    redPin2,greenPin2,bluePin2,
+                    redPin3,greenPin3,bluePin3,
+                    redPin4,greenPin4,bluePin4,
+                    redPin5,greenPin5,bluePin5,
+                    hsyncPin, vsyncPin, -1,3,2);
   //selecting the font
   videodisplay.setFont(Font6x8);
 
