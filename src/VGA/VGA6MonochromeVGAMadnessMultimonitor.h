@@ -34,6 +34,7 @@ class VGA6MonochromeVGAMadnessMultimonitor : public VGAI2SOverlapping< BLpx1sz8s
 		: VGAI2SOverlapping< BLpx1sz8sw2sh0, Graphics<ColorW1X7, BLpx6sz8swmx2yshmxy, CTBIdentity> >(1)
 	{
 		frontColor = 0x1;
+		frontGlobalColor = 0xf;
 	}
 
 	bool init(const Mode &mode,
@@ -112,13 +113,14 @@ class VGA6MonochromeVGAMadnessMultimonitor : public VGAI2SOverlapping< BLpx1sz8s
 		const int deviceBaseIndex[] = {I2S0I_DATA_IN0_IDX, I2S1I_DATA_IN0_IDX};
 		initenginePreparation(mode, pinMap, bitCount, clockPin, descriptorsPerLine);
 		initParallelOutputMode(pinMap, mode.pixelClock, bitCount, clockPin);
-		for (int i = 6; i < 18; i++)
+		for (int i = 0; i < 18; i++)
 			if (pinOutputMap[i] > -1)
 			{
 				PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[pinOutputMap[i]], PIN_FUNC_GPIO);
 				gpio_set_direction((gpio_num_t)pinOutputMap[i], (gpio_mode_t)GPIO_MODE_DEF_OUTPUT);
 				//rtc_gpio_set_drive_capability((gpio_num_t)pinMap[i], (gpio_drive_cap_t)GPIO_DRIVE_CAP_3 );
-				gpio_matrix_out(pinOutputMap[i], deviceBaseIndex[1] + (i % 6), false, false);
+				//signal_idx == 0x100, cancel output put to the gpio
+				gpio_matrix_out(pinOutputMap[i], ((frontGlobalColor>>(i/6))&1) ? (deviceBaseIndex[1] + (i % 6)) : 0x100, false, false);
 			}
 		startTX();
 		return true;
@@ -139,8 +141,17 @@ class VGA6MonochromeVGAMadnessMultimonitor : public VGAI2SOverlapping< BLpx1sz8s
 							((this->descriptorsPerLine > 1)?this->mode.hRes:this->mode.pixelsPerLine()) * this->bytesPerBufferUnit()/this->samplesPerBufferUnit()
 						);
 	}
-	
+
 	int pinOutputMap[18];
+
+	//This is interpreted as 3-bit color:
+	ColorR1G1B1A1X4::Color frontGlobalColor;
+
+	void setFrontGlobalColor(int r, int g, int b, int a = 255)
+	{
+		frontGlobalColor = ColorR1G1B1A1X4::static_RGBA(r, g, b, a);
+	}
+
 };
 
 #endif
