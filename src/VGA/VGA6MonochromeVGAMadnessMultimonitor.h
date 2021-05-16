@@ -35,6 +35,7 @@ class VGA6MonochromeVGAMadnessMultimonitor : public VGAI2SOverlapping< BLpx1sz8s
 	{
 		frontColor = 0x1;
 		frontGlobalColor = 0xf;
+		backGlobalColor = 0x0;
 	}
 
 	bool init(const Mode &mode,
@@ -120,7 +121,12 @@ class VGA6MonochromeVGAMadnessMultimonitor : public VGAI2SOverlapping< BLpx1sz8s
 				gpio_set_direction((gpio_num_t)pinOutputMap[i], (gpio_mode_t)GPIO_MODE_DEF_OUTPUT);
 				//rtc_gpio_set_drive_capability((gpio_num_t)pinMap[i], (gpio_drive_cap_t)GPIO_DRIVE_CAP_3 );
 				//signal_idx == 0x100, cancel output put to the gpio
-				gpio_matrix_out(pinOutputMap[i], ((frontGlobalColor>>(i/6))&1) ? (deviceBaseIndex[1] + (i % 6)) : 0x100, false, false);
+				gpio_matrix_out(pinOutputMap[i], 0x100, false, false);
+				if ((frontGlobalColor>>(i/6))&1) gpio_matrix_out(pinOutputMap[i], deviceBaseIndex[1] + (i % 6), false, false);
+				//modify background only if it is compatible with front color:
+				//components of... (background MUST be in foreground) AND (foreground MUST SURPASS background)
+				if ( ((backGlobalColor & frontGlobalColor) == backGlobalColor) && ( (frontGlobalColor & ((backGlobalColor & frontGlobalColor)^0b00000111))>0) )
+					if ((backGlobalColor>>(i/6))&1) gpio_matrix_out(pinOutputMap[i], deviceBaseIndex[1] + (8*bytesPerBufferUnit()-2), (mode.hSyncPolarity==1)?false:true, false);
 			}
 		startTX();
 		return true;
@@ -145,11 +151,16 @@ class VGA6MonochromeVGAMadnessMultimonitor : public VGAI2SOverlapping< BLpx1sz8s
 	int pinOutputMap[18];
 
 	//This is interpreted as 3-bit color:
-	ColorR1G1B1A1X4::Color frontGlobalColor;
+	ColorR1G1B1A1X4::Color frontGlobalColor, backGlobalColor;
 
 	void setFrontGlobalColor(int r, int g, int b, int a = 255)
 	{
 		frontGlobalColor = ColorR1G1B1A1X4::static_RGBA(r, g, b, a);
+	}
+
+	void setBackGlobalColor(int r, int g, int b, int a = 255)
+	{
+		backGlobalColor = ColorR1G1B1A1X4::static_RGBA(r, g, b, a);
 	}
 
 };

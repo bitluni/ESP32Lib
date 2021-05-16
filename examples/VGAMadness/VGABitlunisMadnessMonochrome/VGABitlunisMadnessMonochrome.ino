@@ -33,11 +33,19 @@ VGA6MonochromeVGAMadnessMultimonitor videodisplay;
 void setup()
 {
   Serial.begin(115200);
-  //selecting the foreground color
+  //selecting the foreground or background color
   //IMPORTANT: for monochrome mode this MUST be done BEFORE init
   //           and color can not be changed after init
-  //uncomment the line to test changing color in all outputs
-  //videodisplay.setFrontGlobalColor(0,255,0);
+  //uncomment the line to test changing foreground color in all outputs
+  //videodisplay.setFrontGlobalColor(255,255,0); //yellow
+  //uncomment the line to test changing background color in all outputs
+  //videodisplay.setBackGlobalColor(255,0,0); //red
+  //because of hardware limitations only BackGlobalColors compatible with FrontGlobalColor will set a non-black background:
+  // FrontGlobalColor - cyan, BackGlobalColors - green or blue
+  // FrontGlobalColor - magenta, BackGlobalColors - red or blue
+  // FrontGlobalColor - yellow, BackGlobalColors - red or green
+  // FrontGlobalColor - white, BackGlobalColors - any
+  
   //initializing vga at the specified pins
   videodisplay.init(VGAMode::MODE320x240,
                     redPin0,greenPin0,bluePin0,
