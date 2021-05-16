@@ -163,6 +163,16 @@ class VGA6MonochromeVGAMadnessMultimonitor : public VGAI2SOverlapping< BLpx1sz8s
 		backGlobalColor = ColorR1G1B1A1X4::static_RGBA(r, g, b, a);
 	}
 
+	void clear(Color color = 0)
+	override
+	{
+		BufferGraphicsUnit bufferUnaffectedBits = (backBuffer[0][0])&( vsyncBit | hsyncBit | vsyncBitI | hsyncBitI );
+		BufferGraphicsUnit newColor = (BufferGraphicsUnit)( graphics_coltobuf(color & static_colormask(), 0, 0)*((0xffff) & (~( vsyncBit | hsyncBit | vsyncBitI | hsyncBitI ))) | bufferUnaffectedBits );
+		for (int y = 0; y < this->wy; y++)
+			for (int x = 0; x < this->wx; x++)
+				backBuffer[y][x] = newColor;
+	}
+
 };
 
 #endif

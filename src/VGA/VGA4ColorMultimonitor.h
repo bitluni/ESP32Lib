@@ -101,4 +101,14 @@ class VGA4ColorMultimonitor : public VGAI2SOverlapping<BLpx1sz16sw1sh0, Graphics
 							((this->descriptorsPerLine > 1)?this->mode.hRes:this->mode.pixelsPerLine()) * this->bytesPerBufferUnit()/this->samplesPerBufferUnit()
 						);
 	}
+
+	void clear(Color color = 0)
+	override
+	{
+		BufferGraphicsUnit bufferUnaffectedBits = (backBuffer[0][0])&( vsyncBit | hsyncBit | vsyncBitI | hsyncBitI );
+		BufferGraphicsUnit newColor = (BufferGraphicsUnit)( graphics_coltobuf(color & static_colormask(), 0, 0)*((0b001001001001) & (~( vsyncBit | hsyncBit | vsyncBitI | hsyncBitI ))) | bufferUnaffectedBits );
+		for (int y = 0; y < this->wy; y++)
+			for (int x = 0; x < this->wx; x++)
+				backBuffer[y][x] = newColor;
+	}
 };
