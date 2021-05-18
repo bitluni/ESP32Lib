@@ -34,8 +34,6 @@ class VGA6MonochromeVGAMadnessMultimonitor : public VGAI2SOverlapping< BLpx1sz8s
 		: VGAI2SOverlapping< BLpx1sz8sw2sh0, Graphics<ColorW1X7, BLpx6sz8swmx2yshmxy, CTBIdentity> >(1)
 	{
 		frontColor = 0x1;
-		frontGlobalColor = 0xf;
-		backGlobalColor = 0x0;
 	}
 
 	bool init(const Mode &mode,
@@ -122,11 +120,11 @@ class VGA6MonochromeVGAMadnessMultimonitor : public VGAI2SOverlapping< BLpx1sz8s
 				//rtc_gpio_set_drive_capability((gpio_num_t)pinMap[i], (gpio_drive_cap_t)GPIO_DRIVE_CAP_3 );
 				//signal_idx == 0x100, cancel output put to the gpio
 				gpio_matrix_out(pinOutputMap[i], 0x100, false, false);
-				if ((frontGlobalColor>>(i/6))&1) gpio_matrix_out(pinOutputMap[i], deviceBaseIndex[1] + (i % 6), false, false);
+				if ((frontGlobalColor[i % 6]>>(i/6))&1) gpio_matrix_out(pinOutputMap[i], deviceBaseIndex[1] + (i % 6), false, false);
 				//modify background only if it is compatible with front color:
 				//components of... (background MUST be in foreground) AND (foreground MUST SURPASS background)
-				if ( ((backGlobalColor & frontGlobalColor) == backGlobalColor) && ( (frontGlobalColor & ((backGlobalColor & frontGlobalColor)^0b00000111))>0) )
-					if ((backGlobalColor>>(i/6))&1) gpio_matrix_out(pinOutputMap[i], deviceBaseIndex[1] + (8*bytesPerBufferUnit()-2), (mode.hSyncPolarity==1)?false:true, false);
+				if ( ((backGlobalColor[i % 6] & frontGlobalColor[i % 6]) == backGlobalColor[i % 6]) && ( (frontGlobalColor[i % 6] & ((backGlobalColor[i % 6] & frontGlobalColor[i % 6])^0b00000111))>0) )
+					if ((backGlobalColor[i % 6]>>(i/6))&1) gpio_matrix_out(pinOutputMap[i], deviceBaseIndex[1] + (8*bytesPerBufferUnit()-2), (mode.hSyncPolarity==1)?false:true, false);
 			}
 		startTX();
 		return true;
@@ -151,16 +149,36 @@ class VGA6MonochromeVGAMadnessMultimonitor : public VGAI2SOverlapping< BLpx1sz8s
 	int pinOutputMap[18];
 
 	//This is interpreted as 3-bit color:
-	ColorR1G1B1A1X4::Color frontGlobalColor, backGlobalColor;
+	ColorR1G1B1A1X4::Color frontGlobalColor[6] = {0xf,0xf,0xf,0xf,0xf,0xf};
+	ColorR1G1B1A1X4::Color backGlobalColor[6] = {0x0,0x0,0x0,0x0,0x0,0x0};
+
+	int selectedMonitor = -1;
+
+	void setMonitor(int monitor = -1)
+	{
+		if (monitor > 5) return;
+		if (monitor < -1) return;
+		selectedMonitor = monitor;
+	}
 
 	void setFrontGlobalColor(int r, int g, int b, int a = 255)
 	{
-		frontGlobalColor = ColorR1G1B1A1X4::static_RGBA(r, g, b, a);
+		if(selectedMonitor < 0)
+		{
+			for(int i=0;i<6;i++) frontGlobalColor[i] = ColorR1G1B1A1X4::static_RGBA(r, g, b, a);
+		} else {
+			frontGlobalColor[selectedMonitor] = ColorR1G1B1A1X4::static_RGBA(r, g, b, a);
+		}
 	}
 
 	void setBackGlobalColor(int r, int g, int b, int a = 255)
 	{
-		backGlobalColor = ColorR1G1B1A1X4::static_RGBA(r, g, b, a);
+		if(selectedMonitor < 0)
+		{
+			for(int i=0;i<6;i++) backGlobalColor[i] = ColorR1G1B1A1X4::static_RGBA(r, g, b, a);
+		} else {
+			backGlobalColor[selectedMonitor] = ColorR1G1B1A1X4::static_RGBA(r, g, b, a);
+		}
 	}
 
 	void clear(Color color = 0)
