@@ -27,8 +27,8 @@ class AudioOutput
   {
     this->audioSystem = &audioSystem;
     timer_config_t config;
-    config.alarm_en = 1;
-    config.auto_reload = 1;
+    config.alarm_en = (timer_alarm_t)1;
+    config.auto_reload = (timer_autoreload_t)1;
     config.counter_dir = TIMER_COUNT_UP;
     config.divider = 16;
     config.intr_type = TIMER_INTR_LEVEL;
