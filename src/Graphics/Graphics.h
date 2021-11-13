@@ -409,11 +409,76 @@ class Graphics: public ImageDrawer
 
 	void line(int x1, int y1, int x2, int y2, Color color)
 	{
+		// If line is not inside screen bounds, don't draw it
+		if ( (x1 < 0 && x2 < 0) || (x1 > xres && x2 > xres) ||
+		     (y1 < 0 && y2 < 0) || (y1 > yres && y2 > yres) )
+			return;
+
 		int x, y, xe, ye;
 		int dx = x2 - x1;
 		int dy = y2 - y1;
 		int dx1 = labs(dx);
 		int dy1 = labs(dy);
+
+		float dxo = dx;
+		float dyo = dy;
+		// Recalculate a coordinate for x1 that is inside the screen bounds
+		if (x1 < 0 || x1 > xres)
+		{
+			// Set the new x1 to be at the edge of the screen
+			x1 = (x1 < 0) ? 0 : xres;
+			// Recalculate the distance on x axis
+			dx = x2 - x1;
+			dx1 = labs(dx);
+			// Calculate the new y1 based on the new position of x1
+			y1 = y2 - dy * dx / dxo;
+			// Recalculate the distance on y axis
+			dyo = dy = y2 - y1;
+			dy1 = labs(dy);
+		}
+		// Recalculate a coordinate for x2 that is inside the screen bounds
+		if (x2 < 0 || x2 > xres)
+		{
+			// Set the new x2 to be at the edge of the screen
+			x2 = (x2 < 0) ? 0 : xres;
+			// Recalculate the distance on x axis
+			dx = x2 - x1;
+			dx1 = labs(dx);
+			// Calculate the new y2 based on the new position of x2
+			y2 = y1 + dy * dx / dxo;
+			// Recalculate the distance on y axis
+			dyo = dy = y2 - y1;
+			dy1 = labs(dy);
+		}
+		// Recalculate a coordinate for y1 that is inside the screen bounds
+		if (y1 < 0 || y1 > yres)
+		{
+			// Set the new y1 to be at the edge of the screen
+			y1 = (y1 < 0) ? 0 : yres;
+			// Recalculate the distance on y axis
+			dy = y2 - y1;
+			dy1 = labs(dy);
+			// Calculate the new x1 based on the new position of y1
+			x1 = x2 - dx * dy / dyo;
+			// Recalculate the distance on x axis
+			dx = x2 - x1;
+			dx1 = labs(dx);
+		}
+		// Recalculate a coordinate for y2 that is inside the screen bounds
+		if (y2 < 0 || y2 > yres)
+		{
+			// Set the new y2 to be at the edge of the screen
+			y2 = (y2 < 0) ? 0 : yres;
+			// Recalculate the distance on y axis
+			dy = y2 - y1;
+			dy1 = labs(dy);
+			// Calculate the new x2 based on the new position of y2
+			x2 = x1 + dx * dy / dyo;
+			// Recalculate the distance on x axis
+			dx = x2 - x1;
+			dx1 = labs(dx);
+		}
+
 		int px = 2 * dy1 - dx1;
 		int py = 2 * dx1 - dy1;
 		if (dy1 <= dx1)
