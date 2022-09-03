@@ -150,3 +150,32 @@ Make sure your STL is low poly. The 3D example use a model with < 5000 triangles
 The Utilities folder provides a convenient [SpriteEditor](https://htmlpreview.github.io/?https://github.com/bitluni/ESP32Lib/blob/master/Utilities/SpriteEditor.html) that you can use directly from the browser. No worries, your files are not uploaded.
 The correct pixel format for VGA14Bit and VGA3Bit is R5G5B4A2 (that will be improved in future). You can import PNG files to use transparency.
 Each sprite has the origin in the center by default. You can modify it by changing the x/y values of the first point definition. Clicking on the image creates additional points that can be used for other purpouses like hit boxes etc.
+# Changing orentation
+Initiate a Gfxwrapper class  <br>
+```C++
+VGA3BitI vga;
+GfxWrapper<VGA3BitI gfx(vga, 640, 480);
+```
+Then set the orientation of the class wherever necessary:<br>
+```C++
+gfx.orientation = 90;
+```
+There are 6 types of oreintation that is supported:<br>
+* object.orientation = 0    -> (default)actual orientation 
+* object.orientation = 90   -> 90 degree clockwise rotation relative to actual
+* object.orientation = 180  -> 180 degree clockwise rotation relative to actual
+* object.orientation = 270  -> 270 degree clockwise rotation relative to actual
+* object.orientation = -1   -> flip horizontally
+* object.orientation = -2   -> flip vertically
+# Notes
+* Rotating the display causes your horizontal and vertical resolution to change. For example: if you have default resolution of 640 by 480 then rotating 90 degree clockwise will change your resolution to 480 by 640. So you have to keep it in mind while displaying rotated graphics. please refer to the [example](https://github.com/AsifKhan991/Customized-GFXwrapper-library-for-Bitluni-ESP32/blob/main/GFXwrapper_oreintation_example.ino) sketch to understand how it works. 
+* It is possible to set individual rotation for individual graphics objects in the display. For this just simply set the desired orientation before displaying the graphics and then just revert to previous orientation. For exaample:
+```C++
+gfx.orientation = 270; //setting desired orientation before displaying
+gfx.setCursor(320 , 240);
+gfx.print("individual rotation"); //displaying sometihng (can be text or graphics)
+gfx.orientation = 0; // revert baack to original orientation
+```
+* Although it is not implemented, tweaking a bit in the library will enable rotating to any arbitrary angles (i.e: 15, 129, 287 etc). The functionality lies in the drawPixel() function of the Gfxwrapper class.
+# How the example sketch looks in display
+![alt text](https://github.com/AsifKhan991/Customized-GFXwrapper-library-for-Bitluni-ESP32/blob/main/IMG_20220807_180029.jpg)
