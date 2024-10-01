@@ -1,5 +1,5 @@
 /*
-	Author: bitluni 2019
+	Author: bitluni 2024
 	License: 
 	Creative Commons Attribution ShareAlike 4.0
 	https://creativecommons.org/licenses/by-sa/4.0/
@@ -9,6 +9,25 @@
 		https://github.com/bitluni
 		http://bitluni.net
 */
+
+
+#ifdef ESP8266
+#include "AudioSystem.h"
+
+class AudioOutput
+{
+  public:
+  AudioSystem *audioSystem;
+  
+  void init(AudioSystem &audioSystem)
+  {
+  }
+};	
+#endif
+
+#ifdef ESP32
+
+//#include "components/esp32/include/esp_clk.h"
 #include "soc/i2s_reg.h"
 #include "soc/timer_group_struct.h"
 #include "driver/periph_ctrl.h"
@@ -18,6 +37,10 @@
 class AudioOutput;
 void IRAM_ATTR timerInterrupt(AudioOutput *audioOutput);
 
+#ifndef TIMER_BASE_CLK
+#define TIMER_BASE_CLK 240000000
+#endif
+//esp_clk_apb_freq()
 class AudioOutput
 {
   public:
@@ -27,8 +50,8 @@ class AudioOutput
   {
     this->audioSystem = &audioSystem;
     timer_config_t config;
-    config.alarm_en = 1;
-    config.auto_reload = 1;
+    config.alarm_en = (timer_alarm_t)1;
+    config.auto_reload = (timer_autoreload_t)1;
     config.counter_dir = TIMER_COUNT_UP;
     config.divider = 16;
     config.intr_type = TIMER_INTR_LEVEL;
@@ -48,11 +71,12 @@ void IRAM_ATTR timerInterrupt(AudioOutput *audioOutput)
   uint32_t intStatus = TIMERG0.int_st_timers.val;
   if(intStatus & BIT(TIMER_0)) 
   {
-      TIMERG0.hw_timer[TIMER_0].update = 1;
-      TIMERG0.int_clr_timers.t0 = 1;
-      TIMERG0.hw_timer[TIMER_0].config.alarm_en = 1;
+      TIMERG0.hw_timer[TIMER_0].update.tx_update = 1;
+      TIMERG0.int_clr_timers.t0_int_clr = 1;
+      TIMERG0.hw_timer[TIMER_0].config.tx_alarm_en = 1;
       
       WRITE_PERI_REG(I2S_CONF_SIGLE_DATA_REG(0), audioOutput->audioSystem->nextSample() << 24);
   }
 }  
 
+#endif

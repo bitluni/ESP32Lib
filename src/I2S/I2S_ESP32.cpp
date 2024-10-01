@@ -12,6 +12,7 @@
 
 #ifdef ESP32
 
+#include "soc/gpio_periph.h"
 #include "I2S.h"
 
 #include "esp_heap_caps.h"
@@ -20,9 +21,11 @@
 #include "soc/i2s_reg.h"
 #include "soc/i2s_struct.h"
 #include "soc/io_mux_reg.h"
+#include "soc/rtc.h"
 #include "driver/gpio.h"
 #include "driver/periph_ctrl.h"
 #include "rom/lldesc.h"
+#include "rom/gpio.h"
 
 #include "../Tools/Log.h"
 #include <soc/rtc.h>
@@ -259,8 +262,12 @@ bool I2S::initParallelInputMode(const int *pinMap, long sampleRate, const int bi
 		esp_intr_alloc(interruptSource[i2sIndex], ESP_INTR_FLAG_INTRDISABLED | ESP_INTR_FLAG_LEVEL3 | ESP_INTR_FLAG_IRAM, &interruptStatic, this, reinterpret_cast<intr_handle_t*>(&interruptHandle));
 	return true;
 }
-
 bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, const int bitCount, int wordSelect, int baseClock)
+{
+	return initParallelOutputMode(pinMap, 0, bitCount, sampleRate, bitCount, wordSelect, baseClock);
+}
+
+bool I2S::initParallelOutputMode(const int *pinMap, const int *pinMapBit, const int pinCount, long sampleRate, const int bitCount, int wordSelect, int baseClock)
 {
 	volatile i2s_dev_t &i2s = *i2sDevices[i2sIndex];
 	//route peripherals
@@ -270,24 +277,43 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, const int b
 	const int deviceWordSelectIndex[] = {I2S0O_WS_OUT_IDX, I2S1O_WS_OUT_IDX};
 	const periph_module_t deviceModule[] = {PERIPH_I2S0_MODULE, PERIPH_I2S1_MODULE};
 	//works only since indices of the pads are sequential
-	for (int i = 0; i < bitCount; i++)
+	for (int i = 0; i < pinCount; i++)
 		if (pinMap[i] > -1)
 		{
 			PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[pinMap[i]], PIN_FUNC_GPIO);
 			gpio_set_direction((gpio_num_t)pinMap[i], (gpio_mode_t)GPIO_MODE_DEF_OUTPUT);
 			//rtc_gpio_set_drive_capability((gpio_num_t)pinMap[i], (gpio_drive_cap_t)GPIO_DRIVE_CAP_3 );
-			if(i2sIndex == 1)
+			if(pinMapBit)
 			{
-				if(bitCount == 16)
-					gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + i + 8, false, false);
+				if(i2sIndex == 1)
+				{
+					if(bitCount == 16)
+						gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + pinMapBit[i] + 8, false, false);
+					else
+						gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + pinMapBit[i], false, false);
+				}
 				else
-					gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + i, false, false);
+				{
+					//there is something odd going on here in the two different I2S
+					//the configuration seems to differ. Use i2s1 for high frequencies.
+					gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + pinMapBit[i] + 24 - bitCount, false, false);
+				}
 			}
 			else
-			{
-				//there is something odd going on here in the two different I2S
-				//the configuration seems to differ. Use i2s1 for high frequencies.
-				gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + i + 24 - bitCount, false, false);
+			{ 
+				if(i2sIndex == 1)
+				{
+					if(bitCount == 16)
+						gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + i + 8, false, false);
+					else
+						gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + i, false, false);
+				}
+				else
+				{
+					//there is something odd going on here in the two different I2S
+					//the configuration seems to differ. Use i2s1 for high frequencies.
+					gpio_matrix_out(pinMap[i], deviceBaseIndex[i2sIndex] + i + 24 - bitCount, false, false);
+				}
 			}
 		}
 	if (baseClock > -1)
@@ -349,7 +375,9 @@ bool I2S::initParallelOutputMode(const int *pinMap, long sampleRate, const int b
 		//sdm = 0xA1fff;
 		//odir = 0;
 		if(sdm > 0xA1fff) sdm = 0xA1fff;
-		rtc_clk_apll_enable(true, sdm & 255, (sdm >> 8) & 255, sdm >> 16, odir);
+		//rtc_clk_apll_enable(true, sdm & 255, (sdm >> 8) & 255, sdm >> 16, odir);
+		rtc_clk_apll_enable(true);
+		rtc_clk_apll_coeff_set(odir, sdm & 255, (sdm >> 8) & 255, sdm >> 16);
 	}
 
 	i2s.clkm_conf.val = 0;
@@ -429,7 +457,9 @@ void I2S::setAPLLClock(long sampleRate, int bitCount)
 	//sdm = 0xA1fff;
 	//odir = 0;
 	if(sdm > 0xA1fff) sdm = 0xA1fff;
-	rtc_clk_apll_enable(true, sdm & 255, (sdm >> 8) & 255, sdm >> 16, odir);
+	//rtc_clk_apll_enable(true, sdm & 255, (sdm >> 8) & 255, sdm >> 16, odir);
+	rtc_clk_apll_enable(true);
+	rtc_clk_apll_coeff_set(odir, sdm & 255, (sdm >> 8) & 255, sdm >> 16);
 }
 
 void I2S::setClock(long sampleRate, int bitCount, bool useAPLL)
