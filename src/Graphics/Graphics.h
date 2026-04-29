@@ -418,6 +418,8 @@ class Graphics: public ImageDrawer, public InterfaceColor, public BufferLayout, 
 			{
 				cursorX = cursorBaseX;
 				cursorY += cursorYIncrement;
+				if(autoScroll && cursorY + font->charHeight > yres)
+					scroll(cursorY + font->charHeight - yres, backColor);
 			}
 			else
 				print(*str);
