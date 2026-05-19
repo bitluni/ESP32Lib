@@ -33,17 +33,20 @@ void loop()
 	videodisplay.setCursor(0, videodisplay.yres - 8);
 	//setting the text color to white with opaque black background
 	videodisplay.setTextColor(videodisplay.RGB(0xffffff), videodisplay.RGBA(0, 0, 0, 255));
-	//printing the fps
+	//printing the smooth fps
 	videodisplay.print("fps: ");
-	static long f = 0;
-	unsigned long t = millis();
-	
-	if (t>0){	//avoiding division through 0
-		videodisplay.print(long((f++ * 1000) / t)); //will print average FPS over the entire time
+	static int lastMillis = 0;
+	int t = millis();
+	//calculate fps (smooth)
+	static float oldFps = 0;
+	uint32_t dt = t - lastMillis;
+	float fps = oldFps;
+	if(dt>0){
+		fps = oldFps * 0.9f + 1000.f / (dt);
 	}
-	else{
-		f = 0; //starting FPS calculation again from frame 0
-	}
+	oldFps = fps;
+	lastMillis = t;
+	videodisplay.print(fps)
 
 	//circle parameters
 	float factors[][2] = {{1, 1.1f}, {0.9f, 1.02f}, {1.1, 0.8}};
