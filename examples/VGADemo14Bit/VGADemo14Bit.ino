@@ -35,8 +35,8 @@ void loop()
 	videodisplay.setTextColor(videodisplay.RGB(0xffffff), videodisplay.RGBA(0, 0, 0, 255));
 	//printing the smooth fps
 	videodisplay.print("fps: ");
-	static int lastMillis = 0;
-	int t = millis();
+	static uint32_t lastMillis = 0;
+	uint32_t t = millis();
 	//calculate fps (smooth)
 	static float oldFps = 0;
 	uint32_t dt = t - lastMillis;
