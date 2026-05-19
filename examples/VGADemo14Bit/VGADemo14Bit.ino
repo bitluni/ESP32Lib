@@ -46,7 +46,7 @@ void loop()
 	}
 	oldFps = fps;
 	lastMillis = t;
-	videodisplay.print(fps)
+	videodisplay.print(fps);
 
 	//circle parameters
 	float factors[][2] = {{1, 1.1f}, {0.9f, 1.02f}, {1.1, 0.8}};
