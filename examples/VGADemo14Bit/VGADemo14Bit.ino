@@ -36,7 +36,14 @@ void loop()
 	//printing the fps
 	videodisplay.print("fps: ");
 	static long f = 0;
-	videodisplay.print(long((f++ * 1000) / millis()));
+	unsigned long t = millis();
+	
+	if (t>0){	//avoiding division through 0
+		videodisplay.print(long((f++ * 1000) / t)); //will print average FPS over the entire time
+	}
+	else{
+		f = 0; //starting FPS calculation again from frame 0
+	}
 
 	//circle parameters
 	float factors[][2] = {{1, 1.1f}, {0.9f, 1.02f}, {1.1, 0.8}};
