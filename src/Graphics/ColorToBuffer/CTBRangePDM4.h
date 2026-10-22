@@ -32,10 +32,10 @@ class CTBRangePDM4
 	}
 	int buftocol(int val)
 	{
-		int valsetbitcount = (val >> 0) & 1 +
-							(val >> 1) & 1 +
-							(val >> 2) & 1 +
-							(val >> 3) & 1;
+		int valsetbitcount = ((val >> 0) & 1) +
+							((val >> 1) & 1) +
+							((val >> 2) & 1) +
+							((val >> 3) & 1);
 		return (((colorMinValue>(valsetbitcount<<6))?0:((valsetbitcount<<6) - colorMinValue))<<8) / colorDepthConversionFactor;
 	}
 };

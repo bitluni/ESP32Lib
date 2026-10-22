@@ -35,6 +35,8 @@
 class CompositeGrayDAC : public CompositeI2SEngine<BLpx1sz16sw1sh8>, public GraphicsX6S2W8RangedSwapped // (=) Graphics<ColorW8, BLpx1sz16sw1sh8, CTBRange>
 {
   public:
+	using Composite::init;
+
 	CompositeGrayDAC() //DAC based modes only work with I2S0
 		: CompositeI2SEngine<BLpx1sz16sw1sh8>(0)
 	{
@@ -153,6 +155,7 @@ class CompositeGrayDAC : public CompositeI2SEngine<BLpx1sz16sw1sh8>, public Grap
 	{
 		Graphics::scroll(dy, color);
 		if(dmaBufferDescriptors)
+		{
 			for (int i = 0; i < yres * mode.vDiv; i++)
 				if(!mode.interlaced || (i & 1) == 0) // odd line
 				{
@@ -174,5 +177,6 @@ class CompositeGrayDAC : public CompositeI2SEngine<BLpx1sz16sw1sh8>, public Grap
 								((descriptorsPerLine > 1)?mode.hRes:mode.pixelsPerLine()) * bytesPerBufferUnit()/samplesPerBufferUnit()
 						);
 				}
+		}
 	}
 };

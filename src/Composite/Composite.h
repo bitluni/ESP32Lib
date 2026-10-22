@@ -100,7 +100,6 @@ class Composite : public I2S, public CompMode, public CompositePinConfig
 
 		dmaBufferDescriptorCount = totalLines * 2 + mode.vRes;
 		int inactiveSamples = mode.hFront + mode.hSync;
-		int activeSamples = mode.hRes;
 		int syncSamples = mode.pixelsPerLine() / 2;
 		
 		shortSyncBuffer = DMABufferDescriptor::allocateBuffer(syncSamples * bytesPerSample(), true);
