@@ -31,6 +31,8 @@
 class CompositeGrayPDM8 : public CompositeI2SEngine<BLpx1sz8sw3sh0>, public GraphicsW8RangedSwappedPDM // (=) Graphics<ColorW8, BLpx1sz8sw3sh0, CTBRangePDM8>
 {
   public:
+	using Composite::init;
+
 	CompositeGrayPDM8() //8 bit based modes only work with I2S1
 		: CompositeI2SEngine<BLpx1sz8sw3sh0>(1)
 	{
@@ -163,6 +165,7 @@ class CompositeGrayPDM8 : public CompositeI2SEngine<BLpx1sz8sw3sh0>, public Grap
 	{
 		Graphics::scroll(dy, color);
 		if(dmaBufferDescriptors)
+		{
 			for (int i = 0; i < yres * mode.vDiv; i++)
 				if(!mode.interlaced || (i & 1) == 0) // odd line
 				{
@@ -184,5 +187,6 @@ class CompositeGrayPDM8 : public CompositeI2SEngine<BLpx1sz8sw3sh0>, public Grap
 								((descriptorsPerLine > 1)?mode.hRes:mode.pixelsPerLine()) * bytesPerBufferUnit()/samplesPerBufferUnit()
 						);
 				}
+		}
 	}
 };

@@ -16,6 +16,8 @@
 class VGA6BitI : public VGAI2SDynamic< BLpx1sz8sw2sh0, Graphics<ColorR2G2B2A2, BLpx1sz8sw0sh0, CTBIdentity> >
 {
   public:
+	using VGA::init;
+
 	VGA6BitI() //8 bit based modes only work with I2S1
 		: VGAI2SDynamic< BLpx1sz8sw2sh0, Graphics<ColorR2G2B2A2, BLpx1sz8sw0sh0, CTBIdentity> >(1)
 	{

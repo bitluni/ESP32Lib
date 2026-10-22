@@ -36,14 +36,14 @@ class CTBRangePDM8
 	}
 	int buftocol(int val)
 	{
-		int valsetbitcount = (val >> 0) & 1 +
-							(val >> 1) & 1 +
-							(val >> 2) & 1 +
-							(val >> 3) & 1 +
-							(val >> 4) & 1 +
-							(val >> 5) & 1 +
-							(val >> 6) & 1 +
-							(val >> 7) & 1;
-		return (((colorMinValue>(valsetbitcount<<5))?0:(valsetbitcount<<5 - colorMinValue))<<8) / colorDepthConversionFactor;
+		int valsetbitcount = ((val >> 0) & 1) +
+							((val >> 1) & 1) +
+							((val >> 2) & 1) +
+							((val >> 3) & 1) +
+							((val >> 4) & 1) +
+							((val >> 5) & 1) +
+							((val >> 6) & 1) +
+							((val >> 7) & 1);
+		return (((colorMinValue>(valsetbitcount<<5))?0:((valsetbitcount<<5) - colorMinValue))<<8) / colorDepthConversionFactor;
 	}
 };

@@ -35,6 +35,10 @@
 class CompositeGrayDACI : public CompositeI2SEngine<BLpx1sz16sw1sh8>, public GraphicsW8 // (=) Graphics<ColorW8, BLpx1sz8sw0sh0, CTBIdentity>
 {
   public:
+	using Composite::init;
+	using Composite::interrupt;
+	using Composite::interruptPixelLine;
+
 	CompositeGrayDACI() //DAC based modes only work with I2S0
 		: CompositeI2SEngine<BLpx1sz16sw1sh8>(0)
 	{

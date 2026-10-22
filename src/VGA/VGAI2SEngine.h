@@ -153,7 +153,7 @@ class VGAI2SEngine : public I2S, public VGA, public BufferLayout
 
 	BufferRendererUnit * getBufferDescriptor(int y, int bufferIndex = 0)
 	{
-		return (BufferRendererUnit *) (dmaBufferDescriptors[indexRendererDataBuffer[bufferIndex] + y*mode.vDiv * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
+		return (BufferRendererUnit *) ((unsigned char *)dmaBufferDescriptors[indexRendererDataBuffer[bufferIndex] + y*mode.vDiv * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
 	}
 
 	void switchToRendererBuffer(int bufferNumber)
@@ -193,12 +193,9 @@ class VGAI2SEngine : public I2S, public VGA, public BufferLayout
 		descriptorsPerLine = 2;
 		//determine parameters
 		//lenght of each line
-		int samplesHLineComplete = mode.hFront + mode.hSync + mode.hBack + mode.hRes;
 		int samplesHBlanking = mode.hFront + mode.hSync + mode.hBack;
 		int samplesHData = mode.hRes;
 
-		int sizeHLineComplete = samplesHLineComplete * bytesPerBufferUnit()/samplesPerBufferUnit();
-		int sizeHLineCompleteAligned32 = (sizeHLineComplete + 3) & 0xfffffffc;
 		int sizeHBlanking = samplesHBlanking * bytesPerBufferUnit()/samplesPerBufferUnit();
 		int sizeHBlankingAligned32 = (sizeHBlanking + 3) & 0xfffffffc;
 		int sizeHData = samplesHData * bytesPerBufferUnit()/samplesPerBufferUnit();
@@ -334,7 +331,6 @@ class VGAI2SEngine : public I2S, public VGA, public BufferLayout
 		//lenght of each line
 		int samplesHLineComplete = mode.hFront + mode.hSync + mode.hBack + mode.hRes;
 		int samplesHBlanking = mode.hFront + mode.hSync + mode.hBack;
-		int samplesHData = mode.hRes;
 
 		int sizeHLineComplete = samplesHLineComplete * bytesPerBufferUnit()/samplesPerBufferUnit();
 		int sizeHLineCompleteAligned32 = (sizeHLineComplete + 3) & 0xfffffffc;

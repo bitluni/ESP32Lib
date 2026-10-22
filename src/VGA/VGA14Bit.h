@@ -16,6 +16,8 @@
 class VGA14Bit : public VGAI2SOverlapping< BLpx1sz16sw1sh0, Graphics<ColorR5G5B4A2, BLpx1sz16sw1sh0, CTBIdentity> >
 {
   public:
+	using VGA::init;
+
 	VGA14Bit(const int i2sIndex = 1)
 		: VGAI2SOverlapping< BLpx1sz16sw1sh0, Graphics<ColorR5G5B4A2, BLpx1sz16sw1sh0, CTBIdentity> >(i2sIndex)
 	{

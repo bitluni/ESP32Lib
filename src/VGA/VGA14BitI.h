@@ -16,6 +16,8 @@
 class VGA14BitI : public VGAI2SDynamic< BLpx1sz16sw1sh0, Graphics<ColorR5G5B4A2, BLpx1sz16sw0sh0, CTBIdentity> >
 {
   public:
+	using VGA::init;
+
 	VGA14BitI(const int i2sIndex = 1)
 		: VGAI2SDynamic< BLpx1sz16sw1sh0, Graphics<ColorR5G5B4A2, BLpx1sz16sw0sh0, CTBIdentity> >(i2sIndex)
 	{

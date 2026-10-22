@@ -33,6 +33,8 @@
 class CompositeGrayPDM4 : public CompositeI2SEngine<BLpx2sz8sw3xshx>, public Graphics<ColorW8, BLpx2sz8sw3xshx, CTBRangePDM4>
 {
   public:
+	using Composite::init;
+
 	CompositeGrayPDM4() //8 bit based modes only work with I2S1
 		: CompositeI2SEngine<BLpx2sz8sw3xshx>(1)
 	{
@@ -184,6 +186,7 @@ class CompositeGrayPDM4 : public CompositeI2SEngine<BLpx2sz8sw3xshx>, public Gra
 	{
 		Graphics::scroll(dy, color);
 		if(dmaBufferDescriptors)
+		{
 			for (int i = 0; i < yres * mode.vDiv; i++)
 				if(!mode.interlaced || (i & 1) == 0) // odd line
 				{
@@ -205,5 +208,6 @@ class CompositeGrayPDM4 : public CompositeI2SEngine<BLpx2sz8sw3xshx>, public Gra
 								((descriptorsPerLine > 1)?mode.hRes:mode.pixelsPerLine()) * bytesPerBufferUnit()/samplesPerBufferUnit()
 						);
 				}
+		}
 	}
 };

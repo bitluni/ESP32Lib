@@ -115,10 +115,10 @@ class CompositeI2SEngine : public Composite, public BufferLayout
 	{
 		if(!mode.interlaced || ((y*mode.vDiv) & 1) == 0) // odd line
 		{
-			return (BufferRendererUnit *) (dmaBufferDescriptors[indexRendererDataBuffer[bufferIndex] + ((y*mode.vDiv)/(mode.interlaced?2:1)) * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
+			return (BufferRendererUnit *) ((unsigned char *)dmaBufferDescriptors[indexRendererDataBuffer[bufferIndex] + ((y*mode.vDiv)/(mode.interlaced?2:1)) * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
 			//return (BufferRendererUnit *) (dmaBufferDescriptors[(mode.vFront + mode.vOddFieldOffset + mode.vBack) * descriptorsPerLine + ((y*mode.vDiv)/(mode.interlaced?2:1)) * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
 		} else { // even line
-			return (BufferRendererUnit *) (dmaBufferDescriptors[indexRendererEvenDataBuffer[bufferIndex] + ((y*mode.vDiv - 1)/2) * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
+			return (BufferRendererUnit *) ((unsigned char *)dmaBufferDescriptors[indexRendererEvenDataBuffer[bufferIndex] + ((y*mode.vDiv - 1)/2) * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
 			//return (BufferRendererUnit *) (dmaBufferDescriptors[(mode.vFront + mode.vEvenFieldOffset + mode.vBack) * descriptorsPerLine + ((y*mode.vDiv - 1)/2) * descriptorsPerLine + descriptorsPerLine - 1].buffer() + dataOffsetInLineInBytes);
 		}
 		//THIS MUST BE FIXED FOR INTERLACED MODES
@@ -173,10 +173,10 @@ class CompositeI2SEngine : public Composite, public BufferLayout
 		// Line must have an even number of samples
 
 
-		int sizeHLineComplete = samplesHLineComplete * bytesPerBufferUnit()/samplesPerBufferUnit();
-		int sizeHLineCompleteAligned32 = (sizeHLineComplete + 3) & 0xfffffffc;
+		//int sizeHLineComplete = samplesHLineComplete * bytesPerBufferUnit()/samplesPerBufferUnit();
+		//int sizeHLineCompleteAligned32 = (sizeHLineComplete + 3) & 0xfffffffc;
 		int sizeHBlanking = samplesHBlanking * bytesPerBufferUnit()/samplesPerBufferUnit();
-		int sizeHBlankingAligned32 = (sizeHBlanking + 3) & 0xfffffffc;
+		//int sizeHBlankingAligned32 = (sizeHBlanking + 3) & 0xfffffffc;
 		int sizeHData = samplesHData * bytesPerBufferUnit()/samplesPerBufferUnit();
 		int sizeHDataAligned32 = (sizeHData + 3) & 0xfffffffc;
 		//int sizeHLineBundledCompleteAligned32 = sizeHBlankingAligned32 + sizeHDataAligned32;
@@ -513,7 +513,6 @@ class CompositeI2SEngine : public Composite, public BufferLayout
 		//lenght of each line
 		int samplesHLineComplete = mode.hFront + mode.hSync + mode.hBack + mode.hRes;
 		int samplesHBlanking = mode.hFront + mode.hSync + mode.hBack;
-		int samplesHData = mode.hRes;
 		//vsync lines
 		int samplesHalfLine = samplesHLineComplete/2;
 		// Line must have an even number of samples

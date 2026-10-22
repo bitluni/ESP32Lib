@@ -37,6 +37,8 @@
 class VGA8BitDACI : public VGAI2SDynamic< BLpx1sz16sw1sh0, GraphicsW8 > // GraphicsW8 (=) Graphics<ColorW8, BLpx1sz8sw0sh0, CTBIdentity>
 {
   public:
+	using VGA::init;
+
 	VGA8BitDACI() //DAC based modes only work with I2S0
 		: VGAI2SDynamic< BLpx1sz16sw1sh0, GraphicsW8 >(0)
 	{

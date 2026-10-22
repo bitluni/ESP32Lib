@@ -16,6 +16,8 @@
 class VGA3Bit : public VGAI2SOverlapping< BLpx1sz8sw2sh0, Graphics<ColorR1G1B1A1X4, BLpx1sz8sw2sh0, CTBIdentity> >
 {
   public:
+	using VGA::init;
+
 	VGA3Bit() //8 bit based modes only work with I2S1
 		: VGAI2SOverlapping< BLpx1sz8sw2sh0, Graphics<ColorR1G1B1A1X4, BLpx1sz8sw2sh0, CTBIdentity> >(1)
 	{

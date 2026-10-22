@@ -35,6 +35,9 @@
 class CompositeGrayLadder : public CompositeI2SEngine<BLpx1sz8sw2sh0>, public GraphicsW8RangedSwapped // (=) Graphics<ColorW8, BLpx1sz8sw2sh0, CTBRange>
 {
   public:
+	using Composite::init;
+	using Composite::interrupt;
+
 	CompositeGrayLadder() //8 bit based modes only work with I2S1
 		: CompositeI2SEngine<BLpx1sz8sw2sh0>(1)
 	{
@@ -140,6 +143,7 @@ class CompositeGrayLadder : public CompositeI2SEngine<BLpx1sz8sw2sh0>, public Gr
 	{
 		Graphics::scroll(dy, color);
 		if(dmaBufferDescriptors)
+		{
 			for (int i = 0; i < yres * mode.vDiv; i++)
 				if(!mode.interlaced || (i & 1) == 0) // odd line
 				{
@@ -161,5 +165,6 @@ class CompositeGrayLadder : public CompositeI2SEngine<BLpx1sz8sw2sh0>, public Gr
 								((descriptorsPerLine > 1)?mode.hRes:mode.pixelsPerLine()) * bytesPerBufferUnit()/samplesPerBufferUnit()
 						);
 				}
+		}
 	}
 };

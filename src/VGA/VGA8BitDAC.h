@@ -37,6 +37,8 @@
 class VGA8BitDAC : public VGAI2SOverlapping< BLpx1sz16sw1sh0, GraphicsX6S2W8RangedSwapped > // GraphicsX6S2W8RangedSwapped (=) Graphics<ColorW8, BLpx1sz16sw1sh8, CTBRange>
 {
   public:
+	using VGA::init;
+
 	VGA8BitDAC() //DAC based modes only work with I2S0
 		: VGAI2SOverlapping< BLpx1sz16sw1sh0, GraphicsX6S2W8RangedSwapped >(0)
 	{

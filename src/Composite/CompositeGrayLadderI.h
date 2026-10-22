@@ -36,6 +36,10 @@
 class CompositeGrayLadderI : public CompositeI2SEngine<BLpx1sz8sw2sh0>, public GraphicsW8 // (=) Graphics<ColorW8, BLpx1sz8sw0sh0, CTBIdentity>
 {
   public:
+	using Composite::init;
+	using Composite::interrupt;
+	using Composite::interruptPixelLine;
+
 	CompositeGrayLadderI() //8 bit based modes only work with I2S1
 		: CompositeI2SEngine<BLpx1sz8sw2sh0>(1)
 	{
